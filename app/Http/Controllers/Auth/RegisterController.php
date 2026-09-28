@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\User;
 use App\Models\Otp;
@@ -13,32 +14,67 @@ use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
 {
-    // ====== BƯỚC 1: Hiển thị form nhập email ======
+    // Hiển thị form nhập emai, laravel sẽ tìm resources/views/auth/register/email.blade.php
     public function showEmailForm()
     {
         return view('auth.register.email');
     }
 
-    // ====== BƯỚC 1: Xử lý khi submit email ======
+    // Nhận email
     public function submitEmail(Request $request)
     {
+        // Xử lý dữ liệu email đầu vào
         $request->validate([
-            'email' => 'required|email|unique:accounts,email',
+            'email' => 'required|email|',
         ], [
+
+            // Thông báo nếu có lỗi
             'email.required' => 'Vui lòng nhập email',
             'email.email' => 'Email không đúng định dạng',
-            'email.unique' => 'Email này đã được đăng ký rồi',
         ]);
 
-        // Tạo tài khoản với mật khẩu TẠM THỜI (ngẫu nhiên, không ai biết)
-        // Mật khẩu này sẽ được thay bằng mật khẩu thật ở Bước 3
+        // Bắt đầu một quá trình đăng ký mới
+        // Xóa trạng thái xác thực OTP của lần đăng ký trước
+        session()->forget('register_verified');
+
+
+        // Tìm tài khoản theo gmail
+        $account = Account::where('email', $request->email)->first();
+
+        // Nếu email đã tồn tại
+        if ($account) {
+
+            // Email đã được xác thực rồi
+            if ($account->is_verified == 1) {
+                return back()->withErrors([
+                    'email' => 'Email này đã được đăng ký rồi.'
+                ])->withInput();
+            }
+
+            // Email đã tồn tại nhưng chưa được xác thực
+            // dùng lại account từ session cũ
+            session([
+                'register_account_id' => $account->account_id
+            ]);
+
+            // Gửi OTP mới
+            $this->generateAndSendOtp($account);
+
+            // Chuyển sang bước nhập OTP
+            return redirect()->route('otp.form');
+        }
+
+        // Nếu email chưa tồn tại
+        // Tạo tài khoản mới
         $account = Account::create([
             'email' => $request->email,
             'password_hash' => password_hash(Str::random(20), PASSWORD_DEFAULT),
+            'is_verified' => 0,
         ]);
 
-        // Lưu account_id vào session để các bước sau (2, 3) biết đang xử lý ai
-        session(['register_account_id' => $account->account_id]);
+        // Lưu account_id vào session để các bước sau biết đang xử lý ai
+        $accountId = $account->account_id;
+        session(['register_account_id' => $accountId]);
 
         // Gửi OTP
         $this->generateAndSendOtp($account);
@@ -46,33 +82,37 @@ class RegisterController extends Controller
         return redirect()->route('otp.form');
     }
 
-    // Hàm dùng chung: sinh mã OTP, lưu DB, gửi email
+    // Hàm sinh mã OTP, lưu DB, gửi email
     private function generateAndSendOtp(Account $account)
     {
         $otpCode = rand(100000, 999999);
 
+        // Lưu vào db
         Otp::create([
             'account_id' => $account->account_id,
             'otp_code' => $otpCode,
             'purpose' => 'register',
+            'attempts' => 0,
             'expires_at' => now()->addMinutes(5),
         ]);
 
         Mail::to($account->email)->send(new OtpMail($otpCode));
     }
 
-    // ====== BƯỚC 3: Hiển thị form tạo mật khẩu ======
+    // Hiển thị form tạo mật khẩu
     public function showPasswordForm()
     {
-        // Chặn truy cập thẳng vào bước 3 nếu chưa xác thực OTP ở bước 2
-        if (!session('register_verified')) {
+        if (
+            !session('register_verified') ||
+            !session('register_account_id')
+        ) {
             return redirect()->route('register.form');
         }
 
         return view('auth.register.password');
     }
 
-    // ====== BƯỚC 3: Xử lý khi submit mật khẩu + họ tên ======
+    // Xử lý khi submit mật khẩu + họ tên
     public function submitPassword(Request $request)
     {
         if (!session('register_verified')) {
@@ -96,9 +136,11 @@ class RegisterController extends Controller
             'password.symbols' => 'Mật khẩu phải có ít nhất 1 ký tự đặc biệt',
         ]);
 
-        $account = Account::find(session('register_account_id'));
+        // Lấy giá trị register_account_id đang được lưu trong session và đưa vào biến $accountId
+        $accountId = session('register_account_id');
+        $account = Account::find($accountId);
 
-        // Cập nhật mật khẩu THẬT (ghi đè mật khẩu tạm ở Bước 1) và đánh dấu đã xác thực
+        // Cập nhật mật khẩu thật ghi đè mật khẩu tạm và đánh dấu đã xác thực
         $account->update([
             'password_hash' => password_hash($request->password, PASSWORD_DEFAULT),
             'is_verified' => 1,
@@ -116,7 +158,7 @@ class RegisterController extends Controller
         return redirect()->route('register.complete');
     }
 
-    // ====== BƯỚC 4: Trang hoàn thành ======
+    // Trang hoàn thành
     public function complete()
     {
         return view('auth.register.complete');

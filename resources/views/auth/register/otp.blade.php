@@ -62,6 +62,7 @@
                             </button>
                         </form>
 
+                        {{-- Nút gửi lại mã,  --}}
                         <form method="POST" action="{{ route('otp.resend') }}" class="text-center mt-3">
                             @csrf
                             <button type="submit" class="btn btn-link text-decoration-none" style="color: #003B73;">

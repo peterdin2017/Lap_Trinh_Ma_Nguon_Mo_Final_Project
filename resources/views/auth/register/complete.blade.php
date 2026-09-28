@@ -25,6 +25,7 @@
                         <h4 class="fw-bold mt-3 mb-2">Đăng ký thành công!</h4>
                         <p class="text-muted mb-4">Tài khoản của bạn đã sẵn sàng sử dụng.</p>
 
+                        {{-- trả về trang login --}}
                         <a href="{{ route('login.form')}}" class="btn btn-lg text-white fw-semibold w-100"
                            style="background-color: #003B73;">
                             ĐĂNG NHẬP NGAY

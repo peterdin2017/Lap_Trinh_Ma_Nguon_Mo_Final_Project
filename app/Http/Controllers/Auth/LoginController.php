@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
-
+namespace App\Http\Controllers\Auth;
+use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -38,6 +38,7 @@ class LoginController extends Controller
             'account_id' => $account->account_id,
             'account_email' => $account->email,
             'user_name' => $user->full_name,
+            'avatar' => $user->avatar,
         ]);
 
         return redirect('/');

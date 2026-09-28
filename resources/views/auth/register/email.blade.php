@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký - SHOP ONLINE</title>
+    <title>Đăng ký - Website Bán hàng Online</title>
     <link href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -30,7 +30,7 @@
     <div class="container pt-4">
         <a href="{{ url('/') }}" class="text-white text-decoration-none d-flex align-items-center" style="width: fit-content;">
             <i class="bi bi-shop me-2" style="font-size: 1.8rem;"></i>
-            <span class="fw-bold" style="font-size: 1.3rem;">SHOP ONLINE</span>
+            <span class="fw-bold" style="font-size: 1.3rem;">Website Bán hàng Online</span>
         </a>
     </div>
 
@@ -44,7 +44,7 @@
                     <h1 class="fw-bold mt-3">Mua sắm thả ga</h1>
                     <p style="color: #D6E9FF; font-size: 1.1rem;">
                         Hàng ngàn sản phẩm chất lượng, giá tốt mỗi ngày.<br>
-                        Tham gia SHOP ONLINE ngay hôm nay.
+                        Tham gia Website Bán hàng Online ngay hôm nay.
                     </p>
                 </div>
             </div>
@@ -56,6 +56,7 @@
 
                         <h4 class="fw-bold mb-4" style="color: #003B73;">Đăng ký</h4>
 
+                        {{--  --}}
                         <form method="POST" action="{{ route('register.submit') }}">
                             @csrf
                             <div class="mb-3">
@@ -66,6 +67,8 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+
+                            {{-- Nút tiếp theo --}}
                             <button type="submit" class="btn w-100 btn-lg text-white fw-semibold"
                                     style="background-color: #003B73;">
                                 TIẾP THEO

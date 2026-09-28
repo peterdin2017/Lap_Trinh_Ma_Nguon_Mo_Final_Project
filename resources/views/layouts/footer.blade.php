@@ -8,7 +8,7 @@
             {{-- Về chúng tôi --}}
             <div class="col-md-3 mb-4">
                 <h5 class="fw-bold mb-3" style="letter-spacing: 1px;">
-                    <i class="bi bi-shop me-2"></i>SHOP ONLINE
+                    <i class="bi bi-shop me-2"></i>Website Bán hàng Online
                 </h5>
 
                 <p class="mb-3" style="color: #D6E9FF; line-height: 1.7;">

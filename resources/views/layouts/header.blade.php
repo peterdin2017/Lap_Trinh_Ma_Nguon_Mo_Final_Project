@@ -19,15 +19,20 @@
                 @if (session('account_id'))
                     <div class="dropdown user-menu">
                         <a href="#" class="text-white text-decoration-none d-flex align-items-center">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
-                                style="width: 28px; height: 28px; background-color: #ffffff; color: #003B73; font-weight: bold; font-size: 0.85rem;">
-                                {{ strtoupper(substr(session('user_name'), 0, 1)) }}
-                            </div>
+                            @if (session('avatar'))
+                                <img src="{{ asset('storage/' . session('avatar')) }}" class="rounded-circle me-2"
+                                    style="width: 28px; height: 28px; object-fit: cover;">
+                            @else
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
+                                    style="width: 28px; height: 28px; background-color: #ffffff; color: #003B73; font-weight: bold; font-size: 0.85rem;">
+                                    {{ strtoupper(substr(session('user_name'), 0, 1)) }}
+                                </div>
+                            @endif
                             {{ session('user_name') }}
                         </a>
 
                         <div class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                            <a class="dropdown-item" href="#">
+                            <a class="dropdown-item" href="{{ route('account.profile') }}">
                                 <i class="bi bi-person me-2"></i>Tài Khoản Của Tôi
                             </a>
                             <a class="dropdown-item" href="#">
@@ -61,7 +66,7 @@
             {{-- Logo chữ --}}
             <a href="{{ url('/') }}" class="text-white text-decoration-none d-flex align-items-center">
                 <i class="bi bi-shop-window" style="font-size: 2.2rem;"></i>
-                <span class="fw-bold ms-2" style="font-size: 1.3rem;">SHOP ONLINE</span>
+                <span class="fw-bold ms-2" style="font-size: 1.3rem;">Website Bán hàng Online</span>
             </a>
 
             {{-- Ô tìm kiếm --}}
@@ -109,7 +114,8 @@
         top: 100%;
         right: 0;
         margin-top: 0;
-        padding-top: 12px;   /* đệm trong suốt phía trên, để "nối liền" vùng hover */
+        padding-top: 12px;
+        /* đệm trong suốt phía trên, để "nối liền" vùng hover */
     }
 
     /* Hiện menu khi rê chuột vào toàn bộ khu vực (bao gồm cả phần đệm phía trên) */
