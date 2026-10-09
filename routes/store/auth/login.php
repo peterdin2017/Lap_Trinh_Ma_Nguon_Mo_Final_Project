@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Store\Auth\LoginController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/login', [LoginController::class, 'showForm'])
     ->name('login.form');
@@ -9,4 +9,5 @@ Route::get('/login', [LoginController::class, 'showForm'])
 Route::post('/login', [LoginController::class, 'login'])
     ->name('login.submit');
 
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->name('logout');

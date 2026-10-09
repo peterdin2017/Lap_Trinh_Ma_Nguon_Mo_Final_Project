@@ -3,151 +3,135 @@
 namespace App\Http\Controllers\Store\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Account;
-use App\Models\User;
-use App\Models\Otp;
+use App\Http\Requests\Store\Auth\RegisterEmailRequest;
+use App\Http\Requests\Store\Auth\RegisterPasswordRequest;
 use App\Mail\OtpMail;
+use App\Models\Account;
+use App\Models\Otp;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-
-// 2 class kiểm tra yêu cầu
-use App\Http\Requests\Store\Auth\Register\RegisterEmailRequest;
-use App\Http\Requests\Store\Auth\Register\RegisterPasswordRequest;
+use Illuminate\View\View;
 
 class RegisterController extends Controller
 {
-    // Hiển thị form nhập emai, laravel sẽ tìm resources/views/auth/register/email.blade.php
-    public function showEmailForm()
+    public function showEmailForm(): View
     {
-        return view('store.auth.register.register');
+        return view('store.auth.register');
     }
 
-    // Nhận email
-    public function submitEmail(RegisterEmailRequest $request)
+    public function submitEmail(RegisterEmailRequest $request): RedirectResponse
     {
-        // Lấy dữ liệu đã được Request kiểm tra
-        $data=$request->validated();
+        $email = $request->validated()['email'];
 
-        // Bắt đầu một quá trình đăng ký mới
-        session()->forget('register_verified');
+        session()->forget([
+            'register_account_id',
+            'register_verified',
+        ]);
 
-        // Tìm tài khoản theo gmail
-        $account = Account::where('email', $data['email'])->first();
+        $account = Account::where('email', $email)->first();
 
-        // Nếu email đã tồn tại
-        if ($account) {
-
-            // Email đã được xác thực rồi
-            if ($account->is_verified == 1) {
-                return back()->withErrors([
-                    'email' => 'Email này đã được đăng ký rồi.'
-                ])->withInput();
-            }
-
-            // Email đã tồn tại nhưng chưa được xác thực
-            // dùng lại account từ session cũ
-            session([
-                'register_account_id' => $account->account_id
-            ]);
-
-            // Gửi OTP mới
-            $this->generateAndSendOtp($account);
-
-            // Chuyển sang trang nhập  OTP
-            return redirect()->route('otp.form');
+        if ($account && ($account->is_verified || $account->role !== 'user')) {
+            return back()
+                ->withErrors(['email' => 'Email này đã được đăng ký rồi.'])
+                ->withInput();
         }
 
-        // Nếu email chưa tồn tại
-        // Tạo tài khoản mới
-        $account = Account::create([
-            'email' => $request->email,
-            'password_hash' => password_hash(Str::random(20), PASSWORD_DEFAULT),
-            'is_verified' => 0,
-        ]);
+        if (! $account) {
+            $account = Account::create([
+                'email' => $email,
+                'password_hash' => Hash::make(Str::random(32)),
+                'role' => 'user',
+                'status' => 'active',
+                'is_verified' => false,
+            ]);
+        }
 
-        // Lưu account_id vào session để các bước sau biết đang xử lý ai
-        session([
-            'register_account_id' => $account->account_id
-        ]);
+        session(['register_account_id' => $account->account_id]);
 
-        // Gửi OTP
         $this->generateAndSendOtp($account);
 
         return redirect()->route('otp.form');
     }
 
-    // Hàm sinh mã OTP, lưu DB, gửi email
-    private function generateAndSendOtp(Account $account)
+    private function generateAndSendOtp(Account $account): void
     {
-        $otpCode = rand(100000, 999999);
+        $otpCode = (string) random_int(100000, 999999);
 
-        // Lưu vào db
         Otp::create([
             'account_id' => $account->account_id,
-            'otp_code' => $otpCode,
+            'account_type' => 'user',
+            'email' => $account->email,
+            'otp_hash' => Hash::make($otpCode),
             'purpose' => 'register',
             'attempts' => 0,
             'expires_at' => now()->addMinutes(5),
         ]);
 
-        Mail::to($account->email)->send(new OtpMail($otpCode));
+        Mail::to($account->email)
+            ->send(new OtpMail($otpCode, 'register'));
     }
 
-    // Hiển thị form tạo mật khẩu
-    public function showPasswordForm()
+    public function showPasswordForm(): View|RedirectResponse
     {
         if (
-            !session('register_verified') ||
-            !session('register_account_id')
+            ! session('register_verified') ||
+            ! session('register_account_id')
         ) {
             return redirect()->route('register.form');
         }
 
-        return view('store.auth.register.password');
+        return view('auth.password');
     }
 
-    // Xử lý khi submit mật khẩu + họ tên
-    public function submitPassword(RegisterPasswordRequest $request)
-    {
-        // Lấy dữ liệu đã được Request kiểm tra
-        $data = $request->validated();
-
-        if (!session('register_verified')) {
+    public function submitPassword(
+        RegisterPasswordRequest $request
+    ): RedirectResponse {
+        if (! session('register_verified')) {
             return redirect()->route('register.form');
         }
 
-        // Lấy account từ session
-        $accountId = session('register_account_id');
+        $account = Account::find(session('register_account_id'));
 
-        $account = Account::find($accountId);
+        if (! $account) {
+            session()->forget([
+                'register_account_id',
+                'register_verified',
+            ]);
 
-        // Cập nhật mật khẩu và xác thực tài khoản
-        $account->update([
-            'password_hash' => password_hash(
-                $data['password'],
-                PASSWORD_DEFAULT
-            ),
-            'is_verified' => 1,
-        ]);
+            return redirect()->route('register.form');
+        }
 
-        // Tạo thông tin người dùng
-        User::create([
-            'account_id' => $account->account_id,
-            'full_name' => $data['full_name'],
-        ]);
+        $data = $request->validated();
 
-        // Xóa session đăng ký
+        DB::transaction(function () use ($account, $data): void {
+            $account->update([
+                'password_hash' => Hash::make($data['password']),
+                'is_verified' => true,
+            ]);
+
+            User::firstOrCreate(
+                ['account_id' => $account->account_id],
+                ['full_name' => $data['full_name']]
+            );
+        });
+
         session()->forget([
             'register_account_id',
-            'register_verified'
+            'register_verified',
         ]);
 
-        return redirect()->route('register.complete');
+        return redirect()
+            ->route('login.form')
+            ->with('success', 'Đăng ký thành công. Vui lòng đăng nhập.');
     }
 
-    // Trang hoàn thành
-    public function complete()
+    // Giữ lại nếu route register.complete hiện vẫn trỏ đến method này.
+    public function complete(): View
     {
-        return view('store.auth.register.complete');
+        return view('auth.complete');
     }
 }

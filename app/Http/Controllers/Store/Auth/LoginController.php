@@ -1,56 +1,58 @@
 <?php
 
 namespace App\Http\Controllers\Store\Auth;
+
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\Auth\LoginRequest;
 use App\Models\Account;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
 
-// Đăng nhập
 class LoginController extends Controller
 {
-    // Hiển thị form đăng nhập
-    public function showForm()
+    public function showForm(): View
     {
-        return view('store.auth.login.login');
+        return view('store.auth.login');
     }
 
-    // Xử lý khi submit form đăng nhập
-    public function login(Request $request)
+    public function login(LoginRequest $request): RedirectResponse
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+        $data = $request->validated();
 
-        // Tìm tài khoản theo email
-        $account = Account::where('email', $request->email)->first();
+        $account = Account::where('email', $data['email'])
+            ->where('role', 'user')
+            ->where('status', 'active')
+            ->where('is_verified', true)
+            ->first();
 
-        // Kiểm tra: tài khoản có tồn tại không, mật khẩu có đúng không
-        if (!$account || !password_verify($request->password, $account->password_hash)) {
-            return back()->withErrors(['login' => 'Email hoặc mật khẩu không đúng']);
+        if (! $account || ! Hash::check($data['password'], $account->password_hash)) {
+            return back()
+                ->withErrors(['email' => 'Email hoặc mật khẩu không đúng.'])
+                ->withInput();
         }
 
-        // Lấy thông tin họ tên để hiển thị lên header sau khi đăng nhập
-        $user = User::where('account_id', $account->account_id)->first();
+        $request->session()->regenerate();
 
-        // Lưu thông tin đăng nhập vào session
+        $profile = User::where('account_id', $account->account_id)->first();
+
         session([
             'account_id' => $account->account_id,
             'account_email' => $account->email,
-            'user_name' => $user->full_name,
-            'avatar' => $user->avatar,
+            'user_name' => $profile?->full_name ?? $account->email,
+            'avatar' => $profile?->avatar,
         ]);
 
-        return redirect('/');
+        return redirect()->intended(route('store.home'));
     }
 
-    // Xử lý khi bấm "Đăng xuất"
-    public function logout()
+    public function logout(Request $request): RedirectResponse
     {
-        // Xóa hết thông tin đăng nhập khỏi session
-        session()->forget(['account_id', 'account_email', 'user_name']);
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->route('store.home');
     }
 }

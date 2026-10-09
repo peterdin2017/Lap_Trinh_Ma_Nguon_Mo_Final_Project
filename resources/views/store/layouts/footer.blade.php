@@ -30,12 +30,12 @@
                         </a>
                     </li>
                     <li class="mb-2">
-                        <a href="{{ route('page.terms') }}" class="footer-link text-decoration-none" style="color: #D6E9FF;">
+                        <a href="#" class="footer-link text-decoration-none" style="color: #D6E9FF;">
                             <i class="bi bi-chevron-right me-1" style="font-size: 0.75rem;"></i>Điều khoản sử dụng
                         </a>
                     </li>
                     <li class="mb-2">
-                        <a href="{{ route('page.privacy') }}" class="footer-link text-decoration-none" style="color: #D6E9FF;">
+                        <a href="#" class="footer-link text-decoration-none" style="color: #D6E9FF;">
                             <i class="bi bi-chevron-right me-1" style="font-size: 0.75rem;"></i>Chính sách bảo mật
                         </a>
                     </li>
@@ -97,7 +97,7 @@
                         <li class="mb-1" style="color: #D6E9FF;">Nguyễn Huỳnh Bảo Trân - 2001240509</li>
                         <li class="mb-1" style="color: #D6E9FF;">Đỗ Thị Hoài Phương - 2001240381</li>
                         <li class="mb-1" style="color: #D6E9FF;">Hồ Tiểu Điệp - 2044240064</li>
-                        <li class="mb-1" style="color: #D6E9FF;">Lê Đình Tấn - 2044240304</li>
+                        <li class="mb-1" style="color: #D6E9D6E9FF;">Lê Đình Tấn - 2044240304</li>
                     </ul>
                 </div>
             </div>

@@ -5,9 +5,17 @@
 
             {{-- Bên trái --}}
             <div class="d-flex align-items-center text-white">
-                <a href="#" class="text-white text-decoration-none me-3">Kênh Người Bán</a>
+
+                {{-- Nút kênh người bán --}}
+                <a href="#" class="text-white text-decoration-none me-3">
+                    Kênh Người Bán
+                </a>
                 <span class="me-3">|</span>
-                <a href="#" class="text-white text-decoration-none me-3">Trở thành Người bán</a>
+
+                {{-- Nút trở thành người bán --}}
+                <a href="#" class="text-white text-decoration-none me-3">
+                    Trở thành Người bán
+                </a>
                 <span class="me-3">|</span>
                 <span class="me-2">Kết nối</span>
                 <a href="#" class="text-white me-2"><i class="bi bi-facebook"></i></a>
@@ -16,19 +24,20 @@
 
             {{-- Bên phải --}}
             <div class="d-flex align-items-center text-white">
-                @if (session('account_id'))         {{-- Kiểm tra xem trong session có account_id hay không--}}
+                @if (session('account_id'))
                     <div class="dropdown user-menu">
                         <a href="#" class="text-white text-decoration-none d-flex align-items-center">
                             @if (session('avatar'))
                                 <img src="{{ asset('storage/' . session('avatar')) }}" class="rounded-circle me-2"
-                                    style="width: 28px; height: 28px; object-fit: cover;">
+                                    style="width: 28px; height: 28px; object-fit: cover;" alt="Ảnh đại diện">
                             @else
                                 <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
-                                    style="width: 28px; height: 28px; background-color: #ffffff; color: #003B73; font-weight: bold; font-size: 0.85rem;">
-                                    {{ mb_strtoupper(mb_substr(session('user_name'), 0, 1)) }}
+                                    style="width: 28px; height: 28px; background-color: #fff; color: #003B73; font-weight: bold;">
+                                    {{ mb_strtoupper(mb_substr(session('user_name', 'U'), 0, 1)) }}
                                 </div>
                             @endif
-                            {{ session('user_name') }}
+
+                            {{ session('user_name', session('account_email')) }}
                         </a>
 
                         <div class="dropdown-menu dropdown-menu-end shadow-sm border-0">
@@ -48,12 +57,13 @@
                         </div>
                     </div>
                 @else
-                    {{-- Nút đăng ký --}}
-                    <a href="{{ route('register.form') }}" class="text-white text-decoration-none me-3">Đăng Ký</a>
+                    <a href="{{ route('register.form') }}" class="text-white text-decoration-none me-3">
+                        Đăng Ký
+                    </a>
                     <span class="me-3">|</span>
-
-                    {{-- Nút đăng nhập --}}
-                    <a href="{{ route('login.form') }}" class="text-white text-decoration-none">Đăng Nhập</a>
+                    <a href="{{ route('login.form') }}" class="text-white text-decoration-none">
+                        Đăng Nhập
+                    </a>
                 @endif
             </div>
 
@@ -67,7 +77,7 @@
         <div class="d-flex align-items-center py-3 gap-4">
 
             {{-- Logo chữ --}}
-            <a href="{{ url('/') }}" class="text-white text-decoration-none d-flex align-items-center">
+            <a href="{{ route('store.home') }}" class="text-white text-decoration-none d-flex align-items-center">
                 <i class="bi bi-shop-window" style="font-size: 2.2rem;"></i>
                 <span class="fw-bold ms-2" style="font-size: 1.3rem;">Website Bán hàng Online</span>
             </a>
@@ -104,13 +114,12 @@
         </div>
     </div>
 </nav>
+
 <style>
-    /* Container cha cần position: relative để menu con định vị đúng theo nó */
     .user-menu {
         position: relative;
     }
 
-    /* Định vị menu dính sát ngay dưới, không có khoảng hở */
     .user-menu .dropdown-menu {
         display: none;
         position: absolute;
@@ -118,10 +127,8 @@
         right: 0;
         margin-top: 0;
         padding-top: 12px;
-        /* đệm trong suốt phía trên, để "nối liền" vùng hover */
     }
 
-    /* Hiện menu khi rê chuột vào toàn bộ khu vực (bao gồm cả phần đệm phía trên) */
     .user-menu:hover .dropdown-menu {
         display: block;
     }

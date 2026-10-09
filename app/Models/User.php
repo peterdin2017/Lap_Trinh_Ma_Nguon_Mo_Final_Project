@@ -6,10 +6,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
 {
-    protected $primaryKey = 'user_id';
-    public $timestamps = false;
-    protected $fillable = ['account_id', 'full_name', 'phone','gender',
-    'birthdate',
-    'avatar'
+    protected $table = 'users';
+
+    protected $primaryKey = 'account_id';
+
+    protected $fillable = [
+        'account_id',
+        'full_name',
+        'phone',
+        'gender',
+        'birthdate',
+        'avatar',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'birthdate' => 'date',
+        ];
+    }
 }

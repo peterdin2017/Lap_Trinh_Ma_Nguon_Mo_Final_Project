@@ -2,11 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Account extends Model
+class Account extends Authenticatable
 {
+    protected $table = 'accounts';
+
     protected $primaryKey = 'account_id';
-    public $timestamps = false;
-    protected $fillable = ['email','password_hash', 'role', 'status', 'is_verified'];
+
+    protected $fillable = [
+        'email',
+        'password_hash',
+        'role',
+        'status',
+        'is_verified',
+    ];
+
+    protected $hidden = [
+        'password_hash',
+        'remember_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'password_hash' => 'hashed',
+            'is_verified' => 'boolean',
+        ];
+    }
 }

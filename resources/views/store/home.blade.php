@@ -3,7 +3,7 @@
 @section('title', 'Trang chủ')
 
 @section('content')
-    <div class="container py-5">
-        <p class="text-center text-muted mb-0">Danh sách sản phẩm sẽ hiển thị ở đây.</p>
+    <div class="container py-4">
+        <h1>Trang chủ cửa hàng</h1>
     </div>
 @endsection
