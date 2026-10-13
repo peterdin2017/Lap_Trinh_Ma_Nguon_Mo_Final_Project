@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Account extends Authenticatable
@@ -29,5 +30,13 @@ class Account extends Authenticatable
             'password_hash' => 'hashed',
             'is_verified' => 'boolean',
         ];
+    }
+    public function seller(): HasOne
+    {
+        return $this->hasOne(
+            Seller::class,
+            'account_id',
+            'account_id'
+        );
     }
 }

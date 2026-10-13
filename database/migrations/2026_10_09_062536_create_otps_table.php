@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('otps', function (Blueprint $table) {
             $table->bigIncrements('otp_id');
             $table->unsignedBigInteger('account_id');
-            $table->enum('account_type', ['user', 'seller']);
+            $table->enum('account_type', ['user', 'seller', 'admin']);
             $table->string('email', 100);
             $table->string('otp_hash');
             $table->unsignedTinyInteger('attempts')->default(0);

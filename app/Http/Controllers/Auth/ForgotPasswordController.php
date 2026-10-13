@@ -3,38 +3,100 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\ForgotPasswordRequest;
-use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Requests\Auth\ForgotPassword\ForgotPasswordEmailRequest;
+use App\Http\Requests\Auth\ForgotPassword\ResetPasswordRequest;
 use App\Mail\OtpMail;
 use App\Models\Account;
 use App\Models\Otp;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\View\View;
 
 class ForgotPasswordController extends Controller
 {
-    // Form nhập email để bắt đầu quên mật khẩu
-    public function showForm()
+    /**
+     * Ánh xạ cổng đăng nhập sang role lưu trong bảng accounts.
+     */
+    private const PORTAL_ROLES = [
+        'store' => 'user',
+        'seller' => 'seller',
+        'admin' => 'admin',
+    ];
+
+    /**
+     * Bước 1/4: hiển thị trang nhập email.
+     */
+    public function showEmailForm(Request $request): View
     {
-        return view('auth.forgot-password');
+        $portal = $request->query('portal', 'store');
+
+        if (! array_key_exists($portal, self::PORTAL_ROLES)) {
+            $portal = 'store';
+        }
+
+        return view('auth.forgot-password.email', [
+            'portal' => $portal,
+        ]);
     }
 
-    // Gửi OTP đến email
-    public function sendOtp(ForgotPasswordRequest $request)
-    {
-        $account = Account::where(
-            'email',
-            $request->validated('email')
-        )->firstOrFail();
+    /**
+     * Bước 1/4: tìm tài khoản theo portal và gửi OTP.
+     */
+    public function sendOtp(
+        ForgotPasswordEmailRequest $request
+    ): RedirectResponse {
+        $email = $request->validated('email');
+
+        // Portal được gửi trong form; query là giá trị dự phòng.
+        $portal = $request->input(
+            'portal',
+            $request->query('portal', 'store')
+        );
+
+        if (! array_key_exists($portal, self::PORTAL_ROLES)) {
+            return back()
+                ->withErrors([
+                    'email' => 'Không xác định được loại tài khoản.',
+                ])
+                ->withInput();
+        }
+
+        // Xóa trạng thái cũ để không dùng nhầm một lượt đặt lại trước đó.
+        $this->clearResetSession();
+
+        $role = self::PORTAL_ROLES[$portal];
+
+        // Tìm đúng tài khoản theo cả email và role.
+        $account = Account::query()
+            ->where('email', $email)
+            ->where('role', $role)
+            ->where('status', 'active')
+            ->where('is_verified', true)
+            ->first();
+
+        if (! $account) {
+            return back()
+                ->withErrors([
+                    'email' => 'Không tìm thấy tài khoản đã xác minh với email này.',
+                ])
+                ->withInput();
+        }
+
+        // Vô hiệu hóa OTP đặt lại mật khẩu cũ của đúng tài khoản.
+        Otp::query()
+            ->where('account_id', $account->account_id)
+            ->where('purpose', 'reset_password')
+            ->whereNull('used_at')
+            ->update([
+                'used_at' => now(),
+            ]);
 
         $otpCode = (string) random_int(100000, 999999);
 
-        Otp::where('account_id', $account->account_id)
-            ->where('purpose', 'reset_password')
-            ->whereNull('used_at')
-            ->update(['used_at' => now()]);
-
-        Otp::create([
+        $otp = Otp::create([
             'account_id' => $account->account_id,
             'account_type' => $account->role,
             'email' => $account->email,
@@ -44,63 +106,157 @@ class ForgotPasswordController extends Controller
             'expires_at' => now()->addMinutes(5),
         ]);
 
+        try {
+            Mail::to($account->email)->send(
+                new OtpMail($otpCode, 'reset_password')
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            // Vô hiệu hóa OTP nếu không gửi được email.
+            $otp->update([
+                'used_at' => now(),
+            ]);
+
+            return back()
+                ->withErrors([
+                    'email' => 'Chưa gửi được mã OTP. Vui lòng thử lại.',
+                ])
+                ->withInput();
+        }
+
+        // Giữ ID và portal để các bước sau tiếp tục dùng đúng tài khoản.
         session([
             'forgot_password_account_id' => $account->account_id,
             'forgot_password_verified' => false,
+            'forgot_password_portal' => $portal,
         ]);
 
-        Mail::to($account->email)->send(
-            new OtpMail($otpCode, 'reset_password')
-        );
-
-        return redirect()->route('forgot-password.otp.form')
+        return redirect()
+            ->route('forgot-password.otp.form', [
+                'portal' => $portal,
+            ])
             ->with('success', 'Mã OTP đã được gửi đến email của bạn.');
     }
 
-    // Form nhập mật khẩu mới sau khi OTP đã được xác minh
-    public function showPasswordForm()
+    /**
+     * Bước 3/4: chỉ mở form mật khẩu sau khi OTP được xác minh.
+     */
+    public function showPasswordForm(): View|RedirectResponse
     {
-        if (!session('forgot_password_verified')) {
-            return redirect()->route('forgot-password.form');
+        $account = $this->getResetAccount();
+
+        if (! $account || ! session('forgot_password_verified')) {
+            return redirect()->route('forgot-password.form', [
+                'portal' => session('forgot_password_portal', 'store'),
+            ])->withErrors([
+                'email' => 'Vui lòng xác minh OTP trước khi tạo mật khẩu mới.',
+            ]);
         }
 
-        return view('auth.reset-password');
+        return view('auth.forgot-password.password');
     }
 
-    // Lưu mật khẩu mới rồi chuyển về trang đăng nhập
-    public function resetPassword(ResetPasswordRequest $request)
-    {
-        if (!session('forgot_password_verified')) {
-            return redirect()->route('forgot-password.form');
-        }
+    /**
+     * Bước 3/4: lưu mật khẩu mới cho đúng tài khoản đã xác minh OTP.
+     */
+    public function resetPassword(
+        ResetPasswordRequest $request
+    ): RedirectResponse {
+        $account = $this->getResetAccount();
 
-        $account = Account::find(session('forgot_password_account_id'));
+        if (! $account || ! session('forgot_password_verified')) {
+            $portal = session('forgot_password_portal', 'store');
 
-        if (!$account) {
-            session()->forget([
-                'forgot_password_account_id',
-                'forgot_password_verified',
+            $this->clearResetSession();
+
+            return redirect()->route('forgot-password.form', [
+                'portal' => $portal,
             ]);
-
-            return redirect()->route('forgot-password.form');
         }
 
-        // Model Account tự băm giá trị này qua cast password_hash.
-        $account->password_hash = $request->validated('password');
-        $account->save();
-
-        session()->forget([
-            'forgot_password_account_id',
-            'forgot_password_verified',
+        $account->update([
+            'password_hash' => Hash::make(
+                $request->validated('password')
+            ),
         ]);
 
-        $loginRoute = match ($account->role) {
+        $portal = session('forgot_password_portal', 'store');
+
+        $loginRoute = match ($portal) {
             'seller' => 'seller.login.form',
             'admin' => 'admin.login.form',
             default => 'login.form',
         };
 
-        return redirect()->route($loginRoute)
-            ->with('success', 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập.');
+        // Xóa trạng thái của luồng quên mật khẩu.
+        $this->clearResetSession();
+
+        // Nếu đang đăng nhập đúng tài khoản vừa đổi mật khẩu,
+        // đăng xuất để yêu cầu đăng nhập lại bằng mật khẩu mới.
+        if (
+            Auth::check() &&
+            (int) Auth::id() === (int) $account->account_id
+        ) {
+            Auth::logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        return redirect()
+            ->route('forgot-password.complete')
+            ->with('password_reset_login_route', $loginRoute);
+    }
+
+    /**
+     * Bước 4/4: hiển thị thông báo đặt lại mật khẩu thành công.
+     */
+    public function complete(): View|RedirectResponse
+    {
+        $loginRoute = session('password_reset_login_route');
+
+        if (! $loginRoute) {
+            return redirect()->route('forgot-password.form');
+        }
+
+        return view('auth.forgot-password.success', [
+            'loginRoute' => $loginRoute,
+        ]);
+    }
+
+    /**
+     * Lấy lại đúng tài khoản đã nhận OTP, kiểm tra cả ID và role.
+     */
+    private function getResetAccount(): ?Account
+    {
+        $accountId = session('forgot_password_account_id');
+        $portal = session('forgot_password_portal');
+
+        if (
+            ! $accountId ||
+            ! array_key_exists($portal, self::PORTAL_ROLES)
+        ) {
+            return null;
+        }
+
+        return Account::query()
+            ->where('account_id', $accountId)
+            ->where('role', self::PORTAL_ROLES[$portal])
+            ->where('status', 'active')
+            ->where('is_verified', true)
+            ->first();
+    }
+
+    /**
+     * Xóa trạng thái của quy trình quên mật khẩu.
+     */
+    private function clearResetSession(): void
+    {
+        session()->forget([
+            'forgot_password_account_id',
+            'forgot_password_verified',
+            'forgot_password_portal',
+        ]);
     }
 }

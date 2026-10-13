@@ -7,13 +7,13 @@
             <div class="d-flex align-items-center text-white">
 
                 {{-- Nút kênh người bán --}}
-                <a href="#" class="text-white text-decoration-none me-3">
+                <a href="{{ route('seller.login.form') }}" class="text-white text-decoration-none me-3">
                     Kênh Người Bán
                 </a>
                 <span class="me-3">|</span>
 
                 {{-- Nút trở thành người bán --}}
-                <a href="#" class="text-white text-decoration-none me-3">
+                <a href="{{ route('seller.register.form') }}" class="text-white text-decoration-none me-3">
                     Trở thành Người bán
                 </a>
                 <span class="me-3">|</span>

@@ -94,10 +94,10 @@
 
                     <ul class="list-unstyled mb-0" style="font-size: 0.9rem;">
                         <li class="mb-1" style="color: #D6E9FF;">Đinh Nguyễn Hoàng Phúc - 2001240370</li>
-                        <li class="mb-1" style="color: #D6E9FF;">Nguyễn Huỳnh Bảo Trân - 2001240509</li>
+                        {{-- <li class="mb-1" style="color: #D6E9FF;">Nguyễn Huỳnh Bảo Trân - 2001240509</li>
                         <li class="mb-1" style="color: #D6E9FF;">Đỗ Thị Hoài Phương - 2001240381</li>
                         <li class="mb-1" style="color: #D6E9FF;">Hồ Tiểu Điệp - 2044240064</li>
-                        <li class="mb-1" style="color: #D6E9D6E9FF;">Lê Đình Tấn - 2044240304</li>
+                        <li class="mb-1" style="color: #D6E9D6E9FF;">Lê Đình Tấn - 2044240304</li> --}}
                     </ul>
                 </div>
             </div>

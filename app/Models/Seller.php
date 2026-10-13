@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Seller extends Model
+{
+    protected $table = 'sellers';
+
+    protected $primaryKey = 'seller_id';
+
+    protected $fillable = [
+        'account_id',
+        'shop_name',
+        'shop_address',
+        'shop_province',
+        'shop_district',
+        'shop_ward',
+        'status',
+        'reject_reason',
+        'approved_at',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'approved_at' => 'datetime',
+        ];
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(
+            Account::class,
+            'account_id',
+            'account_id'
+        );
+    }
+}

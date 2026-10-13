@@ -14,9 +14,6 @@ return new class extends Migration
         Schema::create('sellers', function (Blueprint $table) {
             $table->bigIncrements('seller_id');
             $table->unsignedBigInteger('account_id')->unique();
-            $table->string('email', 100)->unique();
-            $table->string('password');
-            $table->boolean('is_verified')->default(false);
 
             $table->string('shop_name', 100);
             $table->string('shop_address')->nullable();
@@ -33,7 +30,6 @@ return new class extends Migration
 
             $table->string('reject_reason')->nullable();
             $table->timestamp('approved_at')->nullable();
-            $table->rememberToken();
             $table->timestamps();
 
             $table->foreign('account_id')

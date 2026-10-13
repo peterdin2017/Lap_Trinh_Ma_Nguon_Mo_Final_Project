@@ -63,12 +63,11 @@
                             </div>
 
                             <div class="text-end mb-3">
-                                <a href="{{ route('forgot-password.form', ['portal' => 'store']) }} class="text-primary
-                                    text-decoration-none">
-                                    Quên mật khẩu
+                                <a href="{{ route('forgot-password.form', ['portal' => 'store']) }}"
+                                    class="text-primary text-decoration-none">
+                                    Quên mật khẩu?
                                 </a>
                             </div>
-
                             <button type="submit" class="btn btn-primary btn-lg w-100">
                                 Đăng nhập
                             </button>
