@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Bảng otps: mã OTP gửi qua email để đăng ký hoặc đặt lại mật khẩu.
+     * Mã được lưu dạng băm (otp_hash), có hạn dùng (expires_at).
      */
     public function up(): void
     {

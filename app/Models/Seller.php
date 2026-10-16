@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Seller extends Model
 {
@@ -37,5 +38,9 @@ class Seller extends Model
             'account_id',
             'account_id'
         );
+    }
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class, 'seller_id', 'seller_id');
     }
 }

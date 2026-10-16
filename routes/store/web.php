@@ -1,10 +1,21 @@
 <?php
 
+use App\Http\Controllers\Store\HomeController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'store.home')->name('store.home');
+use App\Http\Controllers\Store\Product\ProductController;
+
+Route::get('/', [HomeController::class, 'index'])
+    ->name('store.home');
+
+Route::get('/products/{productId}', [ProductController::class, 'show'])
+    ->whereNumber('productId')
+    ->name('store.products.show');
+
 
 // Các route Store
 require __DIR__ . '/auth/login.php';
 require __DIR__ . '/auth/register.php';
 require __DIR__ . '/auth/forgot-password.php';
+
+require __DIR__ . '/products/cart.php';

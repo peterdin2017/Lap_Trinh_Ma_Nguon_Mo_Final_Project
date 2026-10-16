@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Bảng sellers: thông tin cửa hàng của người bán.
+     * status: pending = chờ duyệt, active = đang hoạt động,
+     * suspended = bị khoá, rejected = bị từ chối.
      */
     public function up(): void
     {

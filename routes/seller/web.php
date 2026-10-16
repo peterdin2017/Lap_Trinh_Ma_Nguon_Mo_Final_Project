@@ -23,4 +23,6 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'seller.status'])->group(function () {
     Route::get('/seller', [HomeController::class, 'index'])
         ->name('seller.home');
+
+    require __DIR__ . '/products/product.php';
 });

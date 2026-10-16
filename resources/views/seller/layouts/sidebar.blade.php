@@ -12,17 +12,44 @@
 
     <nav class="nav flex-column px-3 gap-1">
         <a href="{{ route('seller.home') }}"
-           class="seller-nav-link active nav-link d-flex align-items-center gap-3 rounded-3 py-3">
+           class="seller-nav-link nav-link d-flex align-items-center gap-3 rounded-3 py-3
+                  {{ request()->routeIs('seller.home') ? 'active' : '' }}">
             <i class="bi bi-grid-1x2 fs-5"></i>
             <span>Tổng quan</span>
         </a>
 
-        <span class="seller-nav-link disabled nav-link d-flex align-items-center gap-3 rounded-3 py-3"
-              aria-disabled="true">
-            <i class="bi bi-box-seam fs-5"></i>
-            <span>Sản phẩm</span>
-            <span class="badge text-bg-secondary ms-auto">Sắp có</span>
-        </span>
+        <button
+    class="seller-nav-link nav-link w-100 d-flex align-items-center gap-3 rounded-3 py-3 border-0
+           {{ request()->routeIs('seller.products.*') ? 'active' : '' }}"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target="#sellerProductMenu"
+    aria-expanded="{{ request()->routeIs('seller.products.*') ? 'true' : 'false' }}"
+    aria-controls="sellerProductMenu"
+>
+    <i class="bi bi-box-seam fs-5"></i>
+    <span class="flex-grow-1 text-start">Sản phẩm</span>
+    <i class="bi bi-chevron-down small"></i>
+</button>
+
+<div
+    class="collapse {{ request()->routeIs('seller.products.*') ? 'show' : '' }}"
+    id="sellerProductMenu"
+>
+    <nav class="nav flex-column ms-4 ps-3 border-start border-light border-opacity-25">
+        <a href="{{ route('seller.products.index') }}"
+           class="seller-nav-link nav-link py-2
+                  {{ request()->routeIs('seller.products.index') ? 'active' : '' }}">
+            Danh sách sản phẩm
+        </a>
+
+        <a href="{{ route('seller.products.create') }}"
+           class="seller-nav-link nav-link py-2
+                  {{ request()->routeIs('seller.products.create') ? 'active' : '' }}">
+            Thêm sản phẩm
+        </a>
+    </nav>
+</div>
 
         <span class="seller-nav-link disabled nav-link d-flex align-items-center gap-3 rounded-3 py-3"
               aria-disabled="true">
@@ -76,17 +103,18 @@
 
         <nav class="nav flex-column gap-1">
             <a href="{{ route('seller.home') }}"
-               class="seller-nav-link active nav-link d-flex align-items-center gap-3 rounded-3 py-3">
+               class="seller-nav-link nav-link d-flex align-items-center gap-3 rounded-3 py-3
+                      {{ request()->routeIs('seller.home') ? 'active' : '' }}">
                 <i class="bi bi-grid-1x2 fs-5"></i>
                 <span>Tổng quan</span>
             </a>
 
-            <span class="seller-nav-link disabled nav-link d-flex align-items-center gap-3 rounded-3 py-3"
-                  aria-disabled="true">
+            <a href="{{ route('seller.products.index') }}"
+               class="seller-nav-link nav-link d-flex align-items-center gap-3 rounded-3 py-3
+                      {{ request()->routeIs('seller.products.*') ? 'active' : '' }}">
                 <i class="bi bi-box-seam fs-5"></i>
                 <span>Sản phẩm</span>
-                <span class="badge text-bg-secondary ms-auto">Sắp có</span>
-            </span>
+            </a>
 
             <span class="seller-nav-link disabled nav-link d-flex align-items-center gap-3 rounded-3 py-3"
                   aria-disabled="true">

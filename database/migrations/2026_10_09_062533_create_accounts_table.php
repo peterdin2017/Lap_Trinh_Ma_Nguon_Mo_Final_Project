@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Bảng accounts: thông tin đăng nhập của mọi loại tài khoản.
+     * role: user (khách), seller (người bán), admin (quản trị).
+     * Một email được dùng cho nhiều role, nhưng không trùng trong cùng role.
+     */
     public function up(): void
     {
         Schema::create('accounts', function (Blueprint $table) {

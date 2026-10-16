@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Bảng users: hồ sơ cá nhân của khách hàng (họ tên, SĐT, giới tính, avatar).
+     * Dùng chung khoá account_id với bảng accounts (quan hệ 1-1).
      */
     public function up(): void
     {

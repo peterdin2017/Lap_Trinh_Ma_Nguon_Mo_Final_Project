@@ -1,3 +1,15 @@
+@php
+    $cartCount = 0;
+    $accountId = session('account_id');
+
+    if ($accountId) {
+        $cartCount = \Illuminate\Support\Facades\DB::table('carts')
+            ->join('cart_items', 'carts.cart_id', '=', 'cart_items.cart_id')
+            ->where('carts.account_id', $accountId)
+            ->sum('cart_items.quantity');
+    }
+@endphp
+
 {{-- Thanh trên cùng: tiện ích nhỏ --}}
 <div style="background-color: #002347;">
     <div class="container">
@@ -28,11 +40,17 @@
                     <div class="dropdown user-menu">
                         <a href="#" class="text-white text-decoration-none d-flex align-items-center">
                             @if (session('avatar'))
-                                <img src="{{ asset('storage/' . session('avatar')) }}" class="rounded-circle me-2"
-                                    style="width: 28px; height: 28px; object-fit: cover;" alt="Ảnh đại diện">
+                                <img
+                                    src="{{ asset('storage/' . session('avatar')) }}"
+                                    class="rounded-circle me-2"
+                                    style="width: 28px; height: 28px; object-fit: cover;"
+                                    alt="Ảnh đại diện"
+                                >
                             @else
-                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
-                                    style="width: 28px; height: 28px; background-color: #fff; color: #003B73; font-weight: bold;">
+                                <div
+                                    class="rounded-circle d-flex align-items-center justify-content-center me-2"
+                                    style="width: 28px; height: 28px; background-color: #fff; color: #003B73; font-weight: bold;"
+                                >
                                     {{ mb_strtoupper(mb_substr(session('user_name', 'U'), 0, 1)) }}
                                 </div>
                             @endif
@@ -48,6 +66,7 @@
                                 <i class="bi bi-bag me-2"></i>Đơn Mua
                             </a>
                             <div class="dropdown-divider"></div>
+
                             <form method="POST" action="{{ route('logout') }}" class="m-0">
                                 @csrf
                                 <button type="submit" class="dropdown-item text-danger">
@@ -77,16 +96,25 @@
         <div class="d-flex align-items-center py-3 gap-4">
 
             {{-- Logo chữ --}}
-            <a href="{{ route('store.home') }}" class="text-white text-decoration-none d-flex align-items-center">
+            <a
+                href="{{ route('store.home') }}"
+                class="text-white text-decoration-none d-flex align-items-center"
+            >
                 <i class="bi bi-shop-window" style="font-size: 2.2rem;"></i>
-                <span class="fw-bold ms-2" style="font-size: 1.3rem;">Website Bán hàng Online</span>
+                <span class="fw-bold ms-2" style="font-size: 1.3rem;">
+                    Website Bán hàng Online
+                </span>
             </a>
 
             {{-- Ô tìm kiếm --}}
             <form action="#" method="GET" class="flex-grow-1">
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Tìm kiếm sản phẩm..."
-                        style="border: none; height: 42px;">
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Tìm kiếm sản phẩm..."
+                        style="border: none; height: 42px;"
+                    >
                     <button class="btn" type="submit" style="background-color: #003B73; border: none;">
                         <i class="bi bi-search text-white"></i>
                     </button>
@@ -94,11 +122,16 @@
             </form>
 
             {{-- Giỏ hàng --}}
-            <a href="#" class="text-white text-decoration-none position-relative">
-                <i class="bi bi-cart3" style="font-size: 1.8rem;"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark"
-                    style="font-size: 0.65rem;">
-                    0
+            <a
+                href="{{ route('store.cart.index') }}"
+                class="d-inline-flex align-items-center gap-2 text-white text-decoration-none"
+                aria-label="Giỏ hàng, {{ $cartCount }} sản phẩm"
+                style="white-space: nowrap;"
+            >
+                <i class="bi bi-cart3 fs-4" aria-hidden="true"></i>
+                <span>Giỏ hàng</span>
+                <span class="badge rounded-pill text-bg-warning">
+                    {{ $cartCount }}
                 </span>
             </a>
 
@@ -107,8 +140,8 @@
         {{-- Danh mục nhanh bên dưới ô tìm kiếm --}}
         <div class="d-flex gap-4 pb-2" style="font-size: 0.85rem;">
             <a href="#" class="text-white text-decoration-none">Thời Trang Nam</a>
-            <a href="#" class="text-white text-decoration-none">Điện Thoại & Phụ Kiện</a>
-            <a href="#" class="text-white text-decoration-none">Máy Tính & Laptop</a>
+            <a href="#" class="text-white text-decoration-none">Điện Thoại &amp; Phụ Kiện</a>
+            <a href="#" class="text-white text-decoration-none">Máy Tính &amp; Laptop</a>
             <a href="#" class="text-white text-decoration-none">Đồng Hồ</a>
             <a href="#" class="text-white text-decoration-none">Giày Dép Nam</a>
         </div>
