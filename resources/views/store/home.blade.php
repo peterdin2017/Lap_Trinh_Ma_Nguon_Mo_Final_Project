@@ -4,6 +4,14 @@
 
 @section('content')
     <main class="container py-4">
+        <div class="retail-hero retail-hero--orange">
+            <div>
+                <div class="eyebrow">Mua sắm trực tuyến</div>
+                <h2>Khám phá sản phẩm dành cho bạn</h2>
+                <p>Thời trang, điện thoại, laptop và nhiều danh mục trong cùng một cửa hàng.</p>
+            </div>
+            <i class="bi bi-bag-heart retail-hero__icon" aria-hidden="true"></i>
+        </div>
         <div class="row g-3 g-lg-4">
             {{-- Sidebar bộ lọc --}}
             <aside class="col-12 col-lg-3">
@@ -57,7 +65,9 @@
                     @empty
                         <div class="col-12">
                             <div class="store-empty-state p-5 text-center text-secondary">
-                                Chưa tìm thấy sản phẩm phù hợp.
+                                <i class="bi bi-basket" aria-hidden="true"></i>
+                                <strong>Chưa có sản phẩm để hiển thị</strong>
+                                <span class="empty-note">Sản phẩm sẽ xuất hiện tại đây khi cửa hàng có dữ liệu. Bạn có thể quay lại sau.</span>
                             </div>
                         </div>
                     @endforelse
