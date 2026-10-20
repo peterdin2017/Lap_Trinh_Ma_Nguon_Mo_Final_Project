@@ -1,100 +1,110 @@
 @extends('store.layouts.app')
 
-@section('title', 'Trang chủ')
+@section('title', 'Cửa hàng')
 
 @section('content')
     <main class="container py-4">
-        <div class="mb-4">
-            <h1 class="h3 fw-bold mb-1">Sản phẩm nổi bật</h1>
-            <p class="text-secondary mb-0">
-                Khám phá các sản phẩm từ cửa hàng đang hoạt động.
-            </p>
-        </div>
+        <div class="row g-3 g-lg-4">
+            {{-- Sidebar bộ lọc --}}
+            <aside class="col-12 col-lg-3">
+                @include('store.partials.sidebar')
+            </aside>
 
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-6 g-3">
-            @forelse ($products as $product)
-                <div class="col">
-                    <a
-                        href="{{ route('store.products.show', $product->product_id) }}"
-                        class="text-decoration-none text-dark d-block h-100"
-                    >
-                        <article class="card h-100 border-0 shadow-sm product-card">
-                            <div class="ratio ratio-1x1 bg-light overflow-hidden">
-                                @if ($product->image_url)
-                                    <img
-                                        src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_url) }}"
-                                        alt="{{ $product->product_name }}"
-                                        class="w-100 h-100 object-fit-contain p-2"
-                                        loading="lazy"
-                                    >
-                                @else
-                                    <div class="d-flex flex-column align-items-center justify-content-center text-secondary">
-                                        <i class="bi bi-image fs-2"></i>
-                                        <span class="small">Chưa có ảnh</span>
-                                    </div>
-                                @endif
-                            </div>
+            {{-- Toolbar, lưới sản phẩm và phân trang --}}
+            <section class="col-12 col-lg-9" aria-labelledby="store-title">
+                <div class="store-toolbar p-3 mb-3">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div>
+                            <h1 id="store-title" class="h5 fw-bold mb-1">
+                                Sản phẩm nổi bật
+                            </h1>
+                            <span class="small text-secondary">
+                                {{ $products->total() }} sản phẩm
+                            </span>
+                        </div>
 
-                            <div class="card-body d-flex flex-column p-3">
-                                <div class="small text-secondary mb-2">
-                                    {{ $product->category?->category_name ?? 'Chưa phân loại' }}
-                                </div>
+                        <nav class="store-sort d-flex flex-wrap gap-2"
+                             aria-label="Sắp xếp sản phẩm">
+                            <a href="?sort=popular"
+                               class="store-sort__link {{ request('sort', 'popular') === 'popular' ? 'is-active' : '' }}">
+                                Phổ biến
+                            </a>
 
-                                <h2 class="h6 product-title mb-2">
-                                    {{ $product->product_name }}
-                                </h2>
+                            <a href="?sort=best_selling"
+                               class="store-sort__link {{ request('sort') === 'best_selling' ? 'is-active' : '' }}">
+                                Bán chạy
+                            </a>
 
-                                <div class="small text-secondary text-truncate mb-3">
-                                    <i class="bi bi-shop me-1" aria-hidden="true"></i>
-                                    {{ $product->seller?->shop_name ?? 'Cửa hàng' }}
-                                </div>
+                            <a href="?sort=newest"
+                               class="store-sort__link {{ request('sort') === 'newest' ? 'is-active' : '' }}">
+                                Hàng mới
+                            </a>
 
-                                <div class="mt-auto d-flex justify-content-between align-items-end gap-2">
-                                    <span class="fw-bold text-danger text-nowrap">
-                                        {{ number_format($product->price, 0, ',', '.') }}₫
-                                    </span>
-
-                                    <span class="small text-secondary text-end text-nowrap">
-                                        Đã bán {{ number_format($product->sold_count) }}
-                                    </span>
-                                </div>
-                            </div>
-                        </article>
-                    </a>
-                </div>
-            @empty
-                <div class="col-12">
-                    <div class="alert alert-light border text-center py-5">
-                        Hiện chưa có sản phẩm nào đang được bán.
+                            <a href="?sort=price"
+                               class="store-sort__link {{ request('sort') === 'price' ? 'is-active' : '' }}">
+                                Giá
+                            </a>
+                        </nav>
                     </div>
                 </div>
-            @endforelse
-        </div>
 
-        @if ($products->hasPages())
-            <div class="mt-4">
-                {{ $products->links('pagination::bootstrap-5') }}
-            </div>
-        @endif
+                {{-- Responsive: 2 cột mobile, 3 tablet, 4 desktop --}}
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+                    @forelse ($products as $product)
+                        <div class="col">
+                            @include('store.partials.product-card', ['product' => $product])
+                        </div>
+                    @empty
+                        <div class="col-12">
+                            <div class="store-empty-state p-5 text-center text-secondary">
+                                Chưa tìm thấy sản phẩm phù hợp.
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- Phân trang Bootstrap --}}
+                @if ($products->hasPages())
+                    <nav class="d-flex justify-content-center mt-4" aria-label="Phân trang">
+                        {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
+                    </nav>
+                @endif
+            </section>
+        </div>
     </main>
 
     <style>
-        .product-card {
-            transition: transform .18s ease, box-shadow .18s ease;
+        .store-toolbar,
+        .store-empty-state {
+            background: var(--shop-card-bg, #FFFFFF);
+            border: 1px solid var(--shop-border, #E2E8F0);
+            border-radius: 12px;
+            box-shadow: var(--shop-shadow, 0 2px 8px rgba(0, 0, 0, .04));
         }
 
-        a:hover .product-card {
-            transform: translateY(-3px);
-            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+        .store-sort__link {
+            padding: .5rem .75rem;
+            color: var(--shop-text-muted, #64748B);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: color .15s ease, background-color .15s ease;
         }
 
-        .product-title {
-            display: -webkit-box;
-            min-height: 2.7em;
-            overflow: hidden;
-            line-height: 1.35;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
+        .store-sort__link:hover,
+        .store-sort__link:focus-visible,
+        .store-sort__link.is-active {
+            color: var(--shop-primary, #1A94FF);
+            background: var(--shop-primary-light, #EBF5FF);
+        }
+
+        .store-sort__link.is-active {
+            font-weight: 600;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .store-sort__link {
+                transition: none;
+            }
         }
     </style>
 @endsection

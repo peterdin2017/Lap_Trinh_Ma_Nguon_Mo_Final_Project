@@ -11,7 +11,6 @@
     @endphp
 
     <main class="container py-4">
-        {{-- Breadcrumb --}}
         <nav class="small mb-3" aria-label="breadcrumb">
             <a href="{{ route('store.home') }}" class="text-decoration-none">
                 Trang chủ
@@ -22,40 +21,42 @@
             </span>
         </nav>
 
-        {{-- Khung thông tin sản phẩm --}}
         <section class="card border-0 shadow-sm">
             <div class="card-body p-3 p-lg-4">
                 <div class="row g-4">
-                    {{-- Ảnh chính và ảnh phụ --}}
                     <div class="col-12 col-lg-5">
                         @if ($images->isNotEmpty())
                             <img id="productMainImage"
-                                src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($images->first()) }}"
-                                alt="{{ $product->product_name }}" class="img-fluid rounded w-100"
-                                style="height: 420px; object-fit: contain; background: #f8f9fa;">
+                                 src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($images->first()) }}"
+                                 alt="{{ $product->product_name }}"
+                                 class="img-fluid rounded w-100"
+                                 style="height: 420px; object-fit: contain; background: #f8f9fa;">
 
                             @if ($images->count() > 1)
                                 <div class="d-flex flex-wrap gap-2 mt-3">
                                     @foreach ($images as $image)
-                                        <button type="button" class="btn border p-1"
-                                            data-image="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
-                                            onclick="document.getElementById('productMainImage').src = this.dataset.image"
-                                            aria-label="Xem ảnh sản phẩm {{ $loop->iteration }}">
+                                        <button type="button"
+                                                class="btn border p-1"
+                                                data-image="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
+                                                onclick="document.getElementById('productMainImage').src = this.dataset.image"
+                                                aria-label="Xem ảnh sản phẩm {{ $loop->iteration }}">
                                             <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
-                                                alt="" width="64" height="64" style="object-fit: cover;">
+                                                 alt=""
+                                                 width="64"
+                                                 height="64"
+                                                 style="object-fit: cover;">
                                         </button>
                                     @endforeach
                                 </div>
                             @endif
                         @else
                             <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                                style="height: 420px;">
+                                 style="height: 420px;">
                                 <span class="text-secondary">Chưa có ảnh sản phẩm</span>
                             </div>
                         @endif
                     </div>
 
-                    {{-- Tên, giá và lựa chọn mẫu mã --}}
                     <div class="col-12 col-lg-7">
                         <h1 class="h3 fw-semibold mb-3">
                             {{ $product->product_name }}
@@ -73,14 +74,12 @@
                             </span>
                         </div>
 
-                        {{-- Giá thay đổi theo mẫu đang chọn --}}
                         <div class="bg-light rounded p-3 mb-4">
                             <span id="productPrice" class="text-danger fs-2 fw-semibold">
                                 {{ number_format($initialPrice, 0, ',', '.') }}₫
                             </span>
                         </div>
 
-                        {{-- Các lựa chọn mẫu mã --}}
                         @if ($variants->isNotEmpty())
                             <div class="row mb-4 align-items-start">
                                 <div class="col-4 col-sm-3 text-secondary pt-2">
@@ -88,15 +87,16 @@
                                 </div>
 
                                 <div class="col-8 col-sm-9">
-                                    <div class="d-flex flex-wrap gap-2 variant-list" role="group"
-                                        aria-label="Chọn mẫu mã sản phẩm">
+                                    <div class="d-flex flex-wrap gap-2 variant-list"
+                                         role="group"
+                                         aria-label="Chọn mẫu mã sản phẩm">
                                         @foreach ($variants as $variant)
                                             <button type="button"
-                                                class="btn btn-outline-secondary variant-option {{ $loop->first ? 'active' : '' }}"
-                                                data-variant-id="{{ $variant->variant_id }}"
-                                                data-price="{{ $variant->price }}"
-                                                data-stock="{{ $variant->stock_quantity }}"
-                                                aria-pressed="{{ $loop->first ? 'true' : 'false' }}">
+                                                    class="btn btn-outline-secondary variant-option {{ $loop->first ? 'active' : '' }}"
+                                                    data-variant-id="{{ $variant->variant_id }}"
+                                                    data-price="{{ $variant->price }}"
+                                                    data-stock="{{ $variant->stock_quantity }}"
+                                                    aria-pressed="{{ $loop->first ? 'true' : 'false' }}">
                                                 {{ $variant->variant_name }}
                                             </button>
                                         @endforeach
@@ -139,19 +139,53 @@
                             </dd>
                         </dl>
 
+                        {{-- Hiển thị thông báo sau khi thêm sản phẩm hoặc khi có lỗi. --}}
+                        @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ session('success') }}
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert"
+                                        aria-label="Đóng"></button>
+                            </div>
+                        @endif
+
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert"
+                                        aria-label="Đóng"></button>
+                            </div>
+                        @endif
+
                         <form method="POST" action="{{ route('store.cart.items.store') }}">
                             @csrf
 
-                            <input type="hidden" name="product_id" value="{{ $product->product_id }}">
+                            <input type="hidden"
+                                   name="product_id"
+                                   value="{{ $product->product_id }}">
 
-                            <input type="hidden" name="variant_id" id="selectedVariantId"
-                                value="{{ $selectedVariant?->variant_id }}">
+                            <input type="hidden"
+                                   name="variant_id"
+                                   id="selectedVariantId"
+                                   value="{{ $selectedVariant?->variant_id }}">
 
                             <div class="mb-3" style="max-width: 160px;">
                                 <label for="quantity" class="form-label">Số lượng</label>
-                                <input id="quantity" name="quantity" type="number" min="1"
-                                    max="{{ $initialStock }}" value="1"
-                                    class="form-control @error('quantity') is-invalid @enderror" required>
+                                <input id="quantity"
+                                       name="quantity"
+                                       type="number"
+                                       min="1"
+                                       max="{{ max((int) $initialStock, 1) }}"
+                                       value="1"
+                                       class="form-control @error('quantity') is-invalid @enderror"
+                                       required>
                                 @error('quantity')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -161,8 +195,10 @@
                                 <div class="text-danger small mb-2">{{ $message }}</div>
                             @enderror
 
-                            <button type="submit" class="btn btn-primary" id="addToCartButton"
-                                @disabled($initialStock < 1)>
+                            <button type="submit"
+                                    class="btn btn-primary"
+                                    id="addToCartButton"
+                                    @disabled($initialStock < 1)>
                                 <i class="bi bi-cart-plus me-1"></i>
                                 Thêm vào giỏ hàng
                             </button>
@@ -172,14 +208,13 @@
             </div>
         </section>
 
-        {{-- Thông tin shop --}}
         <section class="card border-0 shadow-sm my-4">
             <div class="card-body p-4">
                 <div class="row align-items-center g-4">
                     <div class="col-12 col-lg-4">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center flex-shrink-0"
-                                style="width: 72px; height: 72px;">
+                                 style="width: 72px; height: 72px;">
                                 <span class="fs-3 fw-bold text-primary">
                                     {{ mb_strtoupper(mb_substr($product->seller?->shop_name ?? 'S', 0, 1)) }}
                                 </span>
@@ -189,9 +224,7 @@
                                 <h2 class="h5 mb-2">
                                     {{ $product->seller?->shop_name ?? 'Cửa hàng' }}
                                 </h2>
-                                <span class="badge text-bg-success">
-                                    Shop đang hoạt động
-                                </span>
+                                <span class="badge text-bg-success">Shop đang hoạt động</span>
                             </div>
                         </div>
                     </div>
@@ -199,9 +232,7 @@
                     <div class="col-12 col-lg-8">
                         <div class="row g-3">
                             <div class="col-6 col-md-4">
-                                <div class="small text-secondary">
-                                    Sản phẩm đang bán
-                                </div>
+                                <div class="small text-secondary">Sản phẩm đang bán</div>
                                 <div class="fw-semibold">
                                     {{ $product->seller?->products()->where('status', 'active')->count() ?? 0 }}
                                 </div>
@@ -216,18 +247,14 @@
 
                             <div class="col-12">
                                 <div class="small text-secondary">Địa chỉ shop</div>
-                                <div>
-                                    {{ $product->seller?->shop_address ?: 'Chưa cập nhật' }}
-                                </div>
+                                <div>{{ $product->seller?->shop_address ?: 'Chưa cập nhật' }}</div>
 
                                 @php
                                     $shopLocation = collect([
                                         $product->seller?->shop_ward,
                                         $product->seller?->shop_district,
                                         $product->seller?->shop_province,
-                                    ])
-                                        ->filter()
-                                        ->implode(', ');
+                                    ])->filter()->implode(', ');
                                 @endphp
 
                                 @if ($shopLocation)
@@ -242,7 +269,6 @@
             </div>
         </section>
 
-        {{-- Mô tả sản phẩm --}}
         <section class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <h2 class="h5 fw-bold mb-3">Chi tiết sản phẩm</h2>
@@ -250,19 +276,17 @@
                 @if ($product->description)
                     <p class="mb-0" style="white-space: pre-line;">{{ $product->description }}</p>
                 @else
-                    <p class="text-secondary mb-0">
-                        Sản phẩm chưa có mô tả.
-                    </p>
+                    <p class="text-secondary mb-0">Sản phẩm chưa có mô tả.</p>
                 @endif
             </div>
         </section>
 
-        {{-- Đánh giá sản phẩm --}}
         <section class="card border-0 shadow-sm mt-4">
             <div class="card-body p-4">
                 <h2 class="h5 fw-bold mb-4">Đánh giá sản phẩm</h2>
 
-                <div class="row align-items-center g-4 p-3 border rounded" style="background-color: #fffaf8;">
+                <div class="row align-items-center g-4 p-3 border rounded"
+                     style="background-color: #fffaf8;">
                     <div class="col-12 col-md-3 text-center">
                         <div class="text-danger">
                             <span class="fs-2 fw-semibold">
@@ -325,6 +349,9 @@
     <script>
         (() => {
             const options = document.querySelectorAll('.variant-option');
+            const selectedVariantInput = document.getElementById('selectedVariantId');
+            const quantityInput = document.getElementById('quantity');
+            const addToCartButton = document.getElementById('addToCartButton');
 
             options.forEach((button) => {
                 button.addEventListener('click', () => {
@@ -339,15 +366,31 @@
                     const price = Number(button.dataset.price);
                     const stock = Number(button.dataset.stock);
 
+                    // Gửi đúng mẫu đang chọn khi submit form.
+                    selectedVariantInput.value = button.dataset.variantId;
+
+                    // Không cho chọn số lượng vượt tồn kho của mẫu.
+                    quantityInput.max = String(Math.max(stock, 1));
+
+                    if (stock < 1) {
+                        addToCartButton.disabled = true;
+                    } else {
+                        addToCartButton.disabled = false;
+
+                        if (Number(quantityInput.value) > stock) {
+                            quantityInput.value = String(stock);
+                        }
+                    }
+
                     document.getElementById('productPrice').textContent =
                         new Intl.NumberFormat('vi-VN').format(price) + '₫';
 
                     document.getElementById('productStock').textContent =
                         new Intl.NumberFormat('vi-VN').format(stock);
 
-                    document.getElementById('productStatus').innerHTML = stock > 0 ?
-                        '<span class="text-success">Còn hàng</span>' :
-                        '<span class="text-danger">Hết hàng</span>';
+                    document.getElementById('productStatus').innerHTML = stock > 0
+                        ? '<span class="text-success">Còn hàng</span>'
+                        : '<span class="text-danger">Hết hàng</span>';
                 });
             });
         })();

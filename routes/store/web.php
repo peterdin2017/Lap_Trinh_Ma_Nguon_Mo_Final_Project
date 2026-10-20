@@ -19,3 +19,8 @@ require __DIR__ . '/auth/register.php';
 require __DIR__ . '/auth/forgot-password.php';
 
 require __DIR__ . '/products/cart.php';
+
+// Account
+require __DIR__ . '/account/profile.php';
+require __DIR__ . '/account/password.php';
+require __DIR__ . '/account/addresses.php';

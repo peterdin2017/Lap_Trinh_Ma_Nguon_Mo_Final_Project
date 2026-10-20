@@ -1,168 +1,214 @@
-@php
-    $cartCount = 0;
-    $accountId = session('account_id');
-
-    if ($accountId) {
-        $cartCount = \Illuminate\Support\Facades\DB::table('carts')
-            ->join('cart_items', 'carts.cart_id', '=', 'cart_items.cart_id')
-            ->where('carts.account_id', $accountId)
-            ->sum('cart_items.quantity');
-    }
-@endphp
-
-{{-- Thanh trên cùng: tiện ích nhỏ --}}
-<div style="background-color: #002347;">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center py-1" style="font-size: 0.85rem;">
-
-            {{-- Bên trái --}}
-            <div class="d-flex align-items-center text-white">
-
-                {{-- Nút kênh người bán --}}
-                <a href="{{ route('seller.login.form') }}" class="text-white text-decoration-none me-3">
-                    Kênh Người Bán
+<header class="shop-header text-white">
+    <div class="container py-3">
+        {{-- Logo, tìm kiếm và thao tác tài khoản --}}
+        <div class="row align-items-center g-3">
+            <div class="col-7 col-lg-3">
+                <a href="{{ route('store.home') }}"
+                   class="shop-header__logo d-inline-flex align-items-center gap-2 text-white text-decoration-none fw-bold">
+                    <i class="bi bi-shop-window fs-3" aria-hidden="true"></i>
+                    <span class="fs-5">Website Bán hàng Online</span>
                 </a>
-                <span class="me-3">|</span>
-
-                {{-- Nút trở thành người bán --}}
-                <a href="{{ route('seller.register.form') }}" class="text-white text-decoration-none me-3">
-                    Trở thành Người bán
-                </a>
-                <span class="me-3">|</span>
-                <span class="me-2">Kết nối</span>
-                <a href="#" class="text-white me-2"><i class="bi bi-facebook"></i></a>
-                <a href="#" class="text-white"><i class="bi bi-instagram"></i></a>
             </div>
 
-            {{-- Bên phải --}}
-            <div class="d-flex align-items-center text-white">
-                @if (session('account_id'))
-                    <div class="dropdown user-menu">
-                        <a href="#" class="text-white text-decoration-none d-flex align-items-center">
-                            @if (session('avatar'))
-                                <img
-                                    src="{{ asset('storage/' . session('avatar')) }}"
-                                    class="rounded-circle me-2"
-                                    style="width: 28px; height: 28px; object-fit: cover;"
-                                    alt="Ảnh đại diện"
-                                >
-                            @else
-                                <div
-                                    class="rounded-circle d-flex align-items-center justify-content-center me-2"
-                                    style="width: 28px; height: 28px; background-color: #fff; color: #003B73; font-weight: bold;"
-                                >
-                                    {{ mb_strtoupper(mb_substr(session('user_name', 'U'), 0, 1)) }}
-                                </div>
-                            @endif
+            <div class="col-12 col-lg-6 order-3 order-lg-2">
+                <form action="#" method="GET" role="search">
+                    <label for="store-search" class="visually-hidden">
+                        Tìm kiếm sản phẩm
+                    </label>
 
-                            {{ session('user_name', session('account_email')) }}
-                        </a>
+                    <div class="input-group shop-header__search">
+                        <input id="store-search"
+                               name="q"
+                               type="search"
+                               class="form-control"
+                               placeholder="Tìm kiếm sản phẩm...">
 
-                        <div class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                            <a class="dropdown-item" href="#">
-                                <i class="bi bi-person me-2"></i>Tài Khoản Của Tôi
-                            </a>
-                            <a class="dropdown-item" href="#">
-                                <i class="bi bi-bag me-2"></i>Đơn Mua
-                            </a>
-                            <div class="dropdown-divider"></div>
-
-                            <form method="POST" action="{{ route('logout') }}" class="m-0">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Đăng Xuất
-                                </button>
-                            </form>
-                        </div>
+                        <button class="btn shop-header__search-button"
+                                type="submit"
+                                aria-label="Tìm kiếm">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                        </button>
                     </div>
-                @else
-                    <a href="{{ route('register.form') }}" class="text-white text-decoration-none me-3">
-                        Đăng Ký
-                    </a>
-                    <span class="me-3">|</span>
-                    <a href="{{ route('login.form') }}" class="text-white text-decoration-none">
-                        Đăng Nhập
-                    </a>
-                @endif
+                </form>
             </div>
 
-        </div>
-    </div>
-</div>
+            {{-- Giỏ hàng và tài khoản --}}
+            <div class="col-5 col-lg-3 order-2 order-lg-3">
+                <div class="d-flex align-items-center justify-content-end gap-2 gap-md-3">
+                    <a href="{{ route('store.cart.index') }}"
+                       class="shop-header__action btn">
+                        <i class="bi bi-cart3" aria-hidden="true"></i>
+                        <span>Giỏ hàng</span>
+                    </a>
 
-{{-- Thanh chính: logo chữ + ô tìm kiếm + giỏ hàng --}}
-<nav style="background: linear-gradient(135deg, #003B73 0%, #002347 100%);">
-    <div class="container">
-        <div class="d-flex align-items-center py-3 gap-4">
+                    @if (session('account_id'))
+                        <div class="dropdown">
+                            <button class="shop-header__action btn dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="bi bi-person" aria-hidden="true"></i>
+                                <span>Tài khoản</span>
+                            </button>
 
-            {{-- Logo chữ --}}
-            <a
-                href="{{ route('store.home') }}"
-                class="text-white text-decoration-none d-flex align-items-center"
-            >
-                <i class="bi bi-shop-window" style="font-size: 2.2rem;"></i>
-                <span class="fw-bold ms-2" style="font-size: 1.3rem;">
-                    Website Bán hàng Online
-                </span>
-            </a>
-
-            {{-- Ô tìm kiếm --}}
-            <form action="#" method="GET" class="flex-grow-1">
-                <div class="input-group">
-                    <input
-                        type="text"
-                        class="form-control"
-                        placeholder="Tìm kiếm sản phẩm..."
-                        style="border: none; height: 42px;"
-                    >
-                    <button class="btn" type="submit" style="background-color: #003B73; border: none;">
-                        <i class="bi bi-search text-white"></i>
-                    </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{{ route('store.account.profile') }}">
+                                        <i class="bi bi-person me-2" aria-hidden="true"></i>
+                                        Hồ sơ của tôi
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{{ route('store.account.addresses.index') }}">
+                                        <i class="bi bi-geo-alt me-2" aria-hidden="true"></i>
+                                        Địa chỉ nhận hàng
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{{ route('store.account.password') }}">
+                                        <i class="bi bi-shield-lock me-2" aria-hidden="true"></i>
+                                        Đổi mật khẩu
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>
+                                            Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    @else
+                        <a href="{{ route('login.form') }}"
+                           class="shop-header__action btn">
+                            <i class="bi bi-person" aria-hidden="true"></i>
+                            <span>Tài khoản</span>
+                        </a>
+                    @endif
                 </div>
-            </form>
-
-            {{-- Giỏ hàng --}}
-            <a
-                href="{{ route('store.cart.index') }}"
-                class="d-inline-flex align-items-center gap-2 text-white text-decoration-none"
-                aria-label="Giỏ hàng, {{ $cartCount }} sản phẩm"
-                style="white-space: nowrap;"
-            >
-                <i class="bi bi-cart3 fs-4" aria-hidden="true"></i>
-                <span>Giỏ hàng</span>
-                <span class="badge rounded-pill text-bg-warning">
-                    {{ $cartCount }}
-                </span>
-            </a>
-
+            </div>
         </div>
 
-        {{-- Danh mục nhanh bên dưới ô tìm kiếm --}}
-        <div class="d-flex gap-4 pb-2" style="font-size: 0.85rem;">
-            <a href="#" class="text-white text-decoration-none">Thời Trang Nam</a>
-            <a href="#" class="text-white text-decoration-none">Điện Thoại &amp; Phụ Kiện</a>
-            <a href="#" class="text-white text-decoration-none">Máy Tính &amp; Laptop</a>
-            <a href="#" class="text-white text-decoration-none">Đồng Hồ</a>
-            <a href="#" class="text-white text-decoration-none">Giày Dép Nam</a>
-        </div>
+        {{-- Điều hướng danh mục --}}
+        <nav class="shop-header__nav d-flex gap-4 gap-lg-5 mt-3 pt-2 overflow-x-auto"
+             aria-label="Danh mục sản phẩm">
+            <a href="#" class="shop-header__nav-link text-nowrap">Thời Trang Nam</a>
+            <a href="#" class="shop-header__nav-link text-nowrap">Điện Thoại &amp; Phụ Kiện</a>
+            <a href="#" class="shop-header__nav-link text-nowrap">Máy Tính &amp; Laptop</a>
+            <a href="#" class="shop-header__nav-link text-nowrap">Đồng Hồ</a>
+            <a href="#" class="shop-header__nav-link text-nowrap">Giày Dép Nam</a>
+        </nav>
     </div>
-</nav>
+</header>
 
 <style>
-    .user-menu {
-        position: relative;
+    .shop-header {
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+        background: linear-gradient(135deg, #1A94FF 0%, #0077E6 100%);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .12);
     }
 
-    .user-menu .dropdown-menu {
-        display: none;
-        position: absolute;
-        top: 100%;
-        right: 0;
-        margin-top: 0;
-        padding-top: 12px;
+    .shop-header__search {
+        min-height: 44px;
+        overflow: hidden;
+        background: #fff;
+        border: 0;
+        border-radius: 8px;
     }
 
-    .user-menu:hover .dropdown-menu {
-        display: block;
+    .shop-header__search .form-control {
+        min-width: 0;
+        min-height: 44px;
+        padding-left: 1rem;
+        border: 0;
+        box-shadow: none;
+    }
+
+    .shop-header__search-button {
+        min-width: 52px;
+        color: var(--shop-primary);
+        background: var(--shop-primary-light);
+        border: 0;
+    }
+
+    .shop-header__search-button:hover,
+    .shop-header__search-button:focus-visible {
+        color: var(--shop-primary-hover);
+        background: #D9EDFF;
+    }
+
+    .shop-header__action {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        gap: .45rem;
+        padding-inline: .9rem;
+        color: #fff;
+        white-space: nowrap;
+        background: rgba(255, 255, 255, .1);
+        border: 1px solid rgba(255, 255, 255, .25);
+        border-radius: 999px;
+        transition: background-color .15s ease, border-color .15s ease;
+    }
+
+    .shop-header__action:hover,
+    .shop-header__action:focus-visible {
+        color: #fff;
+        background: rgba(255, 255, 255, .2);
+        border-color: rgba(255, 255, 255, .45);
+    }
+
+    .shop-header .dropdown-menu {
+        margin-top: .5rem;
+        border: 1px solid var(--shop-border);
+        border-radius: 10px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .12);
+    }
+
+    .shop-header__nav {
+        scrollbar-width: thin;
+    }
+
+    .shop-header__nav-link {
+        padding-bottom: .3rem;
+        color: rgba(255, 255, 255, .92);
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        transition: color .15s ease, border-color .15s ease;
+    }
+
+    .shop-header__nav-link:hover,
+    .shop-header__nav-link:focus-visible {
+        color: #fff;
+        border-bottom-color: #fff;
+    }
+
+    @media (max-width: 575.98px) {
+        .shop-header__logo span {
+            font-size: .95rem !important;
+        }
+
+        .shop-header__action {
+            gap: .3rem;
+            padding-inline: .55rem;
+            font-size: .875rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .shop-header__action,
+        .shop-header__nav-link {
+            transition: none;
+        }
     }
 </style>
