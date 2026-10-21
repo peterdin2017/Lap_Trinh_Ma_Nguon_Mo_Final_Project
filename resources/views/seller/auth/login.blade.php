@@ -1,10 +1,9 @@
 <!doctype html>
 <html lang="vi">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Đăng nhập Seller</title>
+    <title>Đăng nhập Seller - Website Bán hàng Online</title>
 
     <link href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link rel="stylesheet"
@@ -12,106 +11,340 @@
 
     <style>
         :root {
-            --seller-primary: #1a94ff;
-            --seller-primary-dark: #0878d1;
+            --auth-primary: #1A94FF;
+            --auth-primary-hover: #0077E6;
+            --auth-primary-light: #EBF5FF;
+            --auth-text: #0F172A;
+            --auth-muted: #64748B;
+            --auth-border: #E2E8F0;
         }
 
-        body.seller-login-page {
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
             min-height: 100vh;
             margin: 0;
-            background: linear-gradient(
-                135deg,
-                var(--seller-primary) 0%,
-                var(--seller-primary-dark) 100%
-            );
+            color: var(--auth-text);
+            background: #F4F7FA;
+            font-family: Inter, Roboto, "Segoe UI", sans-serif;
         }
 
-        .seller-login-shell {
+        .login-page {
             min-height: 100vh;
+        }
+
+        .login-hero {
+            position: relative;
             display: flex;
+            min-height: 680px;
             flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            padding: clamp(2rem, 5vw, 4rem);
+            color: #fff;
+            background: linear-gradient(135deg, #1A94FF 0%, #0077E6 100%);
+            border-radius: 16px;
         }
 
-        .seller-login-header {
-            padding-top: 1.5rem;
+        .login-hero::before,
+        .login-hero::after {
+            position: absolute;
+            border: 1px solid rgb(255 255 255 / 16%);
+            border-radius: 50%;
+            content: "";
+            pointer-events: none;
         }
 
-        .seller-login-main {
-            flex: 1;
-            display: flex;
+        .login-hero::before {
+            top: -130px;
+            right: -100px;
+            width: 360px;
+            height: 360px;
+            background: rgb(255 255 255 / 8%);
+            box-shadow: 0 0 0 35px rgb(255 255 255 / 3.5%),
+                        0 0 0 70px rgb(255 255 255 / 2.5%);
+        }
+
+        .login-hero::after {
+            bottom: -180px;
+            left: -130px;
+            width: 390px;
+            height: 390px;
+            background: rgb(255 255 255 / 6%);
+            box-shadow: 0 0 0 35px rgb(255 255 255 / 3%),
+                        0 0 0 70px rgb(255 255 255 / 2%);
+        }
+
+        .login-hero__brand,
+        .login-hero__content,
+        .login-hero__footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-hero__brand {
+            display: inline-flex;
             align-items: center;
-            padding-top: 1rem;
-            padding-bottom: 2rem;
+            gap: .65rem;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 700;
+            text-decoration: none;
         }
 
-        .seller-login-row {
-            width: 100%;
+        .login-hero__brand:hover {
+            color: #fff;
+            opacity: .9;
+        }
+
+        .login-hero__brand i {
+            font-size: 1.8rem;
+        }
+
+        .login-hero__content {
+            max-width: 520px;
+            margin-block: auto;
+            padding-block: 3rem;
+        }
+
+        .login-hero__icon {
+            display: inline-flex;
+            width: 96px;
+            height: 96px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.75rem;
+            border: 1px solid rgb(255 255 255 / 26%);
+            border-radius: 28px;
+            background: rgb(255 255 255 / 15%);
+            color: #fff;
+            font-size: 2.75rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .login-hero__title {
+            margin-bottom: .75rem;
+            font-size: clamp(2rem, 3vw, 2.5rem);
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .login-hero__description {
+            max-width: 440px;
             margin: 0;
+            color: rgb(255 255 255 / 85%);
+            font-size: 1.05rem;
+            line-height: 1.7;
         }
 
-        .btn-primary {
-            --bs-btn-bg: var(--seller-primary);
-            --bs-btn-border-color: var(--seller-primary);
-            --bs-btn-hover-bg: var(--seller-primary-dark);
-            --bs-btn-hover-border-color: var(--seller-primary-dark);
-            --bs-btn-active-bg: #0669b8;
-            --bs-btn-active-border-color: #0669b8;
+        .login-hero__footer {
+            color: rgb(255 255 255 / 78%);
+            font-size: .875rem;
         }
 
-        .text-primary {
-            color: var(--seller-primary) !important;
+        .login-form-card {
+            width: 100%;
+            max-width: 500px;
+            margin-inline: auto;
+            border: 1px solid var(--auth-border);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 10px 30px rgb(26 148 255 / 8%);
         }
 
-        .form-control:focus {
-            border-color: var(--seller-primary);
-            box-shadow: 0 0 0 0.25rem rgba(26, 148, 255, 0.25);
+        .login-form-card__body {
+            padding: clamp(1.5rem, 4vw, 2.75rem);
+        }
+
+        .login-form-card__title {
+            margin-bottom: .5rem;
+            color: var(--auth-text);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .login-form-card__subtitle {
+            margin-bottom: 1.75rem;
+            color: var(--auth-muted);
+            font-size: .95rem;
+        }
+
+        .login-form .form-label {
+            color: var(--auth-text);
+            font-size: .9rem;
+            font-weight: 600;
+        }
+
+        .login-input-group {
+            min-height: 48px;
+            overflow: hidden;
+            border: 1px solid var(--auth-border);
+            border-radius: 10px;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .login-input-group:focus-within {
+            border-color: var(--auth-primary);
+            box-shadow: 0 0 0 4px rgb(26 148 255 / 15%);
+        }
+
+        .login-input-group .input-group-text {
+            min-width: 48px;
+            justify-content: center;
+            border: 0;
+            background: #fff;
+            color: var(--auth-muted);
+        }
+
+        .login-input-group .form-control {
+            min-height: 46px;
+            border: 0;
+            background: #fff;
+            color: var(--auth-text);
+            box-shadow: none;
+        }
+
+        .login-input-group .form-control:focus {
+            box-shadow: none;
+        }
+
+        .login-input-group .form-control::placeholder {
+            color: #94A3B8;
+        }
+
+        .login-forgot-link,
+        .login-register-link {
+            color: var(--auth-primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .login-forgot-link {
+            font-size: .85rem;
+        }
+
+        .login-forgot-link:hover,
+        .login-register-link:hover {
+            color: var(--auth-primary-hover);
+            text-decoration: underline;
+        }
+
+        .login-submit {
+            min-height: 48px;
+            border: 1px solid var(--auth-primary);
+            border-radius: 10px;
+            background: var(--auth-primary);
+            color: #fff;
+            font-weight: 600;
+            transition: background-color .15s ease, border-color .15s ease;
+        }
+
+        .login-submit:hover,
+        .login-submit:focus-visible {
+            border-color: var(--auth-primary-hover);
+            background: var(--auth-primary-hover);
+            color: #fff;
+        }
+
+        @media (max-width: 991.98px) {
+            .login-page {
+                padding-block: 1.5rem;
+            }
+
+            .login-hero {
+                min-height: 350px;
+                padding: 1.75rem;
+            }
+
+            .login-hero__content {
+                padding-block: 2rem;
+            }
+
+            .login-hero__icon {
+                width: 68px;
+                height: 68px;
+                margin-bottom: 1rem;
+                border-radius: 20px;
+                font-size: 2rem;
+            }
+
+            .login-hero__title {
+                font-size: 1.75rem;
+            }
+
+            .login-hero__description {
+                font-size: .95rem;
+            }
         }
 
         @media (max-width: 575.98px) {
-            .seller-login-header {
-                padding-top: 1rem;
+            .login-page {
+                padding: .75rem;
             }
 
-            .seller-login-main {
-                padding-top: 1.5rem;
-                padding-bottom: 1.5rem;
+            .login-hero,
+            .login-form-card {
+                border-radius: 12px;
+            }
+
+            .login-hero {
+                min-height: 310px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                transition-duration: .01ms !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
             }
         }
     </style>
 </head>
 
-<body class="seller-login-page">
-    <div class="seller-login-shell">
-        <header class="container seller-login-header">
-            <a href="{{ route('store.home') }}"
-               class="text-white text-decoration-none d-flex align-items-center">
-                <i class="bi bi-shop me-2 fs-3" aria-hidden="true"></i>
-                <span class="fw-bold fs-5">Kênh Người Bán</span>
-            </a>
-        </header>
+<body>
+    <main class="container-fluid login-page d-flex align-items-center py-lg-4">
+        <div class="container">
+            <div class="row align-items-stretch justify-content-center g-4 g-xl-5">
+                {{-- Hero Seller Center --}}
+                <section class="col-12 col-lg-6" aria-label="Giới thiệu Kênh Người Bán">
+                    <div class="login-hero h-100">
+                        <a href="{{ route('store.home') }}" class="login-hero__brand">
+                            <i class="bi bi-shop-window" aria-hidden="true"></i>
+                            <span>Kênh Người Bán</span>
+                        </a>
 
-        <main class="container seller-login-main">
-            <div class="row justify-content-center align-items-center seller-login-row">
-                <section class="col-lg-6 d-none d-lg-block text-white">
-                    <div class="px-4">
-                        <i class="bi bi-shop-window display-2" aria-hidden="true"></i>
+                        <div class="login-hero__content">
+                            <div class="login-hero__icon" aria-hidden="true">
+                                <i class="bi bi-shop"></i>
+                            </div>
 
-                        <h1 class="fw-bold mt-3">Chào mừng trở lại</h1>
+                            <h1 class="login-hero__title">Chào mừng trở lại!</h1>
+                            <p class="login-hero__description">
+                                Đăng nhập để quản lý cửa hàng, sản phẩm và hoạt động bán hàng của bạn.
+                            </p>
+                        </div>
 
-                        <p class="fs-5 text-white-50">
-                            Đăng nhập để quản lý cửa hàng và hoạt động bán hàng của bạn.
-                        </p>
+                        <div class="login-hero__footer">
+                            <i class="bi bi-shield-check me-1" aria-hidden="true"></i>
+                            Kênh quản lý dành cho người bán
+                        </div>
                     </div>
                 </section>
 
-                <section class="col-12 col-md-8 col-lg-5">
-                    <div class="card border-0 shadow-lg rounded-4">
-                        <div class="card-body p-4">
-                            <h2 class="h4 fw-bold mb-2 text-primary">
+                {{-- Form đăng nhập Seller --}}
+                <section class="col-12 col-md-9 col-lg-6 d-flex align-items-center"
+                         aria-labelledby="login-title">
+                    <div class="login-form-card">
+                        <div class="login-form-card__body">
+                            <h2 id="login-title" class="login-form-card__title">
                                 Đăng nhập Seller
                             </h2>
-
-                            <p class="text-secondary mb-4">
+                            <p class="login-form-card__subtitle">
                                 Nhập email và mật khẩu tài khoản Seller của bạn.
                             </p>
 
@@ -123,65 +356,76 @@
 
                             @if ($errors->any())
                                 <div class="alert alert-danger" role="alert">
-                                    {{ $errors->first() }}
+                                    @foreach ($errors->all() as $error)
+                                        <div>{{ $error }}</div>
+                                    @endforeach
                                 </div>
                             @endif
 
-                            <form method="POST" action="{{ route('seller.login.submit') }}">
+                            <form method="POST"
+                                  action="{{ route('seller.login.submit') }}"
+                                  class="login-form">
                                 @csrf
 
                                 <div class="mb-3">
                                     <label for="email" class="form-label">Email</label>
-                                    <input
-                                        id="email"
-                                        type="email"
-                                        name="email"
-                                        class="form-control form-control-lg @error('email') is-invalid @enderror"
-                                        value="{{ old('email') }}"
-                                        placeholder="Nhập email tài khoản Seller"
-                                        autocomplete="username"
-                                        required
-                                        autofocus
-                                    >
+                                    <div class="input-group login-input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-envelope" aria-hidden="true"></i>
+                                        </span>
+                                        <input
+                                            id="email"
+                                            type="email"
+                                            name="email"
+                                            class="form-control @error('email') is-invalid @enderror"
+                                            value="{{ old('email') }}"
+                                            placeholder="Nhập email tài khoản Seller"
+                                            autocomplete="username"
+                                            required
+                                            autofocus
+                                        >
+                                    </div>
                                     @error('email')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
 
-                                <div class="mb-3">
+                                <div class="mb-2">
                                     <label for="password" class="form-label">Mật khẩu</label>
-                                    <input
-                                        id="password"
-                                        type="password"
-                                        name="password"
-                                        class="form-control form-control-lg @error('password') is-invalid @enderror"
-                                        placeholder="Nhập mật khẩu"
-                                        autocomplete="current-password"
-                                        required
-                                    >
+                                    <div class="input-group login-input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-lock" aria-hidden="true"></i>
+                                        </span>
+                                        <input
+                                            id="password"
+                                            type="password"
+                                            name="password"
+                                            class="form-control @error('password') is-invalid @enderror"
+                                            placeholder="Nhập mật khẩu"
+                                            autocomplete="current-password"
+                                            required
+                                        >
+                                    </div>
                                     @error('password')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
 
-                                <div class="text-end mb-3">
-                                    <a
-                                        href="{{ route('forgot-password.form', ['portal' => 'seller']) }}"
-                                        class="text-primary text-decoration-none"
-                                    >
+                                <div class="text-end mb-4">
+                                    <a href="{{ route('forgot-password.form', ['portal' => 'seller']) }}"
+                                       class="login-forgot-link">
                                         Quên mật khẩu?
                                     </a>
                                 </div>
 
-                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <button type="submit" class="btn login-submit w-100">
                                     Đăng nhập
                                 </button>
                             </form>
 
                             <p class="text-center text-secondary mt-4 mb-0">
                                 Bạn chưa có tài khoản Seller?
-                                <a href="{{ route('seller.register.form') }}"
-                                   class="fw-semibold text-primary text-decoration-none">
+                                <a href="{{ route('seller.register.form') }}" class="login-register-link">
                                     Đăng ký
                                 </a>
                             </p>
@@ -189,8 +433,7 @@
                     </div>
                 </section>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 </body>
-
 </html>

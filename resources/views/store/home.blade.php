@@ -15,7 +15,7 @@
         <div class="row g-3 g-lg-4">
             {{-- Sidebar bộ lọc --}}
             <aside class="col-12 col-lg-3">
-                @include('store.partials.sidebar')
+                @include('store.layouts.sidebar')
             </aside>
 
             {{-- Toolbar, lưới sản phẩm và phân trang --}}
