@@ -5,9 +5,21 @@
 @section('content')
     @php
         $variants = $product->variants ?? collect();
-        $selectedVariant = $variants->first();
-        $initialPrice = $selectedVariant?->price ?? $product->price;
+        $hasVariants = $variants->isNotEmpty();
+
+        // Có mẫu mã thì khách PHẢI chọn; chỉ giữ lại lựa chọn cũ khi form báo lỗi và quay lại.
+        $selectedVariant = $hasVariants
+            ? $variants->firstWhere('variant_id', (int) old('variant_id'))
+            : null;
+
         $initialStock = $selectedVariant?->stock_quantity ?? $product->stock_quantity;
+
+        $minPrice = $hasVariants ? $variants->min('price') : $product->price;
+        $maxPrice = $hasVariants ? $variants->max('price') : $product->price;
+        $fmt = fn ($n) => number_format($n, 0, ',', '.') . '₫';
+        $initialPriceText = $selectedVariant
+            ? $fmt($selectedVariant->price)
+            : ((float) $minPrice === (float) $maxPrice ? $fmt($minPrice) : $fmt($minPrice) . ' - ' . $fmt($maxPrice));
     @endphp
 
     <main class="container py-4">
@@ -16,10 +28,13 @@
             <a href="{{ route('store.home') }}" class="text-decoration-none">
                 Trang chủ
             </a>
+            @foreach ($breadcrumb as $crumb)
+                <span class="text-secondary mx-2">/</span>
+                <a href="{{ route('store.products.index', ['category' => $crumb->category_id]) }}"
+                    class="text-decoration-none">{{ $crumb->category_name }}</a>
+            @endforeach
             <span class="text-secondary mx-2">/</span>
-            <span class="text-secondary">
-                {{ $product->category?->category_name ?? 'Sản phẩm' }}
-            </span>
+            <span class="text-secondary">{{ $product->product_name }}</span>
         </nav>
 
         {{-- Khung thông tin sản phẩm --}}
@@ -76,7 +91,7 @@
                         {{-- Giá thay đổi theo mẫu đang chọn --}}
                         <div class="bg-light rounded p-3 mb-4">
                             <span id="productPrice" class="text-danger fs-2 fw-semibold">
-                                {{ number_format($initialPrice, 0, ',', '.') }}₫
+                                {{ $initialPriceText }}
                             </span>
                         </div>
 
@@ -91,13 +106,21 @@
                                     <div class="d-flex flex-wrap gap-2 variant-list" role="group"
                                         aria-label="Chọn mẫu mã sản phẩm">
                                         @foreach ($variants as $variant)
+                                            @php $isSelected = $selectedVariant?->variant_id === $variant->variant_id; @endphp
                                             <button type="button"
-                                                class="btn btn-outline-secondary variant-option {{ $loop->first ? 'active' : '' }}"
+                                                class="btn btn-outline-secondary variant-option {{ $isSelected ? 'active' : '' }}"
                                                 data-variant-id="{{ $variant->variant_id }}"
                                                 data-price="{{ $variant->price }}"
                                                 data-stock="{{ $variant->stock_quantity }}"
-                                                aria-pressed="{{ $loop->first ? 'true' : 'false' }}">
+                                                @if ($variant->image_url)
+                                                    data-image="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($variant->image_url) }}"
+                                                @endif
+                                                aria-pressed="{{ $isSelected ? 'true' : 'false' }}"
+                                                @disabled($variant->stock_quantity < 1)>
                                                 {{ $variant->variant_name }}
+                                                @if ($variant->stock_quantity < 1)
+                                                    <small>(Hết hàng)</small>
+                                                @endif
                                             </button>
                                         @endforeach
                                     </div>
@@ -124,7 +147,9 @@
                                 Tình trạng
                             </dt>
                             <dd class="col-8 col-sm-9" id="productStatus">
-                                @if ($initialStock > 0)
+                                @if ($hasVariants && ! $selectedVariant)
+                                    <span class="text-secondary">Chọn mẫu mã để xem tình trạng</span>
+                                @elseif ($initialStock > 0)
                                     <span class="text-success">Còn hàng</span>
                                 @else
                                     <span class="text-danger">Hết hàng</span>
@@ -135,11 +160,14 @@
                                 Số lượng
                             </dt>
                             <dd class="col-8 col-sm-9" id="productStock">
-                                {{ number_format($initialStock) }}
+                                {{ $hasVariants && ! $selectedVariant ? '—' : number_format($initialStock) }}
                             </dd>
                         </dl>
 
-                        <form method="POST" action="{{ route('store.cart.items.store') }}">
+                        {{-- Cả "Thêm vào giỏ" và "Mua ngay" gửi tới cùng route giỏ hàng của Người 2.
+                             Khách chưa đăng nhập sẽ được CartController chuyển sang trang đăng nhập.
+                             intent=buy_now để Người 2 chuyển tiếp sang bước xác nhận mua. --}}
+                        <form method="POST" action="{{ route('store.cart.items.store') }}" id="purchaseForm" novalidate>
                             @csrf
 
                             <input type="hidden" name="product_id" value="{{ $product->product_id }}">
@@ -150,22 +178,30 @@
                             <div class="mb-3" style="max-width: 160px;">
                                 <label for="quantity" class="form-label">Số lượng</label>
                                 <input id="quantity" name="quantity" type="number" min="1"
-                                    max="{{ $initialStock }}" value="1"
+                                    max="{{ max($initialStock, 1) }}" value="{{ old('quantity', 1) }}"
                                     class="form-control @error('quantity') is-invalid @enderror" required>
                                 @error('quantity')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <div id="clientHint" class="text-danger small mt-1" hidden></div>
                             </div>
 
                             @error('variant_id')
                                 <div class="text-danger small mb-2">{{ $message }}</div>
                             @enderror
 
-                            <button type="submit" class="btn btn-primary" id="addToCartButton"
-                                @disabled($initialStock < 1)>
-                                <i class="bi bi-cart-plus me-1"></i>
-                                Thêm vào giỏ hàng
-                            </button>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="submit" name="intent" value="cart" class="btn btn-outline-primary"
+                                    id="addToCartButton" @disabled(! $hasVariants && $initialStock < 1)>
+                                    <i class="bi bi-cart-plus me-1"></i>
+                                    Thêm vào giỏ hàng
+                                </button>
+
+                                <button type="submit" name="intent" value="buy_now" class="btn btn-primary"
+                                    id="buyNowButton" @disabled(! $hasVariants && $initialStock < 1)>
+                                    Mua ngay
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -258,16 +294,21 @@
         </section>
 
         {{-- Đánh giá sản phẩm --}}
-        <section class="card border-0 shadow-sm mt-4">
+        <section class="card border-0 shadow-sm mt-4" id="reviews">
             <div class="card-body p-4">
                 <h2 class="h5 fw-bold mb-4">Đánh giá sản phẩm</h2>
+
+                @if (session('review_success'))
+                    <div class="alert alert-success">{{ session('review_success') }}</div>
+                @endif
+                @error('review')
+                    <div class="alert alert-danger">{{ $message }}</div>
+                @enderror
 
                 <div class="row align-items-center g-4 p-3 border rounded" style="background-color: #fffaf8;">
                     <div class="col-12 col-md-3 text-center">
                         <div class="text-danger">
-                            <span class="fs-2 fw-semibold">
-                                {{ number_format($product->rating_avg, 1) }}
-                            </span>
+                            <span class="fs-2 fw-semibold">{{ number_format($product->rating_avg, 1) }}</span>
                             <span> trên 5</span>
                         </div>
 
@@ -283,20 +324,54 @@
                     </div>
 
                     <div class="col-12 col-md-9">
-                        <p class="text-secondary mb-0">
-                            @if ($product->rating_count > 0)
-                                Điểm trên là đánh giá trung bình của sản phẩm.
-                                Danh sách nhận xét chi tiết sẽ hiển thị khi chức năng đánh giá được kết nối.
-                            @else
-                                Sản phẩm chưa có đánh giá.
-                            @endif
-                        </p>
+                        @if ($canReview)
+                            <form method="POST" action="{{ route('store.products.reviews.store', $product->product_id) }}">
+                                @csrf
+                                <div class="fw-semibold mb-2">Viết đánh giá của bạn</div>
+                                <select name="rating" class="form-select w-auto mb-2 @error('rating') is-invalid @enderror" required>
+                                    <option value="">Chọn số sao</option>
+                                    @foreach ([5, 4, 3, 2, 1] as $star)
+                                        <option value="{{ $star }}" @selected((int) old('rating') === $star)>{{ $star }} sao</option>
+                                    @endforeach
+                                </select>
+                                @error('rating')
+                                    <div class="text-danger small mb-2">{{ $message }}</div>
+                                @enderror
+                                <textarea name="comment" rows="3" maxlength="1000" class="form-control mb-2"
+                                    placeholder="Chia sẻ trải nghiệm của bạn (không bắt buộc)">{{ old('comment') }}</textarea>
+                                @error('comment')
+                                    <div class="text-danger small mb-2">{{ $message }}</div>
+                                @enderror
+                                <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                            </form>
+                        @elseif ($isGuest)
+                            <p class="text-secondary mb-0">
+                                <a href="{{ route('login.form') }}">Đăng nhập</a> để đánh giá sau khi mua và nhận hàng.
+                            </p>
+                        @else
+                            <p class="text-secondary mb-0">
+                                Chỉ khách đã nhận sản phẩm này mới có thể đánh giá.
+                            </p>
+                        @endif
                     </div>
                 </div>
 
-                <div class="text-center text-secondary py-4">
-                    Chưa có nội dung đánh giá chi tiết.
-                </div>
+                @forelse ($reviews as $review)
+                    <div class="border-bottom py-3">
+                        <div class="small">
+                            <strong>{{ $reviewerNames[$review->account_id] ?? 'Người dùng ẩn danh' }}</strong>
+                            <span class="text-danger ms-2">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
+                            <span class="text-secondary ms-2">{{ $review->created_at?->format('d/m/Y') }}</span>
+                        </div>
+                        @if (filled($review->comment))
+                            <div class="mt-1" style="white-space: pre-line;">{{ $review->comment }}</div>
+                        @endif
+                    </div>
+                @empty
+                    <div class="text-center text-secondary py-4">Chưa có nội dung đánh giá chi tiết.</div>
+                @endforelse
+
+                <div class="mt-3">{{ $reviews->links('pagination::bootstrap-5') }}</div>
             </div>
         </section>
     </main>
@@ -324,7 +399,38 @@
 
     <script>
         (() => {
+            const hasVariants = @json($hasVariants);
+            const baseStock = @json((int) $product->stock_quantity);
             const options = document.querySelectorAll('.variant-option');
+            const form = document.getElementById('purchaseForm');
+            const variantInput = document.getElementById('selectedVariantId');
+            const qty = document.getElementById('quantity');
+            const hint = document.getElementById('clientHint');
+            const mainImage = document.getElementById('productMainImage');
+            const buttons = [document.getElementById('addToCartButton'), document.getElementById('buyNowButton')];
+            const vnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + '₫';
+
+            let galleryImage = mainImage ? mainImage.src : null;
+
+            // Tồn kho của lựa chọn hiện tại; null = chưa chọn mẫu.
+            function currentStock() {
+                if (!hasVariants) return baseStock;
+                const active = document.querySelector('.variant-option.active');
+                return active ? Number(active.dataset.stock) : null;
+            }
+
+            function refresh() {
+                const stock = currentStock();
+
+                if (stock !== null) {
+                    qty.max = Math.max(stock, 1);
+                    if (stock >= 1 && Number(qty.value) > stock) qty.value = stock;
+                }
+
+                // Khóa nút khi biết chắc là hết hàng.
+                buttons.forEach((b) => b && (b.disabled = stock !== null && stock < 1));
+                hint.hidden = true;
+            }
 
             options.forEach((button) => {
                 button.addEventListener('click', () => {
@@ -336,20 +442,53 @@
                     button.classList.add('active');
                     button.setAttribute('aria-pressed', 'true');
 
-                    const price = Number(button.dataset.price);
+                    // QUAN TRỌNG: cập nhật mẫu thật sự được gửi lên server.
+                    variantInput.value = button.dataset.variantId;
+
                     const stock = Number(button.dataset.stock);
 
-                    document.getElementById('productPrice').textContent =
-                        new Intl.NumberFormat('vi-VN').format(price) + '₫';
-
+                    document.getElementById('productPrice').textContent = vnd(Number(button.dataset.price));
                     document.getElementById('productStock').textContent =
                         new Intl.NumberFormat('vi-VN').format(stock);
-
                     document.getElementById('productStatus').innerHTML = stock > 0 ?
                         '<span class="text-success">Còn hàng</span>' :
                         '<span class="text-danger">Hết hàng</span>';
+
+                    // Ảnh riêng của mẫu (nếu có), không thì quay về ảnh đang xem.
+                    if (mainImage) mainImage.src = button.dataset.image || galleryImage;
+
+                    refresh();
                 });
             });
+
+            // Bấm ảnh nhỏ thì nhớ làm ảnh nền hiện tại.
+            document.querySelectorAll('[data-image]').forEach((el) => {
+                if (el.classList.contains('variant-option')) return;
+                el.addEventListener('click', () => (galleryImage = el.dataset.image));
+            });
+
+            form.addEventListener('submit', (event) => {
+                const stock = currentStock();
+                const n = Number(qty.value);
+                let message = '';
+
+                if (hasVariants && stock === null) {
+                    message = 'Vui lòng chọn mẫu mã trước khi mua.';
+                } else if (!Number.isInteger(n) || n < 1) {
+                    message = 'Số lượng phải từ 1 trở lên.';
+                } else if (stock !== null && n > stock) {
+                    message = 'Chỉ còn ' + stock + ' sản phẩm trong kho.';
+                }
+
+                if (message) {
+                    event.preventDefault();
+                    hint.textContent = message;
+                    hint.hidden = false;
+                }
+            });
+
+            qty.addEventListener('input', () => (hint.hidden = true));
+            refresh();
         })();
     </script>
 @endsection

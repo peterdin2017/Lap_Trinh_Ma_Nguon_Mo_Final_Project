@@ -1,4 +1,9 @@
 @php
+    $navCategories = \App\Models\Category::whereNull('parent_id')
+        ->orderBy('category_name')
+        ->limit(8)
+        ->get(['category_id', 'category_name']);
+
     $cartCount = 0;
     $accountId = session('account_id');
 
@@ -107,10 +112,13 @@
             </a>
 
             {{-- Ô tìm kiếm --}}
-            <form action="#" method="GET" class="flex-grow-1">
+            <form action="{{ route('store.products.index') }}" method="GET" class="flex-grow-1">
                 <div class="input-group">
                     <input
                         type="text"
+                        name="q"
+                        value="{{ request()->routeIs('store.products.index') ? request('q') : '' }}"
+                        maxlength="100"
                         class="form-control"
                         placeholder="Tìm kiếm sản phẩm..."
                         style="border: none; height: 42px;"
@@ -137,13 +145,12 @@
 
         </div>
 
-        {{-- Danh mục nhanh bên dưới ô tìm kiếm --}}
-        <div class="d-flex gap-4 pb-2" style="font-size: 0.85rem;">
-            <a href="#" class="text-white text-decoration-none">Thời Trang Nam</a>
-            <a href="#" class="text-white text-decoration-none">Điện Thoại &amp; Phụ Kiện</a>
-            <a href="#" class="text-white text-decoration-none">Máy Tính &amp; Laptop</a>
-            <a href="#" class="text-white text-decoration-none">Đồng Hồ</a>
-            <a href="#" class="text-white text-decoration-none">Giày Dép Nam</a>
+        {{-- Danh mục gốc lấy từ bảng categories --}}
+        <div class="d-flex flex-wrap gap-4 pb-2" style="font-size: 0.85rem;">
+            @foreach ($navCategories as $navCategory)
+                <a href="{{ route('store.products.index', ['category' => $navCategory->category_id]) }}"
+                    class="text-white text-decoration-none">{{ $navCategory->category_name }}</a>
+            @endforeach
         </div>
     </div>
 </nav>
