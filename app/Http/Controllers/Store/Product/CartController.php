@@ -3,75 +3,99 @@
 namespace App\Http\Controllers\Store\Product;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Cart;
 use App\Models\Product;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CartController extends Controller
 {
-    // Hiển thị giỏ hàng của tài khoản đang đăng nhập.
     public function index(Request $request): View|RedirectResponse
     {
-        $accountId = $request->session()->get('account_id');
+        $accountId = $this->accountId($request);
 
-        // Nếu chưa đăng nhập thì chuyển đến trang đăng nhập.
         if (! $accountId) {
             return redirect()->guest(route('login.form'));
         }
 
-        // Tìm giỏ hàng của tài khoản; tạo giỏ mới nếu chưa có.
-        $cart = Cart::query()
-            ->firstOrCreate(['account_id' => $accountId]);
+        $cart = Cart::query()->firstOrCreate([
+            'account_id' => $accountId,
+        ]);
 
-        // Lấy các mặt hàng cùng thông tin sản phẩm và mẫu mã.
         $items = $cart->items()
-            ->with(['product', 'variant'])
+            ->with(['product.seller', 'product.variants', 'variant'])
             ->get();
 
-        // Chuẩn bị dữ liệu theo cấu trúc mà view giỏ hàng sử dụng.
         $cartItems = [];
 
         foreach ($items as $item) {
             $product = $item->product;
 
-            // Bỏ qua mặt hàng nếu sản phẩm đã bị xóa.
             if (! $product) {
                 continue;
             }
 
+            $isSimpleItem = $item->item_key
+                === $product->product_id . ':simple';
+
+            $hasInvalidVariant = (
+                $item->variant_id === null && ! $isSimpleItem
+            ) || (
+                $isSimpleItem && $product->variants->isNotEmpty()
+            );
+
+            $stock = $hasInvalidVariant
+                ? 0
+                : (int) ($item->variant?->stock_quantity ?? $product->stock_quantity);
+
+            $isAvailable = ! $hasInvalidVariant
+                && $product->status === 'active'
+                && $product->seller?->status === 'active'
+                && $stock > 0;
+
             $cartItems[$item->item_key] = [
+                'cart_item_id' => (int) $item->getKey(),
+                'seller_id' => $product->seller?->seller_id ?? 0,
+                'shop_name' => $product->seller?->shop_name ?? 'Cửa hàng',
                 'product_id' => $product->product_id,
                 'variant_id' => $item->variant_id,
                 'product_name' => $product->product_name,
-                'variant_name' => $item->variant?->variant_name,
+                'variant_name' => $hasInvalidVariant
+                    ? 'Mẫu này không còn khả dụng'
+                    : $item->variant?->variant_name,
                 'image_url' => $item->variant?->image_url ?: $product->image_url,
-                'price' => $item->variant?->price ?? $product->price,
+                'price' => $hasInvalidVariant
+                    ? 0
+                    : ($item->variant?->price ?? $product->price),
                 'quantity' => $item->quantity,
-                'stock_quantity' => $item->variant?->stock_quantity
-                    ?? $product->stock_quantity,
+                'stock_quantity' => $stock,
+                'available' => $isAvailable,
             ];
         }
 
-        return view('store.cart.index', ['cart' => $cartItems]);
+        $cartGroups = collect($cartItems)->groupBy('seller_id');
+
+        return view('store.cart.index', compact('cartGroups'));
     }
 
-    // Thêm sản phẩm hoặc mẫu đã chọn vào giỏ hàng.
     public function store(Request $request): RedirectResponse
     {
-        $accountId = $request->session()->get('account_id');
+        $accountId = $this->accountId($request);
 
-        // Yêu cầu đăng nhập trước khi thêm vào giỏ.
         if (! $accountId) {
             return redirect()->guest(route('login.form'));
         }
 
-        // Kiểm tra dữ liệu nhận từ form.
         $data = $request->validate([
             'product_id' => ['required', 'integer', 'min:1'],
             'variant_id' => ['nullable', 'integer', 'min:1'],
             'quantity' => ['required', 'integer', 'min:1', 'max:1000'],
+            'intent' => ['nullable', 'in:cart,buy_now'],
         ], [
             'product_id.required' => 'Không tìm thấy sản phẩm.',
             'quantity.required' => 'Vui lòng chọn số lượng.',
@@ -79,112 +103,261 @@ class CartController extends Controller
             'quantity.min' => 'Số lượng phải lớn hơn 0.',
         ]);
 
-        // Chỉ cho phép thêm sản phẩm đang bán từ shop hoạt động.
-        $product = Product::query()
-            ->with('variants')
-            ->where('status', 'active')
-            ->whereHas('seller', fn ($query) => $query->where('status', 'active'))
-            ->findOrFail($data['product_id']);
+        $itemKey = DB::transaction(function () use ($accountId, $data): string {
+            $product = Product::query()
+                ->where('status', 'active')
+                ->whereHas('seller', fn ($query) => $query->where('status', 'active'))
+                ->lockForUpdate()
+                ->findOrFail($data['product_id']);
 
-        $variant = null;
+            $hasVariants = $product->variants()->exists();
+            $variant = null;
+            $requestedVariantId = $data['variant_id'] ?? null;
 
-        // Nếu sản phẩm có mẫu thì bắt buộc chọn một mẫu hợp lệ.
-        if ($product->variants->isNotEmpty()) {
-            if (empty($data['variant_id'])) {
-                return back()
-                    ->withErrors(['variant_id' => 'Vui lòng chọn mẫu mã sản phẩm.'])
-                    ->withInput();
+            if ($hasVariants && ! $requestedVariantId) {
+                throw ValidationException::withMessages([
+                    'variant_id' => 'Vui lòng chọn mẫu mã sản phẩm.',
+                ]);
             }
 
-            $variant = $product->variants->firstWhere(
-                'variant_id',
-                (int) $data['variant_id']
+            if ($requestedVariantId) {
+                $variant = $product->variants()
+                    ->whereKey((int) $requestedVariantId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $variant) {
+                    throw ValidationException::withMessages([
+                        'variant_id' => 'Mẫu mã đã chọn không hợp lệ.',
+                    ]);
+                }
+            }
+
+            $stock = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+            $quantity = (int) $data['quantity'];
+
+            if ($stock < 1) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'Mẫu sản phẩm này hiện đã hết hàng.',
+                ]);
+            }
+
+            $itemKey = $product->product_id . ':'
+                . ($variant?->variant_id ?? 'simple');
+
+            $cart = Cart::query()->firstOrCreate([
+                'account_id' => $accountId,
+            ]);
+
+            $cart = Cart::query()
+                ->where('cart_id', $cart->cart_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $cartItem = $cart->items()
+                ->where('item_key', $itemKey)
+                ->lockForUpdate()
+                ->first();
+
+            $newQuantity = (int) ($cartItem?->quantity ?? 0) + $quantity;
+
+            if ($newQuantity > $stock) {
+                throw ValidationException::withMessages([
+                    'quantity' => "Chỉ còn {$stock} sản phẩm trong kho.",
+                ]);
+            }
+
+            $cart->items()->updateOrCreate(
+                ['item_key' => $itemKey],
+                [
+                    'product_id' => $product->product_id,
+                    'variant_id' => $variant?->variant_id,
+                    'quantity' => $newQuantity,
+                ]
             );
 
-            if (! $variant) {
-                return back()
-                    ->withErrors(['variant_id' => 'Mẫu mã đã chọn không hợp lệ.'])
-                    ->withInput();
-            }
-        } elseif (! empty($data['variant_id'])) {
-            // Không nhận mẫu nếu sản phẩm không có mẫu.
-            return back()
-                ->withErrors(['variant_id' => 'Sản phẩm này không có mẫu mã.'])
-                ->withInput();
+            return $itemKey;
+        });
+
+        if (($data['intent'] ?? 'cart') === 'buy_now') {
+            return redirect()
+                ->route('store.cart.index', ['buy_now' => $itemKey])
+                ->with('success', 'Đã chuẩn bị sản phẩm để mua. Kiểm tra giỏ hàng trước khi tiếp tục.');
         }
 
-        // Lấy tồn kho của mẫu; nếu không có mẫu thì dùng tồn kho sản phẩm.
-        $stock = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
-        $quantity = (int) $data['quantity'];
-
-        if ($stock < 1) {
-            return back()->withErrors([
-                'quantity' => 'Mẫu sản phẩm này hiện đã hết hàng.',
-            ]);
-        }
-
-        // Tạo khóa riêng cho sản phẩm và mẫu để mỗi mẫu là một dòng giỏ riêng.
-        $variantId = $variant?->variant_id;
-        $itemKey = $product->product_id . ':' . ($variantId ?? 'simple');
-
-        // Tìm hoặc tạo giỏ hàng của tài khoản.
-        $cart = Cart::query()->firstOrCreate([
-            'account_id' => $accountId,
-        ]);
-
-        // Tính số lượng mới, cộng với số lượng đã có trong giỏ.
-        $cartItem = $cart->items()
-            ->where('item_key', $itemKey)
-            ->first();
-
-        $newQuantity = ($cartItem?->quantity ?? 0) + $quantity;
-
-        // Không cho thêm vượt quá tồn kho.
-        if ($newQuantity > $stock) {
-            return back()
-                ->withErrors([
-                    'quantity' => "Chỉ còn {$stock} sản phẩm trong kho.",
-                ])
-                ->withInput();
-        }
-
-        // Cập nhật dòng đã có hoặc tạo dòng mới trong giỏ.
-        $cart->items()->updateOrCreate(
-            ['item_key' => $itemKey],
-            [
-                'product_id' => $product->product_id,
-                'variant_id' => $variantId,
-                'quantity' => $newQuantity,
-            ]
-        );
-
-        // Quay lại trang sản phẩm và gửi thông báo thành công.
         return back()->with('success', 'Đã thêm sản phẩm vào giỏ hàng.');
     }
 
-    // Xóa một mặt hàng khỏi giỏ của tài khoản đang đăng nhập.
-    public function destroy(Request $request, string $key): RedirectResponse
+    public function destroy(Request $request, string $key): JsonResponse|RedirectResponse
     {
-        $accountId = $request->session()->get('account_id');
+        $accountId = $this->accountId($request);
 
         if (! $accountId) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Vui lòng đăng nhập lại.',
+                ], 401);
+            }
+
             return redirect()->guest(route('login.form'));
         }
 
-        // Tìm giỏ thuộc đúng tài khoản để không xóa giỏ người khác.
-        $cart = Cart::query()
-            ->where('account_id', $accountId)
-            ->first();
+        $deletedCount = DB::transaction(function () use ($accountId, $key): int {
+            $cart = Cart::query()
+                ->where('account_id', $accountId)
+                ->lockForUpdate()
+                ->first();
 
-        if ($cart) {
-            $cart->items()
+            if (! $cart) {
+                return 0;
+            }
+
+            return $cart->items()
                 ->where('item_key', $key)
                 ->delete();
+        }, 3);
+
+        if ($request->expectsJson()) {
+            if ($deletedCount === 0) {
+                return response()->json([
+                    'message' => 'Sản phẩm không còn trong giỏ hàng.',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'deleted_count' => $deletedCount,
+                'message' => 'Đã xóa sản phẩm khỏi giỏ hàng.',
+            ]);
         }
 
-        // Sau khi xóa, quay về trang giỏ hàng.
         return redirect()
             ->route('store.cart.index')
             ->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
+    }
+
+    public function updateQuantity(Request $request, string $key): JsonResponse
+    {
+        $accountId = $this->accountId($request);
+
+        if (! $accountId) {
+            return response()->json([
+                'message' => 'Vui lòng đăng nhập lại.',
+            ], 401);
+        }
+
+        $data = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:1000'],
+        ]);
+
+        $item = DB::transaction(function () use ($accountId, $data, $key): array {
+            $cart = Cart::query()
+                ->where('account_id', $accountId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $cartItem = $cart->items()
+                ->where('item_key', $key)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $product = Product::query()
+                ->where('status', 'active')
+                ->whereHas('seller', fn ($query) => $query->where('status', 'active'))
+                ->lockForUpdate()
+                ->findOrFail($cartItem->product_id);
+
+            $variant = null;
+
+            if ($cartItem->variant_id !== null) {
+                $variant = $product->variants()
+                    ->whereKey($cartItem->variant_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+            }
+
+            $expectedKey = $product->product_id . ':'
+                . ($variant?->variant_id ?? 'simple');
+
+            if ($expectedKey !== $cartItem->item_key) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'Mẫu sản phẩm này không còn khả dụng. Hãy xóa khỏi giỏ hàng.',
+                ]);
+            }
+
+            $stock = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+            $quantity = (int) $data['quantity'];
+
+            if ($stock < $quantity) {
+                throw ValidationException::withMessages([
+                    'quantity' => "Chỉ còn {$stock} sản phẩm trong kho.",
+                ]);
+            }
+
+            $cartItem->update(['quantity' => $quantity]);
+            $unitPrice = (float) ($variant?->price ?? $product->price);
+
+            return [
+                'quantity' => $quantity,
+                'stock_quantity' => $stock,
+                'unit_price' => $unitPrice,
+                'subtotal' => $unitPrice * $quantity,
+            ];
+        }, 3);
+
+        return response()->json([
+            'success' => true,
+            'item' => $item,
+        ]);
+    }
+
+    public function destroySelected(Request $request): JsonResponse
+    {
+        $accountId = $this->accountId($request);
+
+        if (! $accountId) {
+            return response()->json([
+                'message' => 'Vui lòng đăng nhập lại.',
+            ], 401);
+        }
+
+        $data = $request->validate([
+            'keys' => ['required', 'array', 'min:1', 'max:100'],
+            'keys.*' => ['required', 'string', 'max:100'],
+        ]);
+
+        $deletedCount = DB::transaction(function () use ($accountId, $data): int {
+            $cart = Cart::query()
+                ->where('account_id', $accountId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            return $cart->items()
+                ->whereIn('item_key', array_unique($data['keys']))
+                ->delete();
+        }, 3);
+
+        return response()->json([
+            'success' => true,
+            'deleted_count' => $deletedCount,
+            'message' => 'Đã xóa các sản phẩm đã chọn khỏi giỏ hàng.',
+        ]);
+    }
+
+    private function accountId(Request $request): ?int
+    {
+        $accountId = $request->session()->get('account_id');
+
+        if (! is_numeric($accountId)) {
+            return null;
+        }
+
+        $accountId = Account::query()
+            ->whereKey((int) $accountId)
+            ->whereIn('role', ['user', 'seller'])
+            ->where('status', 'active')
+            ->value('account_id');
+
+        return $accountId === null ? null : (int) $accountId;
     }
 }

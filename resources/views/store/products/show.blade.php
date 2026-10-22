@@ -195,13 +195,27 @@
                                 <div class="text-danger small mb-2">{{ $message }}</div>
                             @enderror
 
-                            <button type="submit"
-                                    class="btn btn-primary"
-                                    id="addToCartButton"
-                                    @disabled($initialStock < 1)>
-                                <i class="bi bi-cart-plus me-1"></i>
-                                Thêm vào giỏ hàng
-                            </button>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="submit"
+                                        name="intent"
+                                        value="cart"
+                                        class="btn btn-outline-primary"
+                                        id="addToCartButton"
+                                        @disabled($initialStock < 1)>
+                                    <i class="bi bi-cart-plus me-1" aria-hidden="true"></i>
+                                    Thêm vào giỏ hàng
+                                </button>
+
+                                <button type="submit"
+                                        name="intent"
+                                        value="buy_now"
+                                        class="btn btn-primary"
+                                        id="buyNowButton"
+                                        @disabled($initialStock < 1)>
+                                    <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>
+                                    Mua ngay
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -351,7 +365,10 @@
             const options = document.querySelectorAll('.variant-option');
             const selectedVariantInput = document.getElementById('selectedVariantId');
             const quantityInput = document.getElementById('quantity');
-            const addToCartButton = document.getElementById('addToCartButton');
+            const purchaseButtons = [
+                document.getElementById('addToCartButton'),
+                document.getElementById('buyNowButton'),
+            ];
 
             options.forEach((button) => {
                 button.addEventListener('click', () => {
@@ -366,20 +383,15 @@
                     const price = Number(button.dataset.price);
                     const stock = Number(button.dataset.stock);
 
-                    // Gửi đúng mẫu đang chọn khi submit form.
                     selectedVariantInput.value = button.dataset.variantId;
-
-                    // Không cho chọn số lượng vượt tồn kho của mẫu.
                     quantityInput.max = String(Math.max(stock, 1));
 
-                    if (stock < 1) {
-                        addToCartButton.disabled = true;
-                    } else {
-                        addToCartButton.disabled = false;
+                    purchaseButtons.forEach((purchaseButton) => {
+                        purchaseButton.disabled = stock < 1;
+                    });
 
-                        if (Number(quantityInput.value) > stock) {
-                            quantityInput.value = String(stock);
-                        }
+                    if (stock > 0 && Number(quantityInput.value) > stock) {
+                        quantityInput.value = String(stock);
                     }
 
                     document.getElementById('productPrice').textContent =
