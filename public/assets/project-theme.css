@@ -1,0 +1,61 @@
+:root,
+[data-bs-theme="light"] {
+    --shop-primary: #1a94ff;
+    --shop-primary-hover: #0878d1;
+    --shop-price: #ff424e;
+    --bs-primary: #1a94ff;
+    --bs-primary-rgb: 26, 148, 255;
+    --bs-link-color: #1a94ff;
+    --bs-link-hover-color: #0878d1;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--shop-primary);
+    --bs-btn-border-color: var(--shop-primary);
+    --bs-btn-hover-bg: var(--shop-primary-hover);
+    --bs-btn-hover-border-color: var(--shop-primary-hover);
+    --bs-btn-active-bg: var(--shop-primary-hover);
+    --bs-btn-active-border-color: var(--shop-primary-hover);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--shop-primary);
+    --bs-btn-border-color: var(--shop-primary);
+    --bs-btn-hover-bg: var(--shop-primary);
+    --bs-btn-hover-border-color: var(--shop-primary);
+    --bs-btn-active-bg: var(--shop-primary-hover);
+    --bs-btn-active-border-color: var(--shop-primary-hover);
+}
+
+.text-primary,
+.link-primary {
+    color: var(--shop-primary) !important;
+}
+
+.form-check-input:checked {
+    border-color: var(--shop-primary);
+    background-color: var(--shop-primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--shop-primary);
+    box-shadow: 0 0 0 .2rem rgb(26 148 255 / 18%);
+}
+
+.progress-bar {
+    background-color: var(--shop-primary);
+}
+
+.page-item.active .page-link {
+    background-color: var(--shop-primary);
+    border-color: var(--shop-primary);
+}
+
+.page-link {
+    color: var(--shop-primary);
+}
+
+.page-link:hover {
+    color: var(--shop-primary-hover);
+}

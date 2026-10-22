@@ -10,4 +10,5 @@ Route::post('/seller/login', [LoginController::class, 'login'])
     ->name('seller.login.submit');
 
 Route::post('/seller/logout', [LoginController::class, 'logout'])
+    ->middleware('auth')
     ->name('seller.logout');

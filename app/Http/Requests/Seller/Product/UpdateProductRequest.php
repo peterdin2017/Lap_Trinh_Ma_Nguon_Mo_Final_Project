@@ -41,6 +41,12 @@ class UpdateProductRequest extends FormRequest
             // ID của các ảnh phụ cũ được chọn để xóa.
             'remove_image_ids' => ['nullable', 'array'],
             'remove_image_ids.*' => ['integer', 'distinct'],
+
+            'variants_present' => ['sometimes', 'boolean'],
+            'variants' => ['nullable', 'array', 'max:20'],
+            'variants.*.variant_name' => ['required', 'string', 'max:100'],
+            'variants.*.price' => ['required', 'numeric', 'min:0', 'max:9999999999'],
+            'variants.*.stock_quantity' => ['required', 'integer', 'min:0', 'max:1000000'],
         ];
     }
 
@@ -70,6 +76,17 @@ class UpdateProductRequest extends FormRequest
             'images.*.max' => 'Mỗi ảnh phụ không được vượt quá 5MB.',
             'remove_image_ids.*.integer' => 'Ảnh được chọn để xóa không hợp lệ.',
             'remove_image_ids.*.distinct' => 'Ảnh được chọn để xóa bị trùng.',
+
+            'variants.array' => 'Danh sách mẫu mã không hợp lệ.',
+            'variants.max' => 'Mỗi sản phẩm chỉ được có tối đa 20 mẫu mã.',
+            'variants.*.variant_name.required' => 'Vui lòng nhập tên cho từng mẫu mã.',
+            'variants.*.variant_name.max' => 'Tên mẫu mã không được vượt quá 100 ký tự.',
+            'variants.*.price.required' => 'Vui lòng nhập giá cho từng mẫu mã.',
+            'variants.*.price.numeric' => 'Giá mẫu mã phải là số.',
+            'variants.*.price.min' => 'Giá mẫu mã không được âm.',
+            'variants.*.stock_quantity.required' => 'Vui lòng nhập tồn kho cho từng mẫu mã.',
+            'variants.*.stock_quantity.integer' => 'Tồn kho mẫu mã phải là số nguyên.',
+            'variants.*.stock_quantity.min' => 'Tồn kho mẫu mã không được âm.',
         ];
     }
 }

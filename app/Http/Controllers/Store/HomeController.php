@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\View\View;
 
@@ -19,6 +20,11 @@ class HomeController extends Controller
             ->latest()
             ->paginate(12);
 
-        return view('store.home', compact('products'));
+        $categories = Category::query()
+            ->withCount('products')
+            ->orderByDesc('products_count')
+            ->get();
+
+        return view('store.home', compact('products', 'categories'));
     }
 }

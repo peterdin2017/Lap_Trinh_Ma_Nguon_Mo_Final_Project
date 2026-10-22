@@ -29,7 +29,6 @@ return new class extends Migration
                 ->default('active');
 
             $table->boolean('is_verified')->default(false);
-            $table->rememberToken();
             $table->timestamps();
 
             // Chặn trùng email trong cùng role,
