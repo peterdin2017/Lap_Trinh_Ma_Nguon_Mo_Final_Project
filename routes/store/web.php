@@ -25,3 +25,6 @@ require __DIR__ . '/products/catalog.php';
 require __DIR__ . '/account/profile.php';
 require __DIR__ . '/account/password.php';
 require __DIR__ . '/account/addresses.php';
+
+// Checkout
+require __DIR__ . '/checkout/checkout.php';

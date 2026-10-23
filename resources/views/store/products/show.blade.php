@@ -222,12 +222,13 @@
                             <div class="d-flex flex-wrap gap-2">
                                 <button type="submit" name="intent" value="cart" class="btn btn-outline-primary"
                                     id="addToCartButton" @disabled(! $hasVariants && $initialStock < 1)>
-                                    <i class="bi bi-cart-plus me-1"></i>
+                                    <i class="bi bi-cart-plus me-1" aria-hidden="true"></i>
                                     Thêm vào giỏ hàng
                                 </button>
 
                                 <button type="submit" name="intent" value="buy_now" class="btn btn-primary"
                                     id="buyNowButton" @disabled(! $hasVariants && $initialStock < 1)>
+                                    <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>
                                     Mua ngay
                                 </button>
                             </div>

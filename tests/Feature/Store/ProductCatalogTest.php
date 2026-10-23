@@ -7,10 +7,8 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\Seller;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ProductCatalogTest extends TestCase
@@ -218,22 +216,21 @@ class ProductCatalogTest extends TestCase
 
     /* ------------------------------ Đánh giá ------------------------------ */
 
-    public function test_only_buyers_of_delivered_orders_can_review_once_and_rating_is_updated(): void
+    public function test_only_buyers_of_completed_orders_can_review_once_and_rating_is_updated(): void
     {
-        $this->createOrderTables();
         $product = $this->makeProduct();
         $buyer = $this->makeBuyer('buyer@example.com');
         $stranger = $this->makeBuyer('stranger@example.com');
 
-        $orderId = DB::table('orders')->insertGetId(['account_id' => $buyer->account_id, 'status' => 'shipping']);
-        DB::table('order_items')->insert(['order_id' => $orderId, 'product_id' => $product->product_id]);
+        $orderId = $this->makeOrder($buyer, 'shipping');
+        $this->addOrderItem($orderId, $product);
         $url = route('store.products.reviews.store', $product->product_id);
 
-        // Đơn chưa giao: chưa được đánh giá.
+        // Đơn đang giao: chưa được đánh giá.
         $this->withSession(['account_id' => $buyer->account_id])
             ->post($url, ['rating' => 5])->assertSessionHasErrors('review');
 
-        DB::table('orders')->where('order_id', $orderId)->update(['status' => 'delivered']);
+        DB::table('orders')->where('order_id', $orderId)->update(['order_status' => 'completed']);
 
         // Người chưa mua: bị chặn.
         $this->withSession(['account_id' => $stranger->account_id])
@@ -256,6 +253,13 @@ class ProductCatalogTest extends TestCase
         $this->withSession(['account_id' => $buyer->account_id])
             ->post($url, ['rating' => 1])->assertSessionHasErrors('review');
         $this->assertSame(1, Review::count());
+
+        // Mua lại lần nữa (dòng hàng mới) thì được đánh giá thêm một lần.
+        $second = $this->makeOrder($buyer, 'completed');
+        $this->addOrderItem($second, $product);
+        $this->withSession(['account_id' => $buyer->account_id])
+            ->post($url, ['rating' => 2])->assertSessionHas('review_success');
+        $this->assertSame(2, Review::count());
 
         // Hiển thị nhận xét trên trang chi tiết.
         $this->get(route('store.products.show', $product->product_id))->assertSee('Tốt');
@@ -317,18 +321,35 @@ class ProductCatalogTest extends TestCase
         ], $attrs));
     }
 
-    /** Bảng tối thiểu theo giả định schema của Người 2. */
-    private function createOrderTables(): void
+    private function makeOrder(Account $buyer, string $status): int
     {
-        Schema::create('orders', function (Blueprint $t) {
-            $t->bigIncrements('order_id');
-            $t->unsignedBigInteger('account_id');
-            $t->string('status');
-        });
-        Schema::create('order_items', function (Blueprint $t) {
-            $t->bigIncrements('order_item_id');
-            $t->unsignedBigInteger('order_id');
-            $t->unsignedBigInteger('product_id');
-        });
+        static $n = 0;
+        $n++;
+
+        return DB::table('orders')->insertGetId([
+            'order_code' => 'DH' . str_pad((string) $n, 6, '0', STR_PAD_LEFT),
+            'account_id' => $buyer->account_id,
+            'seller_id' => $this->shop->seller_id,
+            'shipping_name' => 'Nguyen Van A',
+            'shipping_phone' => '0900000000',
+            'shipping_address' => '1 Duong A, Quan B',
+            'order_status' => $status,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    private function addOrderItem(int $orderId, Product $product): void
+    {
+        DB::table('order_items')->insert([
+            'order_id' => $orderId,
+            'product_id' => $product->product_id,
+            'product_name' => $product->product_name,
+            'price' => 100000,
+            'quantity' => 1,
+            'total_price' => 100000,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }
