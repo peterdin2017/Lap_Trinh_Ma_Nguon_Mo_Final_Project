@@ -3,118 +3,106 @@
 @section('title', 'Cửa hàng')
 
 @section('content')
-    <main class="container py-4">
-        <div class="retail-hero retail-hero--orange">
+    <div class="container py-4">
+        <section class="retail-hero retail-hero--orange">
             <div>
                 <div class="eyebrow">Mua sắm trực tuyến</div>
-                <h2>Khám phá sản phẩm dành cho bạn</h2>
-                <p>Thời trang, điện thoại, laptop và nhiều danh mục trong cùng một cửa hàng.</p>
+                <h1>Khám phá sản phẩm dành cho bạn</h1>
+                <p>
+                    Thời trang, điện thoại, laptop và nhiều danh mục
+                    trong cùng một cửa hàng.
+                </p>
             </div>
+
             <i class="bi bi-bag-heart retail-hero__icon" aria-hidden="true"></i>
-        </div>
-        <div class="row g-3 g-lg-4">
-            {{-- Sidebar bộ lọc --}}
-            <aside class="col-12 col-lg-3">
-                @include('store.layouts.sidebar')
-            </aside>
+        </section>
 
-            {{-- Toolbar, lưới sản phẩm và phân trang --}}
-            <section class="col-12 col-lg-9" aria-labelledby="store-title">
-                <div class="store-toolbar p-3 mb-3">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                        <div>
-                            <h1 id="store-title" class="h5 fw-bold mb-1">
-                                Sản phẩm nổi bật
-                            </h1>
-                            <span class="small text-secondary">
-                                {{ $products->total() }} sản phẩm
-                            </span>
-                        </div>
+        @php
+            $homeCategories = $categories
+                ->whereNull('parent_id')
+                ->take(8);
+        @endphp
 
-                        <nav class="store-sort d-flex flex-wrap gap-2"
-                             aria-label="Sắp xếp sản phẩm">
-                            <a href="?sort=popular"
-                               class="store-sort__link {{ request('sort', 'popular') === 'popular' ? 'is-active' : '' }}">
-                                Phổ biến
-                            </a>
+        @if ($homeCategories->isNotEmpty())
+            <section class="mb-4" aria-labelledby="home-categories-title">
+                <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                    <h2 id="home-categories-title" class="h5 fw-bold mb-0">
+                        Danh mục nổi bật
+                    </h2>
 
-                            <a href="?sort=best_selling"
-                               class="store-sort__link {{ request('sort') === 'best_selling' ? 'is-active' : '' }}">
-                                Bán chạy
-                            </a>
-
-                            <a href="?sort=newest"
-                               class="store-sort__link {{ request('sort') === 'newest' ? 'is-active' : '' }}">
-                                Hàng mới
-                            </a>
-
-                            <a href="?sort=price"
-                               class="store-sort__link {{ request('sort') === 'price' ? 'is-active' : '' }}">
-                                Giá
-                            </a>
-                        </nav>
-                    </div>
+                    <a
+                        href="{{ route('store.products.index') }}"
+                        class="small text-decoration-none"
+                    >
+                        Xem tất cả sản phẩm
+                    </a>
                 </div>
 
-                {{-- Responsive: 2 cột mobile, 3 tablet, 4 desktop --}}
-                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
-                    @forelse ($products as $product)
+                <div class="row row-cols-2 row-cols-md-4 g-2">
+                    @foreach ($homeCategories as $category)
                         <div class="col">
-                            @include('store.partials.product-card', ['product' => $product])
+                            <a
+                                href="{{ route('store.products.index', ['category' => $category->category_id]) }}"
+                                class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center gap-2"
+                            >
+                                <span class="text-truncate">
+                                    {{ $category->category_name }}
+                                </span>
+
+                                @if (isset($category->products_count))
+                                    <span class="badge text-bg-light flex-shrink-0">
+                                        {{ $category->products_count }}
+                                    </span>
+                                @endif
+                            </a>
                         </div>
-                    @empty
-                        <div class="col-12">
-                            <div class="store-empty-state p-5 text-center text-secondary">
-                                <i class="bi bi-basket" aria-hidden="true"></i>
-                                <strong>Chưa có sản phẩm để hiển thị</strong>
-                                <span class="empty-note">Sản phẩm sẽ xuất hiện tại đây khi cửa hàng có dữ liệu. Bạn có thể quay lại sau.</span>
-                            </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        <section aria-labelledby="home-products-title">
+            <div class="store-toolbar p-3 mb-3">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                    <h2 id="home-products-title" class="h5 fw-bold mb-0">
+                        Sản phẩm mới nhất
+                    </h2>
+
+                    <span class="small text-secondary">
+                        {{ number_format($products->total()) }} sản phẩm
+                    </span>
+                </div>
+            </div>
+
+            @if ($products->isEmpty())
+                <div class="store-empty-state p-5">
+                    <i class="bi bi-basket" aria-hidden="true"></i>
+                    <strong>Chưa có sản phẩm để hiển thị</strong>
+                    <span class="empty-note">
+                        Sản phẩm sẽ xuất hiện tại đây khi cửa hàng có dữ liệu.
+                        Bạn có thể quay lại sau.
+                    </span>
+                </div>
+            @else
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+                    @foreach ($products as $product)
+                        <div class="col">
+                            @include('store.partials.product-card', [
+                                'product' => $product,
+                            ])
                         </div>
-                    @endforelse
+                    @endforeach
                 </div>
 
-                {{-- Phân trang Bootstrap --}}
                 @if ($products->hasPages())
-                    <nav class="d-flex justify-content-center mt-4" aria-label="Phân trang">
+                    <nav
+                        class="d-flex justify-content-center mt-4"
+                        aria-label="Phân trang sản phẩm"
+                    >
                         {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
                     </nav>
                 @endif
-            </section>
-        </div>
-    </main>
-
-    <style>
-        .store-toolbar,
-        .store-empty-state {
-            background: var(--shop-card-bg, #FFFFFF);
-            border: 1px solid var(--shop-border, #E2E8F0);
-            border-radius: 12px;
-            box-shadow: var(--shop-shadow, 0 2px 8px rgba(0, 0, 0, .04));
-        }
-
-        .store-sort__link {
-            padding: .5rem .75rem;
-            color: var(--shop-text-muted, #64748B);
-            text-decoration: none;
-            border-radius: 8px;
-            transition: color .15s ease, background-color .15s ease;
-        }
-
-        .store-sort__link:hover,
-        .store-sort__link:focus-visible,
-        .store-sort__link.is-active {
-            color: var(--shop-primary, #1A94FF);
-            background: var(--shop-primary-light, #EBF5FF);
-        }
-
-        .store-sort__link.is-active {
-            font-weight: 600;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .store-sort__link {
-                transition: none;
-            }
-        }
-    </style>
+            @endif
+        </section>
+    </div>
 @endsection

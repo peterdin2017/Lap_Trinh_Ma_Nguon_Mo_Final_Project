@@ -10,7 +10,10 @@
                 Nhập mật khẩu hiện tại để xác nhận thay đổi.
             </p>
 
-            <form method="POST" action="{{ route('store.account.password.update') }}">
+            <form
+                method="POST"
+                action="{{ route('store.account.password.update') }}"
+            >
                 @csrf
                 @method('PUT')
 
@@ -32,19 +35,25 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="password" class="form-label">Mật khẩu mới</label>
+                    <label for="password" class="form-label">
+                        Mật khẩu mới
+                    </label>
                     <input
                         id="password"
                         name="password"
                         type="password"
                         autocomplete="new-password"
                         minlength="8"
+                        aria-describedby="password-help"
                         class="form-control @error('password') is-invalid @enderror"
                         required
                     >
                     @error('password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                    <div id="password-help" class="form-text">
+                        Mật khẩu mới cần có ít nhất 8 ký tự.
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -63,7 +72,8 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary px-4">
-                    <i class="bi bi-shield-check me-1"></i>Cập nhật mật khẩu
+                    <i class="bi bi-shield-check me-1" aria-hidden="true"></i>
+                    Cập nhật mật khẩu
                 </button>
             </form>
         </div>

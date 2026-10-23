@@ -8,34 +8,34 @@
         $hasVariants = $variants->isNotEmpty();
 
         // Có mẫu mã thì khách PHẢI chọn; chỉ giữ lại lựa chọn cũ khi form báo lỗi và quay lại.
-        $selectedVariant = $hasVariants
-            ? $variants->firstWhere('variant_id', (int) old('variant_id'))
-            : null;
+        $selectedVariant = $hasVariants ? $variants->firstWhere('variant_id', (int) old('variant_id')) : null;
 
         $initialStock = $selectedVariant?->stock_quantity ?? $product->stock_quantity;
 
         $minPrice = $hasVariants ? $variants->min('price') : $product->price;
         $maxPrice = $hasVariants ? $variants->max('price') : $product->price;
-        $fmt = fn ($n) => number_format($n, 0, ',', '.') . '₫';
+        $fmt = fn($n) => number_format($n, 0, ',', '.') . '₫';
         $initialPriceText = $selectedVariant
             ? $fmt($selectedVariant->price)
-            : ((float) $minPrice === (float) $maxPrice ? $fmt($minPrice) : $fmt($minPrice) . ' - ' . $fmt($maxPrice));
+            : ((float) $minPrice === (float) $maxPrice
+                ? $fmt($minPrice)
+                : $fmt($minPrice) . ' - ' . $fmt($maxPrice));
     @endphp
 
     <main class="container py-4">
         <nav class="small mb-3" aria-label="breadcrumb">
-<<<<<<< HEAD
             <a href="{{ route('store.home') }}" class="text-decoration-none">Trang chủ</a>
-=======
-            <a href="{{ route('store.home') }}" class="text-decoration-none">
-                Trang chủ
-            </a>
-            @foreach ($breadcrumb as $crumb)
-                <span class="text-secondary mx-2">/</span>
-                <a href="{{ route('store.products.index', ['category' => $crumb->category_id]) }}"
-                    class="text-decoration-none">{{ $crumb->category_name }}</a>
-            @endforeach
->>>>>>> origin/hoai-phuong
+
+            @isset($breadcrumb)
+                @foreach ($breadcrumb as $crumb)
+                    <span class="text-secondary mx-2">/</span>
+                    <a href="{{ route('store.products.index', ['category' => $crumb->category_id]) }}"
+                        class="text-decoration-none">
+                        {{ $crumb->category_name }}
+                    </a>
+                @endforeach
+            @endisset
+
             <span class="text-secondary mx-2">/</span>
             <span class="text-secondary">{{ $product->product_name }}</span>
         </nav>
@@ -46,31 +46,26 @@
                     <div class="col-12 col-lg-5">
                         @if ($images->isNotEmpty())
                             <img id="productMainImage"
-                                 src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($images->first()) }}"
-                                 alt="{{ $product->product_name }}"
-                                 class="img-fluid rounded w-100"
-                                 style="height: 420px; object-fit: contain; background: #f8f9fa;">
+                                src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($images->first()) }}"
+                                alt="{{ $product->product_name }}" class="img-fluid rounded w-100"
+                                style="height: 420px; object-fit: contain; background: #f8f9fa;">
 
                             @if ($images->count() > 1)
                                 <div class="d-flex flex-wrap gap-2 mt-3">
                                     @foreach ($images as $image)
-                                        <button type="button"
-                                                class="btn border p-1"
-                                                data-image="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
-                                                onclick="document.getElementById('productMainImage').src = this.dataset.image"
-                                                aria-label="Xem ảnh sản phẩm {{ $loop->iteration }}">
+                                        <button type="button" class="btn border p-1"
+                                            data-image="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
+                                            onclick="document.getElementById('productMainImage').src = this.dataset.image"
+                                            aria-label="Xem ảnh sản phẩm {{ $loop->iteration }}">
                                             <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
-                                                 alt=""
-                                                 width="64"
-                                                 height="64"
-                                                 style="object-fit: cover;">
+                                                alt="" width="64" height="64" style="object-fit: cover;">
                                         </button>
                                     @endforeach
                                 </div>
                             @endif
                         @else
                             <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                                 style="height: 420px;">
+                                style="height: 420px;">
                                 <span class="text-secondary">Chưa có ảnh sản phẩm</span>
                             </div>
                         @endif
@@ -100,9 +95,8 @@
                             <div class="row mb-4 align-items-start">
                                 <div class="col-4 col-sm-3 text-secondary pt-2">Mẫu mã</div>
                                 <div class="col-8 col-sm-9">
-                                    <div class="d-flex flex-wrap gap-2 variant-list"
-                                         role="group"
-                                         aria-label="Chọn mẫu mã sản phẩm">
+                                    <div class="d-flex flex-wrap gap-2 variant-list" role="group"
+                                        aria-label="Chọn mẫu mã sản phẩm">
                                         @foreach ($variants as $variant)
                                             @php $isSelected = $selectedVariant?->variant_id === $variant->variant_id; @endphp
                                             <button type="button"
@@ -110,9 +104,7 @@
                                                 data-variant-id="{{ $variant->variant_id }}"
                                                 data-price="{{ $variant->price }}"
                                                 data-stock="{{ $variant->stock_quantity }}"
-                                                @if ($variant->image_url)
-                                                    data-image="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($variant->image_url) }}"
-                                                @endif
+                                                @if ($variant->image_url) data-image="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($variant->image_url) }}" @endif
                                                 aria-pressed="{{ $isSelected ? 'true' : 'false' }}"
                                                 @disabled($variant->stock_quantity < 1)>
                                                 {{ $variant->variant_name }}
@@ -139,7 +131,7 @@
 
                             <dt class="col-4 col-sm-3 fw-normal text-secondary">Tình trạng</dt>
                             <dd class="col-8 col-sm-9" id="productStatus">
-                                @if ($hasVariants && ! $selectedVariant)
+                                @if ($hasVariants && !$selectedVariant)
                                     <span class="text-secondary">Chọn mẫu mã để xem tình trạng</span>
                                 @elseif ($initialStock > 0)
                                     <span class="text-success">Còn hàng</span>
@@ -150,17 +142,14 @@
 
                             <dt class="col-4 col-sm-3 fw-normal text-secondary">Số lượng</dt>
                             <dd class="col-8 col-sm-9" id="productStock">
-                                {{ $hasVariants && ! $selectedVariant ? '—' : number_format($initialStock) }}
+                                {{ $hasVariants && !$selectedVariant ? '—' : number_format($initialStock) }}
                             </dd>
                         </dl>
 
                         @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 {{ session('success') }}
-                                <button type="button"
-                                        class="btn-close"
-                                        data-bs-dismiss="alert"
-                                        aria-label="Đóng"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
                             </div>
                         @endif
 
@@ -171,10 +160,7 @@
                                         <li>{{ $error }}</li>
                                     @endforeach
                                 </ul>
-                                <button type="button"
-                                        class="btn-close"
-                                        data-bs-dismiss="alert"
-                                        aria-label="Đóng"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
                             </div>
                         @endif
 
@@ -184,14 +170,10 @@
                         <form method="POST" action="{{ route('store.cart.items.store') }}" id="purchaseForm" novalidate>
                             @csrf
 
-                            <input type="hidden"
-                                   name="product_id"
-                                   value="{{ $product->product_id }}">
+                            <input type="hidden" name="product_id" value="{{ $product->product_id }}">
 
-                            <input type="hidden"
-                                   name="variant_id"
-                                   id="selectedVariantId"
-                                   value="{{ $selectedVariant?->variant_id }}">
+                            <input type="hidden" name="variant_id" id="selectedVariantId"
+                                value="{{ $selectedVariant?->variant_id }}">
 
                             <div class="mb-3" style="max-width: 160px;">
                                 <label for="quantity" class="form-label">Số lượng</label>
@@ -210,13 +192,13 @@
 
                             <div class="d-flex flex-wrap gap-2">
                                 <button type="submit" name="intent" value="cart" class="btn btn-outline-primary"
-                                    id="addToCartButton" @disabled(! $hasVariants && $initialStock < 1)>
+                                    id="addToCartButton" @disabled(!$hasVariants && $initialStock < 1)>
                                     <i class="bi bi-cart-plus me-1" aria-hidden="true"></i>
                                     Thêm vào giỏ hàng
                                 </button>
 
                                 <button type="submit" name="intent" value="buy_now" class="btn btn-primary"
-                                    id="buyNowButton" @disabled(! $hasVariants && $initialStock < 1)>
+                                    id="buyNowButton" @disabled(!$hasVariants && $initialStock < 1)>
                                     <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>
                                     Mua ngay
                                 </button>
@@ -235,9 +217,9 @@
                         <div class="col-12 col-lg-4">
                             <div class="d-flex align-items-center gap-3">
                                 <a href="{{ route('store.shops.show', $product->seller->seller_id) }}"
-                                   class="rounded-circle bg-light border d-flex align-items-center justify-content-center flex-shrink-0 text-decoration-none"
-                                   style="width: 72px; height: 72px;"
-                                   aria-label="Xem cửa hàng {{ $product->seller->shop_name }}">
+                                    class="rounded-circle bg-light border d-flex align-items-center justify-content-center flex-shrink-0 text-decoration-none"
+                                    style="width: 72px; height: 72px;"
+                                    aria-label="Xem cửa hàng {{ $product->seller->shop_name }}">
                                     <span class="fs-3 fw-bold text-primary">
                                         {{ mb_strtoupper(mb_substr($product->seller->shop_name, 0, 1)) }}
                                     </span>
@@ -246,7 +228,7 @@
                                 <div>
                                     <h2 class="h5 mb-2">
                                         <a href="{{ route('store.shops.show', $product->seller->seller_id) }}"
-                                           class="text-dark text-decoration-none">
+                                            class="text-dark text-decoration-none">
                                             {{ $product->seller->shop_name }}
                                         </a>
                                     </h2>
@@ -254,18 +236,16 @@
                                     <span class="badge text-bg-success">Shop đang hoạt động</span>
 
                                     @if (session('account_role') === 'user')
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-primary d-block mt-2"
-                                                data-chat-start
-                                                data-seller-id="{{ $product->seller->seller_id }}"
-                                                data-shop-name="{{ $product->seller->shop_name }}"
-                                                data-product-id="{{ $product->product_id }}">
+                                        <button type="button" class="btn btn-sm btn-outline-primary d-block mt-2"
+                                            data-chat-start data-seller-id="{{ $product->seller->seller_id }}"
+                                            data-shop-name="{{ $product->seller->shop_name }}"
+                                            data-product-id="{{ $product->product_id }}">
                                             <i class="bi bi-chat-dots me-1" aria-hidden="true"></i>
                                             Chat với Shop
                                         </button>
                                     @else
                                         <a href="{{ route('login.form') }}"
-                                           class="btn btn-sm btn-outline-primary d-block mt-2">
+                                            class="btn btn-sm btn-outline-primary d-block mt-2">
                                             <i class="bi bi-chat-dots me-1" aria-hidden="true"></i>
                                             Chat với Shop
                                         </a>
@@ -299,7 +279,9 @@
                                             $product->seller->shop_ward,
                                             $product->seller->shop_district,
                                             $product->seller->shop_province,
-                                        ])->filter()->implode(', ');
+                                        ])
+                                            ->filter()
+                                            ->implode(', ');
                                     @endphp
 
                                     @if ($shopLocation)
@@ -357,13 +339,16 @@
 
                     <div class="col-12 col-md-9">
                         @if ($canReview)
-                            <form method="POST" action="{{ route('store.products.reviews.store', $product->product_id) }}">
+                            <form method="POST"
+                                action="{{ route('store.products.reviews.store', $product->product_id) }}">
                                 @csrf
                                 <div class="fw-semibold mb-2">Viết đánh giá của bạn</div>
-                                <select name="rating" class="form-select w-auto mb-2 @error('rating') is-invalid @enderror" required>
+                                <select name="rating"
+                                    class="form-select w-auto mb-2 @error('rating') is-invalid @enderror" required>
                                     <option value="">Chọn số sao</option>
                                     @foreach ([5, 4, 3, 2, 1] as $star)
-                                        <option value="{{ $star }}" @selected((int) old('rating') === $star)>{{ $star }} sao</option>
+                                        <option value="{{ $star }}" @selected((int) old('rating') === $star)>
+                                            {{ $star }} sao</option>
                                     @endforeach
                                 </select>
                                 @error('rating')
@@ -392,7 +377,8 @@
                     <div class="border-bottom py-3">
                         <div class="small">
                             <strong>{{ $reviewerNames[$review->account_id] ?? 'Người dùng ẩn danh' }}</strong>
-                            <span class="text-danger ms-2">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
+                            <span
+                                class="text-danger ms-2">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
                             <span class="text-secondary ms-2">{{ $review->created_at?->format('d/m/Y') }}</span>
                         </div>
                         @if (filled($review->comment))
@@ -479,7 +465,8 @@
 
                     const stock = Number(button.dataset.stock);
 
-                    document.getElementById('productPrice').textContent = vnd(Number(button.dataset.price));
+                    document.getElementById('productPrice').textContent = vnd(Number(button.dataset
+                        .price));
                     document.getElementById('productStock').textContent =
                         new Intl.NumberFormat('vi-VN').format(stock);
                     document.getElementById('productStatus').innerHTML = stock > 0 ?
