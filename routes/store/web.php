@@ -1,8 +1,7 @@
 <?php
 
-use App\Http\Controllers\Store\HomeController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Store\HomeController;
 use App\Http\Controllers\Store\Product\ProductController;
 
 Route::get('/', [HomeController::class, 'index'])
@@ -11,7 +10,6 @@ Route::get('/', [HomeController::class, 'index'])
 Route::get('/products/{productId}', [ProductController::class, 'show'])
     ->whereNumber('productId')
     ->name('store.products.show');
-
 
 // Các route Store
 require __DIR__ . '/auth/login.php';
@@ -27,3 +25,9 @@ require __DIR__ . '/account/addresses.php';
 
 // Checkout
 require __DIR__ . '/checkout/checkout.php';
+
+// Shop
+require __DIR__ . '/shop/shop.php';
+
+// Chat
+require __DIR__ . '/chat/chat.php';

@@ -12,9 +12,7 @@
 
     <main class="container py-4">
         <nav class="small mb-3" aria-label="breadcrumb">
-            <a href="{{ route('store.home') }}" class="text-decoration-none">
-                Trang chủ
-            </a>
+            <a href="{{ route('store.home') }}" class="text-decoration-none">Trang chủ</a>
             <span class="text-secondary mx-2">/</span>
             <span class="text-secondary">
                 {{ $product->category?->category_name ?? 'Sản phẩm' }}
@@ -58,9 +56,7 @@
                     </div>
 
                     <div class="col-12 col-lg-7">
-                        <h1 class="h3 fw-semibold mb-3">
-                            {{ $product->product_name }}
-                        </h1>
+                        <h1 class="h3 fw-semibold mb-3">{{ $product->product_name }}</h1>
 
                         <div class="d-flex flex-wrap gap-3 small mb-4">
                             <span>
@@ -68,7 +64,6 @@
                                 <strong>{{ number_format($product->rating_avg, 1) }}</strong>
                                 ({{ $product->rating_count }})
                             </span>
-
                             <span class="text-secondary">
                                 Đã bán {{ number_format($product->sold_count) }}
                             </span>
@@ -82,10 +77,7 @@
 
                         @if ($variants->isNotEmpty())
                             <div class="row mb-4 align-items-start">
-                                <div class="col-4 col-sm-3 text-secondary pt-2">
-                                    Mẫu mã
-                                </div>
-
+                                <div class="col-4 col-sm-3 text-secondary pt-2">Mẫu mã</div>
                                 <div class="col-8 col-sm-9">
                                     <div class="d-flex flex-wrap gap-2 variant-list"
                                          role="group"
@@ -107,22 +99,16 @@
 
                         <dl class="row mb-4">
                             @if ($product->brand)
-                                <dt class="col-4 col-sm-3 fw-normal text-secondary">
-                                    Thương hiệu
-                                </dt>
+                                <dt class="col-4 col-sm-3 fw-normal text-secondary">Thương hiệu</dt>
                                 <dd class="col-8 col-sm-9">{{ $product->brand }}</dd>
                             @endif
 
-                            <dt class="col-4 col-sm-3 fw-normal text-secondary">
-                                Danh mục
-                            </dt>
+                            <dt class="col-4 col-sm-3 fw-normal text-secondary">Danh mục</dt>
                             <dd class="col-8 col-sm-9">
                                 {{ $product->category?->category_name ?? '—' }}
                             </dd>
 
-                            <dt class="col-4 col-sm-3 fw-normal text-secondary">
-                                Tình trạng
-                            </dt>
+                            <dt class="col-4 col-sm-3 fw-normal text-secondary">Tình trạng</dt>
                             <dd class="col-8 col-sm-9" id="productStatus">
                                 @if ($initialStock > 0)
                                     <span class="text-success">Còn hàng</span>
@@ -131,15 +117,12 @@
                                 @endif
                             </dd>
 
-                            <dt class="col-4 col-sm-3 fw-normal text-secondary">
-                                Số lượng
-                            </dt>
+                            <dt class="col-4 col-sm-3 fw-normal text-secondary">Số lượng</dt>
                             <dd class="col-8 col-sm-9" id="productStock">
                                 {{ number_format($initialStock) }}
                             </dd>
                         </dl>
 
-                        {{-- Hiển thị thông báo sau khi thêm sản phẩm hoặc khi có lỗi. --}}
                         @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 {{ session('success') }}
@@ -222,66 +205,91 @@
             </div>
         </section>
 
-        <section class="card border-0 shadow-sm my-4">
-            <div class="card-body p-4">
-                <div class="row align-items-center g-4">
-                    <div class="col-12 col-lg-4">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center flex-shrink-0"
-                                 style="width: 72px; height: 72px;">
-                                <span class="fs-3 fw-bold text-primary">
-                                    {{ mb_strtoupper(mb_substr($product->seller?->shop_name ?? 'S', 0, 1)) }}
-                                </span>
-                            </div>
+        {{-- Thông tin Shop: nhấn avatar hoặc tên để mở trang cửa hàng --}}
+        @if ($product->seller)
+            <section class="card border-0 shadow-sm my-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center g-4">
+                        <div class="col-12 col-lg-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <a href="{{ route('store.shops.show', $product->seller->seller_id) }}"
+                                   class="rounded-circle bg-light border d-flex align-items-center justify-content-center flex-shrink-0 text-decoration-none"
+                                   style="width: 72px; height: 72px;"
+                                   aria-label="Xem cửa hàng {{ $product->seller->shop_name }}">
+                                    <span class="fs-3 fw-bold text-primary">
+                                        {{ mb_strtoupper(mb_substr($product->seller->shop_name, 0, 1)) }}
+                                    </span>
+                                </a>
 
-                            <div>
-                                <h2 class="h5 mb-2">
-                                    {{ $product->seller?->shop_name ?? 'Cửa hàng' }}
-                                </h2>
-                                <span class="badge text-bg-success">Shop đang hoạt động</span>
+                                <div>
+                                    <h2 class="h5 mb-2">
+                                        <a href="{{ route('store.shops.show', $product->seller->seller_id) }}"
+                                           class="text-dark text-decoration-none">
+                                            {{ $product->seller->shop_name }}
+                                        </a>
+                                    </h2>
+
+                                    <span class="badge text-bg-success">Shop đang hoạt động</span>
+
+                                    @if (session('account_role') === 'user')
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary d-block mt-2"
+                                                data-chat-start
+                                                data-seller-id="{{ $product->seller->seller_id }}"
+                                                data-shop-name="{{ $product->seller->shop_name }}"
+                                                data-product-id="{{ $product->product_id }}">
+                                            <i class="bi bi-chat-dots me-1" aria-hidden="true"></i>
+                                            Chat với Shop
+                                        </button>
+                                    @else
+                                        <a href="{{ route('login.form') }}"
+                                           class="btn btn-sm btn-outline-primary d-block mt-2">
+                                            <i class="bi bi-chat-dots me-1" aria-hidden="true"></i>
+                                            Chat với Shop
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="col-12 col-lg-8">
-                        <div class="row g-3">
-                            <div class="col-6 col-md-4">
-                                <div class="small text-secondary">Sản phẩm đang bán</div>
-                                <div class="fw-semibold">
-                                    {{ $product->seller?->products()->where('status', 'active')->count() ?? 0 }}
-                                </div>
-                            </div>
-
-                            <div class="col-6 col-md-4">
-                                <div class="small text-secondary">Tham gia</div>
-                                <div class="fw-semibold">
-                                    {{ $product->seller?->created_at?->format('m/Y') ?? '—' }}
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="small text-secondary">Địa chỉ shop</div>
-                                <div>{{ $product->seller?->shop_address ?: 'Chưa cập nhật' }}</div>
-
-                                @php
-                                    $shopLocation = collect([
-                                        $product->seller?->shop_ward,
-                                        $product->seller?->shop_district,
-                                        $product->seller?->shop_province,
-                                    ])->filter()->implode(', ');
-                                @endphp
-
-                                @if ($shopLocation)
-                                    <div class="small text-secondary mt-1">
-                                        {{ $shopLocation }}
+                        <div class="col-12 col-lg-8">
+                            <div class="row g-3">
+                                <div class="col-6 col-md-4">
+                                    <div class="small text-secondary">Sản phẩm đang bán</div>
+                                    <div class="fw-semibold">
+                                        {{ $product->seller->products()->where('status', 'active')->count() }}
                                     </div>
-                                @endif
+                                </div>
+
+                                <div class="col-6 col-md-4">
+                                    <div class="small text-secondary">Tham gia</div>
+                                    <div class="fw-semibold">
+                                        {{ $product->seller->created_at?->format('m/Y') ?? '—' }}
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="small text-secondary">Địa chỉ Shop</div>
+                                    <div>{{ $product->seller->shop_address ?: 'Chưa cập nhật' }}</div>
+
+                                    @php
+                                        $shopLocation = collect([
+                                            $product->seller->shop_ward,
+                                            $product->seller->shop_district,
+                                            $product->seller->shop_province,
+                                        ])->filter()->implode(', ');
+                                    @endphp
+
+                                    @if ($shopLocation)
+                                        <div class="small text-secondary mt-1">{{ $shopLocation }}</div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        @endif
 
         <section class="card border-0 shadow-sm">
             <div class="card-body p-4">
