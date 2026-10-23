@@ -1,33 +1,11 @@
-<<<<<<< HEAD
 @php
     $navCategories = \App\Models\Category::whereNull('parent_id')
         ->orderBy('category_name')
         ->limit(8)
         ->get(['category_id', 'category_name']);
-
-    $cartCount = 0;
-    $accountId = session('account_id');
-
-    if ($accountId) {
-        $cartCount = \Illuminate\Support\Facades\DB::table('carts')
-            ->join('cart_items', 'carts.cart_id', '=', 'cart_items.cart_id')
-            ->where('carts.account_id', $accountId)
-            ->sum('cart_items.quantity');
-    }
 @endphp
 
-{{-- Thanh trên cùng: tiện ích nhỏ --}}
-<div style="background-color: #002347;">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center py-1" style="font-size: 0.85rem;">
 
-            {{-- Bên trái --}}
-            <div class="d-flex align-items-center text-white">
-
-                {{-- Nút kênh người bán --}}
-                <a href="{{ route('seller.login.form') }}" class="text-white text-decoration-none me-3">
-                    Kênh Người Bán
-=======
 <header class="shop-header text-white">
     <div class="container py-3">
         {{-- Logo, tìm kiếm và thao tác tài khoản --}}
@@ -37,12 +15,11 @@
                    class="shop-header__logo d-inline-flex align-items-center gap-2 text-white text-decoration-none fw-bold">
                     <i class="bi bi-shop-window fs-3" aria-hidden="true"></i>
                     <span class="fs-5">Website Bán hàng Online</span>
->>>>>>> origin/main
                 </a>
             </div>
 
             <div class="col-12 col-lg-6 order-3 order-lg-2">
-                <form action="#" method="GET" role="search">
+                <form action="{{ route('store.products.index') }}" method="GET" role="search">
                     <label for="store-search" class="visually-hidden">
                         Tìm kiếm sản phẩm
                     </label>
@@ -51,6 +28,8 @@
                         <input id="store-search"
                                name="q"
                                type="search"
+                               value="{{ request()->routeIs('store.products.index') ? request('q') : '' }}"
+                               maxlength="100"
                                class="form-control"
                                placeholder="Tìm kiếm sản phẩm...">
 
@@ -82,34 +61,6 @@
                                 <span>Tài khoản</span>
                             </button>
 
-<<<<<<< HEAD
-            {{-- Logo chữ --}}
-            <a
-                href="{{ route('store.home') }}"
-                class="text-white text-decoration-none d-flex align-items-center"
-            >
-                <i class="bi bi-shop-window" style="font-size: 2.2rem;"></i>
-                <span class="fw-bold ms-2" style="font-size: 1.3rem;">
-                    Website Bán hàng Online
-                </span>
-            </a>
-
-            {{-- Ô tìm kiếm --}}
-            <form action="{{ route('store.products.index') }}" method="GET" class="flex-grow-1">
-                <div class="input-group">
-                    <input
-                        type="text"
-                        name="q"
-                        value="{{ request()->routeIs('store.products.index') ? request('q') : '' }}"
-                        maxlength="100"
-                        class="form-control"
-                        placeholder="Tìm kiếm sản phẩm..."
-                        style="border: none; height: 42px;"
-                    >
-                    <button class="btn" type="submit" style="background-color: #003B73; border: none;">
-                        <i class="bi bi-search text-white"></i>
-                    </button>
-=======
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a class="dropdown-item"
@@ -151,30 +102,18 @@
                             <span>Tài khoản</span>
                         </a>
                     @endif
->>>>>>> origin/main
                 </div>
             </div>
         </div>
 
-<<<<<<< HEAD
-        {{-- Danh mục gốc lấy từ bảng categories --}}
-        <div class="d-flex flex-wrap gap-4 pb-2" style="font-size: 0.85rem;">
-            @foreach ($navCategories as $navCategory)
-                <a href="{{ route('store.products.index', ['category' => $navCategory->category_id]) }}"
-                    class="text-white text-decoration-none">{{ $navCategory->category_name }}</a>
-            @endforeach
-        </div>
-=======
         {{-- Điều hướng danh mục --}}
         <nav class="shop-header__nav d-flex gap-4 gap-lg-5 mt-3 pt-2 overflow-x-auto"
              aria-label="Danh mục sản phẩm">
-            <a href="#" class="shop-header__nav-link text-nowrap">Thời Trang Nam</a>
-            <a href="#" class="shop-header__nav-link text-nowrap">Điện Thoại &amp; Phụ Kiện</a>
-            <a href="#" class="shop-header__nav-link text-nowrap">Máy Tính &amp; Laptop</a>
-            <a href="#" class="shop-header__nav-link text-nowrap">Đồng Hồ</a>
-            <a href="#" class="shop-header__nav-link text-nowrap">Giày Dép Nam</a>
+            @foreach ($navCategories as $navCategory)
+                <a href="{{ route('store.products.index', ['category' => $navCategory->category_id]) }}"
+                   class="shop-header__nav-link text-nowrap">{{ $navCategory->category_name }}</a>
+            @endforeach
         </nav>
->>>>>>> origin/main
     </div>
 </header>
 

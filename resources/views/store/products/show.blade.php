@@ -108,7 +108,6 @@
                                         @foreach ($variants as $variant)
                                             @php $isSelected = $selectedVariant?->variant_id === $variant->variant_id; @endphp
                                             <button type="button"
-<<<<<<< HEAD
                                                 class="btn btn-outline-secondary variant-option {{ $isSelected ? 'active' : '' }}"
                                                 data-variant-id="{{ $variant->variant_id }}"
                                                 data-price="{{ $variant->price }}"
@@ -118,13 +117,6 @@
                                                 @endif
                                                 aria-pressed="{{ $isSelected ? 'true' : 'false' }}"
                                                 @disabled($variant->stock_quantity < 1)>
-=======
-                                                    class="btn btn-outline-secondary variant-option {{ $loop->first ? 'active' : '' }}"
-                                                    data-variant-id="{{ $variant->variant_id }}"
-                                                    data-price="{{ $variant->price }}"
-                                                    data-stock="{{ $variant->stock_quantity }}"
-                                                    aria-pressed="{{ $loop->first ? 'true' : 'false' }}">
->>>>>>> origin/main
                                                 {{ $variant->variant_name }}
                                                 @if ($variant->stock_quantity < 1)
                                                     <small>(Hết hàng)</small>
@@ -172,12 +164,6 @@
                             </dd>
                         </dl>
 
-<<<<<<< HEAD
-                        {{-- Cả "Thêm vào giỏ" và "Mua ngay" gửi tới cùng route giỏ hàng của Người 2.
-                             Khách chưa đăng nhập sẽ được CartController chuyển sang trang đăng nhập.
-                             intent=buy_now để Người 2 chuyển tiếp sang bước xác nhận mua. --}}
-                        <form method="POST" action="{{ route('store.cart.items.store') }}" id="purchaseForm" novalidate>
-=======
                         {{-- Hiển thị thông báo sau khi thêm sản phẩm hoặc khi có lỗi. --}}
                         @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -203,8 +189,10 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('store.cart.items.store') }}">
->>>>>>> origin/main
+                        {{-- Cả "Thêm vào giỏ" và "Mua ngay" gửi tới cùng route giỏ hàng của Người 2.
+                             Khách chưa đăng nhập sẽ được CartController chuyển sang trang đăng nhập.
+                             intent=buy_now để Người 2 chuyển tiếp sang bước xác nhận mua. --}}
+                        <form method="POST" action="{{ route('store.cart.items.store') }}" id="purchaseForm" novalidate>
                             @csrf
 
                             <input type="hidden"
@@ -218,20 +206,9 @@
 
                             <div class="mb-3" style="max-width: 160px;">
                                 <label for="quantity" class="form-label">Số lượng</label>
-<<<<<<< HEAD
                                 <input id="quantity" name="quantity" type="number" min="1"
                                     max="{{ max($initialStock, 1) }}" value="{{ old('quantity', 1) }}"
                                     class="form-control @error('quantity') is-invalid @enderror" required>
-=======
-                                <input id="quantity"
-                                       name="quantity"
-                                       type="number"
-                                       min="1"
-                                       max="{{ max((int) $initialStock, 1) }}"
-                                       value="1"
-                                       class="form-control @error('quantity') is-invalid @enderror"
-                                       required>
->>>>>>> origin/main
                                 @error('quantity')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -242,7 +219,6 @@
                                 <div class="text-danger small mb-2">{{ $message }}</div>
                             @enderror
 
-<<<<<<< HEAD
                             <div class="d-flex flex-wrap gap-2">
                                 <button type="submit" name="intent" value="cart" class="btn btn-outline-primary"
                                     id="addToCartButton" @disabled(! $hasVariants && $initialStock < 1)>
@@ -255,15 +231,6 @@
                                     Mua ngay
                                 </button>
                             </div>
-=======
-                            <button type="submit"
-                                    class="btn btn-primary"
-                                    id="addToCartButton"
-                                    @disabled($initialStock < 1)>
-                                <i class="bi bi-cart-plus me-1"></i>
-                                Thêm vào giỏ hàng
-                            </button>
->>>>>>> origin/main
                         </form>
                     </div>
                 </div>
@@ -343,7 +310,6 @@
             </div>
         </section>
 
-<<<<<<< HEAD
         {{-- Đánh giá sản phẩm --}}
         <section class="card border-0 shadow-sm mt-4" id="reviews">
             <div class="card-body p-4">
@@ -357,14 +323,6 @@
                 @enderror
 
                 <div class="row align-items-center g-4 p-3 border rounded" style="background-color: #fffaf8;">
-=======
-        <section class="card border-0 shadow-sm mt-4">
-            <div class="card-body p-4">
-                <h2 class="h5 fw-bold mb-4">Đánh giá sản phẩm</h2>
-
-                <div class="row align-items-center g-4 p-3 border rounded"
-                     style="background-color: #fffaf8;">
->>>>>>> origin/main
                     <div class="col-12 col-md-3 text-center">
                         <div class="text-danger">
                             <span class="fs-2 fw-semibold">{{ number_format($product->rating_avg, 1) }}</span>
@@ -461,7 +419,6 @@
             const hasVariants = @json($hasVariants);
             const baseStock = @json((int) $product->stock_quantity);
             const options = document.querySelectorAll('.variant-option');
-<<<<<<< HEAD
             const form = document.getElementById('purchaseForm');
             const variantInput = document.getElementById('selectedVariantId');
             const qty = document.getElementById('quantity');
@@ -491,11 +448,6 @@
                 buttons.forEach((b) => b && (b.disabled = stock !== null && stock < 1));
                 hint.hidden = true;
             }
-=======
-            const selectedVariantInput = document.getElementById('selectedVariantId');
-            const quantityInput = document.getElementById('quantity');
-            const addToCartButton = document.getElementById('addToCartButton');
->>>>>>> origin/main
 
             options.forEach((button) => {
                 button.addEventListener('click', () => {
@@ -512,7 +464,6 @@
 
                     const stock = Number(button.dataset.stock);
 
-<<<<<<< HEAD
                     document.getElementById('productPrice').textContent = vnd(Number(button.dataset.price));
                     document.getElementById('productStock').textContent =
                         new Intl.NumberFormat('vi-VN').format(stock);
@@ -524,33 +475,6 @@
                     if (mainImage) mainImage.src = button.dataset.image || galleryImage;
 
                     refresh();
-=======
-                    // Gửi đúng mẫu đang chọn khi submit form.
-                    selectedVariantInput.value = button.dataset.variantId;
-
-                    // Không cho chọn số lượng vượt tồn kho của mẫu.
-                    quantityInput.max = String(Math.max(stock, 1));
-
-                    if (stock < 1) {
-                        addToCartButton.disabled = true;
-                    } else {
-                        addToCartButton.disabled = false;
-
-                        if (Number(quantityInput.value) > stock) {
-                            quantityInput.value = String(stock);
-                        }
-                    }
-
-                    document.getElementById('productPrice').textContent =
-                        new Intl.NumberFormat('vi-VN').format(price) + '₫';
-
-                    document.getElementById('productStock').textContent =
-                        new Intl.NumberFormat('vi-VN').format(stock);
-
-                    document.getElementById('productStatus').innerHTML = stock > 0
-                        ? '<span class="text-success">Còn hàng</span>'
-                        : '<span class="text-danger">Hết hàng</span>';
->>>>>>> origin/main
                 });
             });
 
