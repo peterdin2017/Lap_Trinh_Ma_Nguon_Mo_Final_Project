@@ -1,3 +1,11 @@
+@php
+    $navCategories = \App\Models\Category::whereNull('parent_id')
+        ->orderBy('category_name')
+        ->limit(8)
+        ->get(['category_id', 'category_name']);
+@endphp
+
+
 <header class="shop-header text-white">
     <div class="container py-3">
         {{-- Logo, tìm kiếm và thao tác tài khoản --}}
@@ -11,7 +19,7 @@
             </div>
 
             <div class="col-12 col-lg-6 order-3 order-lg-2">
-                <form action="#" method="GET" role="search">
+                <form action="{{ route('store.products.index') }}" method="GET" role="search">
                     <label for="store-search" class="visually-hidden">
                         Tìm kiếm sản phẩm
                     </label>
@@ -20,6 +28,8 @@
                         <input id="store-search"
                                name="q"
                                type="search"
+                               value="{{ request()->routeIs('store.products.index') ? request('q') : '' }}"
+                               maxlength="100"
                                class="form-control"
                                placeholder="Tìm kiếm sản phẩm...">
 
@@ -99,11 +109,10 @@
         {{-- Điều hướng danh mục --}}
         <nav class="shop-header__nav d-flex gap-4 gap-lg-5 mt-3 pt-2 overflow-x-auto"
              aria-label="Danh mục sản phẩm">
-            <a href="#" class="shop-header__nav-link text-nowrap">Thời Trang Nam</a>
-            <a href="#" class="shop-header__nav-link text-nowrap">Điện Thoại &amp; Phụ Kiện</a>
-            <a href="#" class="shop-header__nav-link text-nowrap">Máy Tính &amp; Laptop</a>
-            <a href="#" class="shop-header__nav-link text-nowrap">Đồng Hồ</a>
-            <a href="#" class="shop-header__nav-link text-nowrap">Giày Dép Nam</a>
+            @foreach ($navCategories as $navCategory)
+                <a href="{{ route('store.products.index', ['category' => $navCategory->category_id]) }}"
+                   class="shop-header__nav-link text-nowrap">{{ $navCategory->category_name }}</a>
+            @endforeach
         </nav>
     </div>
 </header>
