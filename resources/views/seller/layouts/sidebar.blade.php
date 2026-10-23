@@ -1,23 +1,13 @@
 @php
     $productsOpen = request()->routeIs('seller.products.*');
-
-    $ordersOpen = request()->routeIs(
-        'seller.orders.*',
-        'seller.order.*'
-    );
-
-    $reportsOpen = request()->routeIs(
-        'seller.reports.*',
-        'seller.analytics.*'
-    );
-
+    $ordersOpen = request()->routeIs('seller.orders.*', 'seller.order.*');
+    $reportsOpen = request()->routeIs('seller.reports.*', 'seller.analytics.*');
     $shopSettingsOpen = request()->routeIs(
         'seller.shop-information.*',
         'seller.shipping.*',
         'seller.promotions.*',
-        'seller.vouchers.*'
+        'seller.vouchers.*',
     );
-
     $pendingOrderCount = $pendingOrderCount ?? 0;
 @endphp
 
@@ -40,6 +30,12 @@
             <span>Tổng quan</span>
         </a>
 
+        <a href="{{ url('/seller/chat') }}"
+           class="seller-nav-link {{ request()->routeIs('seller.chat.*') ? 'active' : '' }}">
+            <i class="bi bi-chat-dots" aria-hidden="true"></i>
+            <span>Tin nhắn</span>
+        </a>
+
         {{-- Quản lý sản phẩm --}}
         <button class="seller-nav-link seller-nav-toggle {{ $productsOpen ? 'active' : '' }}"
                 type="button"
@@ -51,16 +47,19 @@
             <span>Quản lý Sản phẩm</span>
             <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
         </button>
+
         <div id="sellerProductMenu" class="collapse {{ $productsOpen ? 'show' : '' }}">
             <nav class="seller-submenu" aria-label="Quản lý sản phẩm">
                 <a href="{{ route('seller.products.index') }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.products.index') ? 'active' : '' }}">
                     Danh sách sản phẩm
                 </a>
+
                 <a href="{{ route('seller.products.create') }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.products.create') ? 'active' : '' }}">
                     Thêm sản phẩm mới
                 </a>
+
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.products.hidden') ? route('seller.products.hidden') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.products.hidden') ? 'active' : '' }}">
                     Sản phẩm hết hàng / ẩn
@@ -79,25 +78,30 @@
             <span>Quản lý Đơn hàng</span>
             <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
         </button>
+
         <div id="sellerOrderMenu" class="collapse {{ $ordersOpen ? 'show' : '' }}">
             <nav class="seller-submenu" aria-label="Quản lý đơn hàng">
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.index') ? route('seller.orders.index') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.orders.index') ? 'active' : '' }}">
                     Tất cả đơn hàng
                 </a>
+
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.pending') ? route('seller.orders.pending') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.orders.pending') ? 'active' : '' }}">
                     <span>Chờ xác nhận</span>
                     <span class="seller-menu-badge">{{ $pendingOrderCount }}</span>
                 </a>
+
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.shipping') ? route('seller.orders.shipping') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.orders.shipping') ? 'active' : '' }}">
                     Đang vận chuyển
                 </a>
+
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.delivered') ? route('seller.orders.delivered') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.orders.delivered') ? 'active' : '' }}">
                     Đã hoàn thành
                 </a>
+
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.cancelled') ? route('seller.orders.cancelled') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.orders.cancelled') ? 'active' : '' }}">
                     Đơn hủy / Trả hàng
@@ -116,12 +120,14 @@
             <span>Doanh thu &amp; Thống kê</span>
             <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
         </button>
+
         <div id="sellerReportsMenu" class="collapse {{ $reportsOpen ? 'show' : '' }}">
             <nav class="seller-submenu" aria-label="Doanh thu và thống kê">
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.reports.revenue') ? route('seller.reports.revenue') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.reports.revenue') ? 'active' : '' }}">
                     Báo cáo doanh thu
                 </a>
+
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.analytics.index') ? route('seller.analytics.index') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.analytics.*') ? 'active' : '' }}">
                     Phân tích bán hàng
@@ -140,16 +146,19 @@
             <span>Thiết lập Shop</span>
             <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
         </button>
+
         <div id="sellerSettingsMenu" class="collapse {{ $shopSettingsOpen ? 'show' : '' }}">
             <nav class="seller-submenu" aria-label="Thiết lập Shop">
                 <a href="{{ route('seller.shop-information.edit') }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.shop-information.*') ? 'active' : '' }}">
                     Hồ sơ cửa hàng
                 </a>
+
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.shipping.edit') ? route('seller.shipping.edit') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.shipping.*') ? 'active' : '' }}">
                     Cài đặt vận chuyển
                 </a>
+
                 <a href="{{ \Illuminate\Support\Facades\Route::has('seller.promotions.index') ? route('seller.promotions.index') : '#' }}"
                    class="seller-subnav-link {{ request()->routeIs('seller.promotions.*', 'seller.vouchers.*') ? 'active' : '' }}">
                     Mã giảm giá / Voucher
@@ -196,6 +205,7 @@
                 <small>Quản lý cửa hàng</small>
             </span>
         </a>
+
         <button type="button"
                 class="btn-close seller-sidebar__close"
                 data-bs-dismiss="offcanvas"
@@ -212,6 +222,12 @@
                 <span>Tổng quan</span>
             </a>
 
+            <a href="{{ url('/seller/chat') }}"
+               class="seller-nav-link {{ request()->routeIs('seller.chat.*') ? 'active' : '' }}">
+                <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                <span>Tin nhắn</span>
+            </a>
+
             <button class="seller-nav-link seller-nav-toggle {{ $productsOpen ? 'active' : '' }}"
                     type="button"
                     data-bs-toggle="collapse"
@@ -222,14 +238,23 @@
                 <span>Quản lý Sản phẩm</span>
                 <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
             </button>
+
             <div id="sellerProductMenuMobile" class="collapse {{ $productsOpen ? 'show' : '' }}">
                 <nav class="seller-submenu" aria-label="Sản phẩm">
                     <a href="{{ route('seller.products.index') }}"
-                       class="seller-subnav-link {{ request()->routeIs('seller.products.index') ? 'active' : '' }}">Danh sách sản phẩm</a>
+                       class="seller-subnav-link {{ request()->routeIs('seller.products.index') ? 'active' : '' }}">
+                        Danh sách sản phẩm
+                    </a>
+
                     <a href="{{ route('seller.products.create') }}"
-                       class="seller-subnav-link {{ request()->routeIs('seller.products.create') ? 'active' : '' }}">Thêm sản phẩm mới</a>
+                       class="seller-subnav-link {{ request()->routeIs('seller.products.create') ? 'active' : '' }}">
+                        Thêm sản phẩm mới
+                    </a>
+
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.products.hidden') ? route('seller.products.hidden') : '#' }}"
-                       class="seller-subnav-link {{ request()->routeIs('seller.products.hidden') ? 'active' : '' }}">Sản phẩm hết hàng / ẩn</a>
+                       class="seller-subnav-link {{ request()->routeIs('seller.products.hidden') ? 'active' : '' }}">
+                        Sản phẩm hết hàng / ẩn
+                    </a>
                 </nav>
             </div>
 
@@ -243,20 +268,34 @@
                 <span>Quản lý Đơn hàng</span>
                 <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
             </button>
+
             <div id="sellerOrderMenuMobile" class="collapse {{ $ordersOpen ? 'show' : '' }}">
                 <nav class="seller-submenu" aria-label="Đơn hàng">
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.index') ? route('seller.orders.index') : '#' }}"
-                       class="seller-subnav-link {{ request()->routeIs('seller.orders.index') ? 'active' : '' }}">Tất cả đơn hàng</a>
+                       class="seller-subnav-link {{ request()->routeIs('seller.orders.index') ? 'active' : '' }}">
+                        Tất cả đơn hàng
+                    </a>
+
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.pending') ? route('seller.orders.pending') : '#' }}"
                        class="seller-subnav-link {{ request()->routeIs('seller.orders.pending') ? 'active' : '' }}">
-                        <span>Chờ xác nhận</span><span class="seller-menu-badge">{{ $pendingOrderCount }}</span>
+                        <span>Chờ xác nhận</span>
+                        <span class="seller-menu-badge">{{ $pendingOrderCount }}</span>
                     </a>
+
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.shipping') ? route('seller.orders.shipping') : '#' }}"
-                       class="seller-subnav-link">Đang vận chuyển</a>
+                       class="seller-subnav-link">
+                        Đang vận chuyển
+                    </a>
+
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.delivered') ? route('seller.orders.delivered') : '#' }}"
-                       class="seller-subnav-link">Đã hoàn thành</a>
+                       class="seller-subnav-link">
+                        Đã hoàn thành
+                    </a>
+
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.cancelled') ? route('seller.orders.cancelled') : '#' }}"
-                       class="seller-subnav-link">Đơn hủy / Trả hàng</a>
+                       class="seller-subnav-link">
+                        Đơn hủy / Trả hàng
+                    </a>
                 </nav>
             </div>
 
@@ -270,12 +309,18 @@
                 <span>Doanh thu &amp; Thống kê</span>
                 <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
             </button>
+
             <div id="sellerReportsMenuMobile" class="collapse {{ $reportsOpen ? 'show' : '' }}">
                 <nav class="seller-submenu" aria-label="Báo cáo">
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.reports.revenue') ? route('seller.reports.revenue') : '#' }}"
-                       class="seller-subnav-link">Báo cáo doanh thu</a>
+                       class="seller-subnav-link">
+                        Báo cáo doanh thu
+                    </a>
+
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.analytics.index') ? route('seller.analytics.index') : '#' }}"
-                       class="seller-subnav-link">Phân tích bán hàng</a>
+                       class="seller-subnav-link">
+                        Phân tích bán hàng
+                    </a>
                 </nav>
             </div>
 
@@ -289,14 +334,23 @@
                 <span>Thiết lập Shop</span>
                 <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
             </button>
+
             <div id="sellerSettingsMenuMobile" class="collapse {{ $shopSettingsOpen ? 'show' : '' }}">
                 <nav class="seller-submenu" aria-label="Thiết lập Shop">
                     <a href="{{ route('seller.shop-information.edit') }}"
-                       class="seller-subnav-link {{ request()->routeIs('seller.shop-information.*') ? 'active' : '' }}">Hồ sơ Cửa hàng</a>
+                       class="seller-subnav-link {{ request()->routeIs('seller.shop-information.*') ? 'active' : '' }}">
+                        Hồ sơ cửa hàng
+                    </a>
+
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.shipping.edit') ? route('seller.shipping.edit') : '#' }}"
-                       class="seller-subnav-link">Cài đặt vận chuyển</a>
+                       class="seller-subnav-link">
+                        Cài đặt vận chuyển
+                    </a>
+
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.promotions.index') ? route('seller.promotions.index') : '#' }}"
-                       class="seller-subnav-link">Mã giảm giá / Voucher</a>
+                       class="seller-subnav-link">
+                        Mã giảm giá / Voucher
+                    </a>
                 </nav>
             </div>
         </nav>
@@ -330,7 +384,6 @@
 <style>
     .seller-sidebar {
         --seller-sidebar-line: var(--seller-border, #E2E8F0);
-
         width: 260px;
         min-height: 100vh;
         color: var(--seller-text, #0F172A);
@@ -584,7 +637,7 @@
 
         new MutationObserver(syncThemeButtons).observe(root, {
             attributes: true,
-            attributeFilter: ['data-theme']
+            attributeFilter: ['data-theme'],
         });
 
         syncThemeButtons();
