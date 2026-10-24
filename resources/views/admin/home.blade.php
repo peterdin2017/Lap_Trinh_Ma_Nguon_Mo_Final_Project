@@ -1,107 +1,13 @@
 @extends('admin.layouts.app')
-
-@section('title', 'Tổng quan - Admin Center')
-@section('page-title', 'Tổng quan hệ thống')
-
+@section('title','Tổng quan quản trị')
+@section('page-title','Tổng quan hệ thống')
 @section('content')
-    <div class="mb-4">
-        <h2 class="h4 fw-bold mb-1">Tổng quan hệ thống</h2>
-        <p class="text-secondary mb-0">Theo dõi tài khoản, cửa hàng và hồ sơ cần xử lý.</p>
-    </div>
-
-    <div class="row g-3">
-        <div class="col-sm-6 col-xl-4">
-            <div class="card admin-stat-card h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-secondary mb-1">Tài khoản</div>
-                        <div class="fs-3 fw-bold">{{ $accountCount }}</div>
-                    </div>
-                    <span class="admin-stat-card__icon">
-                        <i class="bi bi-people" aria-hidden="true"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-sm-6 col-xl-4">
-            <div class="card admin-stat-card h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-secondary mb-1">Cửa hàng</div>
-                        <div class="fs-3 fw-bold">{{ $shopCount }}</div>
-                    </div>
-                    <span class="admin-stat-card__icon">
-                        <i class="bi bi-shop" aria-hidden="true"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-sm-6 col-xl-4">
-            <div class="card admin-stat-card h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-secondary mb-1">Chờ duyệt</div>
-                        <div class="fs-3 fw-bold">{{ $pendingShopCount }}</div>
-                    </div>
-                    <span class="admin-stat-card__icon admin-stat-card__icon--warning">
-                        <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card admin-content-card mt-4">
-        <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-4">
-            <div>
-                <h3 class="h5 fw-bold mb-1">Hồ sơ người bán</h3>
-                <p class="text-secondary mb-0">
-                    Xem hồ sơ mới gửi và duyệt hoặc từ chối cửa hàng.
-                </p>
-            </div>
-
-            <a href="{{ route('admin.sellers.index') }}" class="btn btn-primary">
-                <i class="bi bi-clipboard-check me-2" aria-hidden="true"></i>
-                Mở danh sách duyệt
-                @if ($pendingShopCount > 0)
-                    <span class="badge text-bg-light text-primary ms-1">{{ $pendingShopCount }}</span>
-                @endif
-            </a>
-        </div>
-    </div>
-
-    <style>
-        .admin-stat-card,
-        .admin-content-card {
-            color: var(--app-text);
-            background-color: var(--app-card-bg);
-            border: 1px solid var(--app-border);
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgb(0 0 0 / 4%);
-        }
-
-        .admin-stat-card__icon {
-            display: inline-flex;
-            width: 52px;
-            height: 52px;
-            align-items: center;
-            justify-content: center;
-            border-radius: 14px;
-            background-color: var(--app-primary-light);
-            color: var(--app-primary);
-            font-size: 1.5rem;
-        }
-
-        .admin-stat-card__icon--warning {
-            background-color: #FFF7E6;
-            color: #D99000;
-        }
-
-        [data-bs-theme="dark"] .admin-stat-card__icon--warning {
-            background-color: #3A2D16;
-            color: #FBBF24;
-        }
-    </style>
+<div class="admin-hero"><div><span class="admin-eyebrow">ADMIN CENTER / DASHBOARD</span><h2>Quản trị cửa hàng thông minh</h2><p>Theo dõi toàn sàn, xử lý hồ sơ và kiểm duyệt tập trung.</p></div><i class="bi bi-shield-check admin-hero-icon"></i></div>
+<div class="row g-3 mb-4">
+@foreach ([['Tài khoản',$accountCount,'people','primary'],['Seller',$sellerCount,'person-badge','info'],['Shop hoạt động',$shopCount,'shop','success'],['Shop chờ duyệt',$pendingShopCount,'hourglass-split','warning'],['Sản phẩm',$productCount,'box-seam','primary'],['Sản phẩm bị khóa',$lockedProductCount,'shield-x','danger'],['Đơn hàng',$orderCount,'receipt','info'],['Báo cáo chờ',$pendingReportCount,'flag','danger']] as $stat)
+<div class="col-6 col-xl-3"><div class="admin-kpi"><div class="admin-kpi-label">{{ $stat[0] }}</div><div class="admin-kpi-number">{{ number_format($stat[1]) }}</div><i class="bi bi-{{ $stat[2] }} admin-kpi-symbol"></i></div></div>
+@endforeach
+</div>
+<div class="row g-3"><div class="col-lg-5"><div class="admin-panel h-100"><div class="admin-panel-heading"><h3>Thao tác nhanh</h3></div><div class="admin-quick-links"><a href="{{ route('admin.sellers.index') }}"><i class="bi bi-check2-square"></i>Duyệt hồ sơ shop <i class="bi bi-arrow-right"></i></a><a href="{{ route('admin.accounts.index') }}"><i class="bi bi-people"></i>Quản lý tài khoản<i class="bi bi-arrow-right"></i></a><a href="{{ route('admin.categories.index') }}"><i class="bi bi-diagram-3"></i>Danh mục sản phẩm<i class="bi bi-arrow-right"></i></a><a href="{{ route('admin.products.index') }}"><i class="bi bi-box"></i>Kiểm duyệt sản phẩm<i class="bi bi-arrow-right"></i></a><a href="{{ route('admin.reports.index') }}"><i class="bi bi-flag"></i>Báo cáo vi phạm<i class="bi bi-arrow-right"></i></a></div></div></div>
+<div class="col-lg-7"><div class="admin-panel h-100"><div class="admin-panel-heading"><h3>Shop mới chờ duyệt</h3><a href="{{ route('admin.sellers.index') }}">Xem tất cả <i class="bi bi-arrow-up-right"></i></a></div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Shop</th><th>Ngày gửi</th><th>Trạng thái</th></tr></thead><tbody>@forelse($recentShops as $shop)<tr><td class="fw-semibold">{{ $shop->shop_name }}</td><td>{{ $shop->created_at?->format('d/m/Y') }}</td><td><span class="admin-pill warning">Chờ duyệt</span></td></tr>@empty<tr><td colspan="3" class="text-secondary text-center py-4">Không có hồ sơ chờ duyệt</td></tr>@endforelse</tbody></table></div></div></div></div>
 @endsection

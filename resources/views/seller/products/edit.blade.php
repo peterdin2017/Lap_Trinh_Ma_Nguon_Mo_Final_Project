@@ -6,7 +6,6 @@
     @php
         $savedVariants = $product->variants
             ->map(fn ($variant) => [
-                'variant_id' => $variant->variant_id,
                 'variant_name' => $variant->variant_name,
                 'price' => $variant->price,
                 'stock_quantity' => $variant->stock_quantity,
@@ -152,35 +151,19 @@
                     <div class="fw-semibold">Mẫu mã sản phẩm</div>
                     <div class="small text-secondary">
                         Ví dụ: Đen – 256GB hoặc Tím – 512GB.
-                        Có thể chọn ảnh riêng cho từng mẫu mã.
+                        Để trống danh sách nếu sản phẩm không có mẫu mã.
                     </div>
                 </div>
 
                 <div class="card-body">
+                    {{-- Báo controller rằng form có gửi danh sách biến thể. --}}
                     <input type="hidden" name="variants_present" value="1">
 
                     <div id="variantRows">
                         @foreach ($variantRows as $index => $variant)
                             @if (is_array($variant))
-                                @php
-                                    $savedVariant = !empty($variant['variant_id'])
-                                        ? $product->variants->firstWhere(
-                                            'variant_id',
-                                            (int) $variant['variant_id']
-                                        )
-                                        : null;
-                                @endphp
-
-                                <div class="row g-2 align-items-end mb-4 variant-row">
-                                    @if (!empty($variant['variant_id']))
-                                        <input
-                                            type="hidden"
-                                            name="variants[{{ $index }}][variant_id]"
-                                            value="{{ $variant['variant_id'] }}"
-                                        >
-                                    @endif
-
-                                    <div class="col-md-4">
+                                <div class="row g-2 align-items-end mb-3 variant-row">
+                                    <div class="col-md-5">
                                         <label class="form-label">Tên mẫu mã</label>
                                         <input
                                             name="variants[{{ $index }}][variant_name]"
@@ -192,7 +175,7 @@
                                         >
                                     </div>
 
-                                    <div class="col-md-2">
+                                    <div class="col-md-3">
                                         <label class="form-label">Giá (₫)</label>
                                         <input
                                             name="variants[{{ $index }}][price]"
@@ -205,7 +188,7 @@
                                         >
                                     </div>
 
-                                    <div class="col-md-2">
+                                    <div class="col-md-3">
                                         <label class="form-label">Tồn kho</label>
                                         <input
                                             name="variants[{{ $index }}][stock_quantity]"
@@ -217,42 +200,7 @@
                                         >
                                     </div>
 
-                                    <div class="col-md-3">
-                                        <label class="form-label">Ảnh mẫu mã</label>
-
-                                        @if ($savedVariant?->image_url)
-                                            <div class="mb-2">
-                                                <img
-                                                    src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($savedVariant->image_url) }}"
-                                                    alt="Ảnh mẫu {{ $variant['variant_name'] ?? '' }}"
-                                                    width="64"
-                                                    height="64"
-                                                    class="rounded border"
-                                                    style="object-fit: cover;"
-                                                >
-                                                <span class="small text-secondary ms-1">
-                                                    Ảnh hiện tại
-                                                </span>
-                                            </div>
-                                        @endif
-
-                                        <input
-                                            name="variants[{{ $index }}][image]"
-                                            type="file"
-                                            accept="image/*"
-                                            class="form-control"
-                                        >
-                                        <div class="form-text">
-                                            Để trống nếu muốn giữ ảnh hiện tại.
-                                        </div>
-                                        @error("variants.$index.image")
-                                            <div class="text-danger small mt-1">
-                                                {{ $message }}
-                                            </div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="col-md-1 d-grid">
+                                    <div class="col-md-1">
                                         <button
                                             type="button"
                                             class="btn btn-outline-danger remove-variant"
@@ -275,9 +223,6 @@
                     </button>
 
                     @error('variants')
-                        <div class="text-danger small mt-2">{{ $message }}</div>
-                    @enderror
-                    @error('variants.*.variant_id')
                         <div class="text-danger small mt-2">{{ $message }}</div>
                     @enderror
                     @error('variants.*.variant_name')
@@ -379,11 +324,11 @@
                     id="image"
                     name="image"
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
                     class="form-control @error('image') is-invalid @enderror"
                 >
                 <div class="form-text">
-                    Tối đa 10 MB. Hệ thống chuẩn hóa ảnh thành JPG hoặc PNG.
+                    Tối đa 5MB. Hệ thống chuẩn hóa ảnh thành JPG hoặc PNG.
                 </div>
                 @error('image')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -430,7 +375,7 @@
                     id="images"
                     name="images[]"
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
                     multiple
                     class="form-control @error('images') is-invalid @enderror"
                 >
@@ -512,8 +457,8 @@
                 const index = nextIndex++;
 
                 rows.insertAdjacentHTML('beforeend', `
-                    <div class="row g-2 align-items-end mb-4 variant-row">
-                        <div class="col-md-4">
+                    <div class="row g-2 align-items-end mb-3 variant-row">
+                        <div class="col-md-5">
                             <label class="form-label">Tên mẫu mã</label>
                             <input
                                 name="variants[${index}][variant_name]"
@@ -524,7 +469,7 @@
                             >
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label class="form-label">Giá (₫)</label>
                             <input
                                 name="variants[${index}][price]"
@@ -536,7 +481,7 @@
                             >
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label class="form-label">Tồn kho</label>
                             <input
                                 name="variants[${index}][stock_quantity]"
@@ -547,20 +492,7 @@
                             >
                         </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">Ảnh mẫu mã</label>
-                            <input
-                                name="variants[${index}][image]"
-                                type="file"
-                                accept="image/*"
-                                class="form-control"
-                            >
-                            <div class="form-text">
-                                Không bắt buộc, tối đa 10 MB.
-                            </div>
-                        </div>
-
-                        <div class="col-md-1 d-grid">
+                        <div class="col-md-1">
                             <button
                                 type="button"
                                 class="btn btn-outline-danger remove-variant"

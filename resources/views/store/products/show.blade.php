@@ -10,14 +10,6 @@
         // Có mẫu mã thì khách PHẢI chọn; chỉ giữ lại lựa chọn cũ khi form báo lỗi và quay lại.
         $selectedVariant = $hasVariants ? $variants->firstWhere('variant_id', (int) old('variant_id')) : null;
 
-        $galleryImage = $images->first();
-        $galleryImageUrl = $galleryImage
-            ? \Illuminate\Support\Facades\Storage::disk('public')->url($galleryImage)
-            : null;
-        $selectedVariantImageUrl = $selectedVariant?->image_url
-            ? \Illuminate\Support\Facades\Storage::disk('public')->url($selectedVariant->image_url)
-            : null;
-        $initialImageUrl = $selectedVariantImageUrl ?? $galleryImageUrl;
         $initialStock = $selectedVariant?->stock_quantity ?? $product->stock_quantity;
 
         $minPrice = $hasVariants ? $variants->min('price') : $product->price;
@@ -52,31 +44,32 @@
             <div class="card-body p-3 p-lg-4">
                 <div class="row g-4">
                     <div class="col-12 col-lg-5">
-                        <img id="productMainImage"
-                            src="{{ $initialImageUrl ?? '' }}"
-                            data-gallery-image="{{ $galleryImageUrl ?? '' }}"
-                            alt="{{ $product->product_name }}"
-                            class="img-fluid rounded w-100 {{ $initialImageUrl ? '' : 'd-none' }}"
-                            style="height: 420px; object-fit: contain; background: #f8f9fa;">
+                        @if ($images->isNotEmpty())
+                            <img id="productMainImage"
+                                src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($images->first()) }}"
+                                alt="{{ $product->product_name }}" class="img-fluid rounded w-100"
+                                style="height: 420px; object-fit: contain; background: #f8f9fa;">
 
-                        <div id="productImagePlaceholder"
-                            class="bg-light rounded d-flex align-items-center justify-content-center {{ $initialImageUrl ? 'd-none' : '' }}"
-                            style="height: 420px;">
-                            <span class="text-secondary">Chưa có ảnh sản phẩm</span>
-                        </div>
-
-                        @if ($images->count() > 1)
-                            <div class="d-flex flex-wrap gap-2 mt-3">
-                                @foreach ($images as $image)
-                                    <button type="button" class="btn border p-1 product-gallery-thumbnail"
-                                        data-image="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
-                                        aria-label="Xem ảnh sản phẩm {{ $loop->iteration }}">
-                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
-                                            alt="" width="64" height="64" style="object-fit: cover;">
-                                    </button>
-                                @endforeach
+                            @if ($images->count() > 1)
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    @foreach ($images as $image)
+                                        <button type="button" class="btn border p-1"
+                                            data-image="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
+                                            onclick="document.getElementById('productMainImage').src = this.dataset.image"
+                                            aria-label="Xem ảnh sản phẩm {{ $loop->iteration }}">
+                                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image) }}"
+                                                alt="" width="64" height="64" style="object-fit: cover;">
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @else
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                style="height: 420px;">
+                                <span class="text-secondary">Chưa có ảnh sản phẩm</span>
                             </div>
-                        @endif                    </div>
+                        @endif
+                    </div>
 
                     <div class="col-12 col-lg-7">
                         <h1 class="h3 fw-semibold mb-3">{{ $product->product_name }}</h1>
@@ -432,23 +425,11 @@
             const qty = document.getElementById('quantity');
             const hint = document.getElementById('clientHint');
             const mainImage = document.getElementById('productMainImage');
-            const imagePlaceholder = document.getElementById('productImagePlaceholder');
             const buttons = [document.getElementById('addToCartButton'), document.getElementById('buyNowButton')];
             const vnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + '₫';
 
-            // Ảnh gallery làm ảnh dự phòng, kể cả khi mẫu đang chọn có ảnh riêng.
-            let galleryImage = mainImage?.dataset.galleryImage || null;
+            let galleryImage = mainImage ? mainImage.src : null;
 
-            function showProductImage(src) {
-                if (src) {
-                    mainImage.src = src;
-                    mainImage.classList.remove('d-none');
-                    imagePlaceholder?.classList.add('d-none');
-                } else {
-                    mainImage?.classList.add('d-none');
-                    imagePlaceholder?.classList.remove('d-none');
-                }
-            }
             // Tồn kho của lựa chọn hiện tại; null = chưa chọn mẫu.
             function currentStock() {
                 if (!hasVariants) return baseStock;
@@ -493,19 +474,18 @@
                         '<span class="text-danger">Hết hàng</span>';
 
                     // Ảnh riêng của mẫu (nếu có), không thì quay về ảnh đang xem.
-                    showProductImage(button.dataset.image || galleryImage);
+                    if (mainImage) mainImage.src = button.dataset.image || galleryImage;
 
                     refresh();
                 });
             });
 
-            // Thumbnail đổi ảnh chính và trở thành ảnh dự phòng cho mẫu mã không có ảnh riêng.
-            document.querySelectorAll('.product-gallery-thumbnail').forEach((thumbnail) => {
-                thumbnail.addEventListener('click', () => {
-                    galleryImage = thumbnail.dataset.image;
-                    showProductImage(galleryImage);
-                });
+            // Bấm ảnh nhỏ thì nhớ làm ảnh nền hiện tại.
+            document.querySelectorAll('[data-image]').forEach((el) => {
+                if (el.classList.contains('variant-option')) return;
+                el.addEventListener('click', () => (galleryImage = el.dataset.image));
             });
+
             form.addEventListener('submit', (event) => {
                 const stock = currentStock();
                 const n = Number(qty.value);
@@ -531,6 +511,3 @@
         })();
     </script>
 @endsection
-
-
-
