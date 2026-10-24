@@ -30,6 +30,9 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
+            'rating_avg' => 'decimal:1',
+            'rating_count' => 'integer',
+            'sold_count' => 'integer',
             'locked_at' => 'datetime',
         ];
     }
@@ -59,13 +62,13 @@ class Product extends Model
     }
 
     public function variants(): HasMany
-{
-    return $this->hasMany(
-        ProductVariant::class,
-        'product_id',
-        'product_id'
-    );
-}
+    {
+        return $this->hasMany(
+            ProductVariant::class,
+            'product_id',
+            'product_id'
+        );
+    }
 
     public function reviews(): HasMany
     {

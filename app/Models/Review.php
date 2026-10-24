@@ -33,4 +33,8 @@ class Review extends Model
     {
         return $this->belongsTo(Account::class, 'account_id', 'account_id');
     }
+    public function orderItem(): BelongsTo
+    {
+        return $this->belongsTo(OrderItem::class, 'order_item_id', 'order_item_id');
+    }
 }
