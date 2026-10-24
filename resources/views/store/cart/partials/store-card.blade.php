@@ -32,9 +32,10 @@
         <button
             class="btn btn-sm btn-outline-primary"
             type="button"
-            disabled
-            aria-label="Chat với {{ $shopName }} hiện chưa khả dụng"
-            title="Chức năng chat chưa khả dụng"
+            data-chat-start
+            data-seller-id="{{ $sellerId }}"
+            data-shop-name="{{ $shopName }}"
+            aria-label="Chat với {{ $shopName }}"
         >
             <i class="bi bi-chat-dots-fill me-1" aria-hidden="true"></i>
             Chat

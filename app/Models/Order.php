@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\OrderItem;
 
 class Order extends Model
 {
+    protected $table = 'orders';
+
     protected $primaryKey = 'order_id';
 
     protected $fillable = [
@@ -26,6 +27,7 @@ class Order extends Model
         'discount_amount',
         'total_amount',
         'note',
+        'cancellation_reason',
     ];
 
     protected function casts(): array

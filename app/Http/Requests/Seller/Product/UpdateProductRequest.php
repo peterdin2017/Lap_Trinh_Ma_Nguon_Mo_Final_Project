@@ -26,27 +26,40 @@ class UpdateProductRequest extends FormRequest
             'image' => [
                 'nullable',
                 'image',
-                'mimes:jpg,jpeg,png,webp,gif,bmp',
-                'max:5120',
+                'max:10240',
             ],
 
-            // Ảnh phụ mới thêm vào sản phẩm, tối đa 8 ảnh trong một lần gửi.
+            // Tối đa 8 ảnh phụ trong một lần gửi.
             'images' => ['nullable', 'array', 'max:8'],
             'images.*' => [
                 'image',
-                'mimes:jpg,jpeg,png,webp,gif,bmp',
-                'max:5120',
+                'max:10240',
             ],
 
-            // ID của các ảnh phụ cũ được chọn để xóa.
+            // ID của ảnh phụ cũ được chọn để xóa.
             'remove_image_ids' => ['nullable', 'array'],
             'remove_image_ids.*' => ['integer', 'distinct'],
 
             'variants_present' => ['sometimes', 'boolean'],
             'variants' => ['nullable', 'array', 'max:20'],
+
+            // ID trống với mẫu mã mới; controller kiểm tra mẫu cũ thuộc sản phẩm nào.
+            'variants.*.variant_id' => ['nullable', 'integer', 'distinct'],
+
             'variants.*.variant_name' => ['required', 'string', 'max:100'],
-            'variants.*.price' => ['required', 'numeric', 'min:0', 'max:9999999999'],
-            'variants.*.stock_quantity' => ['required', 'integer', 'min:0', 'max:1000000'],
+            'variants.*.price' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:9999999999',
+            ],
+            'variants.*.stock_quantity' => [
+                'required',
+                'integer',
+                'min:0',
+                'max:1000000',
+            ],
+            'variants.*.image' => ['nullable', 'image', 'max:10240'],
         ];
     }
 
@@ -55,30 +68,37 @@ class UpdateProductRequest extends FormRequest
         return [
             'category_id.required' => 'Vui lòng chọn danh mục.',
             'category_id.exists' => 'Danh mục không hợp lệ.',
+
             'product_name.required' => 'Vui lòng nhập tên sản phẩm.',
             'product_name.max' => 'Tên sản phẩm không được vượt quá 200 ký tự.',
             'brand.max' => 'Thương hiệu không được vượt quá 100 ký tự.',
             'description.max' => 'Mô tả không được vượt quá 5000 ký tự.',
+
             'price.required' => 'Vui lòng nhập giá bán.',
             'price.numeric' => 'Giá bán phải là số.',
             'price.min' => 'Giá bán không được âm.',
+
             'stock_quantity.required' => 'Vui lòng nhập số lượng tồn kho.',
             'stock_quantity.integer' => 'Số lượng tồn kho phải là số nguyên.',
             'stock_quantity.min' => 'Số lượng tồn kho không được âm.',
+
             'weight_gram.integer' => 'Cân nặng phải là số nguyên tính bằng gram.',
-            'image.image' => 'Ảnh chính phải là tệp hình ảnh.',
-            'image.mimes' => 'Ảnh chính phải có định dạng JPG, PNG, WEBP, GIF hoặc BMP.',
-            'image.max' => 'Ảnh chính không được vượt quá 5MB.',
+
+            'image.image' => 'Ảnh chính tải lên không hợp lệ.',
+            'image.max' => 'Ảnh chính không được vượt quá 10 MB.',
+
             'images.array' => 'Danh sách ảnh phụ không hợp lệ.',
             'images.max' => 'Mỗi lần chỉ được thêm tối đa 8 ảnh phụ.',
-            'images.*.image' => 'Mỗi ảnh phụ phải là tệp hình ảnh.',
-            'images.*.mimes' => 'Ảnh phụ phải có định dạng JPG, PNG, WEBP, GIF hoặc BMP.',
-            'images.*.max' => 'Mỗi ảnh phụ không được vượt quá 5MB.',
+            'images.*.image' => 'Mỗi ảnh phụ tải lên không hợp lệ.',
+            'images.*.max' => 'Mỗi ảnh phụ không được vượt quá 10 MB.',
+
             'remove_image_ids.*.integer' => 'Ảnh được chọn để xóa không hợp lệ.',
             'remove_image_ids.*.distinct' => 'Ảnh được chọn để xóa bị trùng.',
 
             'variants.array' => 'Danh sách mẫu mã không hợp lệ.',
             'variants.max' => 'Mỗi sản phẩm chỉ được có tối đa 20 mẫu mã.',
+            'variants.*.variant_id.integer' => 'Mẫu mã được chọn không hợp lệ.',
+            'variants.*.variant_id.distinct' => 'Mẫu mã bị gửi trùng.',
             'variants.*.variant_name.required' => 'Vui lòng nhập tên cho từng mẫu mã.',
             'variants.*.variant_name.max' => 'Tên mẫu mã không được vượt quá 100 ký tự.',
             'variants.*.price.required' => 'Vui lòng nhập giá cho từng mẫu mã.',
@@ -87,6 +107,9 @@ class UpdateProductRequest extends FormRequest
             'variants.*.stock_quantity.required' => 'Vui lòng nhập tồn kho cho từng mẫu mã.',
             'variants.*.stock_quantity.integer' => 'Tồn kho mẫu mã phải là số nguyên.',
             'variants.*.stock_quantity.min' => 'Tồn kho mẫu mã không được âm.',
+
+            'variants.*.image.image' => 'Ảnh mẫu mã tải lên không hợp lệ.',
+            'variants.*.image.max' => 'Ảnh mẫu mã không được vượt quá 10 MB.',
         ];
     }
 }

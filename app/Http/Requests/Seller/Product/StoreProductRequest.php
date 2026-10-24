@@ -22,21 +22,20 @@ class StoreProductRequest extends FormRequest
             'stock_quantity' => ['required', 'integer', 'min:0', 'max:1000000'],
             'weight_gram' => ['nullable', 'integer', 'min:1', 'max:100000'],
 
-            // Một ảnh chính.
+            // Ảnh chính bắt buộc, tối đa 10 MB.
             'image' => [
                 'required',
                 'image',
-                'mimes:jpg,jpeg,png,webp,gif,bmp',
-                'max:5120',
+                'max:10240',
             ],
 
-            // Tối đa 8 ảnh phụ.
+            // Tối đa 8 ảnh phụ, mỗi ảnh tối đa 10 MB.
             'images' => ['nullable', 'array', 'max:8'],
             'images.*' => [
                 'image',
-                'mimes:jpg,jpeg,png,webp,gif,bmp',
-                'max:5120',
+                'max:10240',
             ],
+
             'variants_present' => ['nullable', 'boolean'],
             'variants' => ['nullable', 'array', 'max:20'],
             'variants.*.variant_name' => ['required', 'string', 'max:100'],
@@ -78,14 +77,12 @@ class StoreProductRequest extends FormRequest
 
             'image.required' => 'Vui lòng chọn ảnh chính cho sản phẩm.',
             'image.image' => 'Ảnh chính tải lên không hợp lệ.',
-            'image.mimes' => 'Ảnh chính hỗ trợ JPG, PNG, WebP, GIF hoặc BMP.',
-            'image.max' => 'Ảnh chính không được vượt quá 5MB.',
+            'image.max' => 'Ảnh chính không được vượt quá 10 MB.',
 
             'images.array' => 'Danh sách ảnh phụ không hợp lệ.',
             'images.max' => 'Sản phẩm chỉ được tải tối đa 8 ảnh phụ.',
             'images.*.image' => 'Một trong các ảnh phụ không hợp lệ.',
-            'images.*.mimes' => 'Ảnh phụ hỗ trợ JPG, PNG, WebP, GIF hoặc BMP.',
-            'images.*.max' => 'Mỗi ảnh phụ không được vượt quá 5MB.',
+            'images.*.max' => 'Mỗi ảnh phụ không được vượt quá 10 MB.',
 
             'variants.array' => 'Danh sách mẫu mã không hợp lệ.',
             'variants.max' => 'Mỗi sản phẩm chỉ được có tối đa 20 mẫu mã.',

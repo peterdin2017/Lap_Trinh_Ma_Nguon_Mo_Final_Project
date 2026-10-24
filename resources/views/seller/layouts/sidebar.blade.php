@@ -1,14 +1,18 @@
 @php
     $productsOpen = request()->routeIs('seller.products.*');
-    $ordersOpen = request()->routeIs('seller.orders.*', 'seller.order.*');
+    $ordersOpen = request()->routeIs('seller.orders.*');
     $reportsOpen = request()->routeIs('seller.reports.*', 'seller.analytics.*');
+
     $shopSettingsOpen = request()->routeIs(
         'seller.shop-information.*',
         'seller.shipping.*',
         'seller.promotions.*',
         'seller.vouchers.*',
     );
-    $pendingOrderCount = $pendingOrderCount ?? 0;
+
+    $pendingOrderCount = $pendingOrdersCount ?? 0;
+    $currentOrderStatus = request()->query('status', 'all');
+    $onOrdersIndex = request()->routeIs('seller.orders.index');
 @endphp
 
 {{-- Sidebar desktop --}}
@@ -59,11 +63,6 @@
                    class="seller-subnav-link {{ request()->routeIs('seller.products.create') ? 'active' : '' }}">
                     Thêm sản phẩm mới
                 </a>
-
-                <a href="{{ \Illuminate\Support\Facades\Route::has('seller.products.hidden') ? route('seller.products.hidden') : '#' }}"
-                   class="seller-subnav-link {{ request()->routeIs('seller.products.hidden') ? 'active' : '' }}">
-                    Sản phẩm hết hàng / ẩn
-                </a>
             </nav>
         </div>
 
@@ -81,29 +80,29 @@
 
         <div id="sellerOrderMenu" class="collapse {{ $ordersOpen ? 'show' : '' }}">
             <nav class="seller-submenu" aria-label="Quản lý đơn hàng">
-                <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.index') ? route('seller.orders.index') : '#' }}"
-                   class="seller-subnav-link {{ request()->routeIs('seller.orders.index') ? 'active' : '' }}">
+                <a href="{{ route('seller.orders.index', ['status' => 'all']) }}"
+                   class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'all' ? 'active' : '' }}">
                     Tất cả đơn hàng
                 </a>
 
-                <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.pending') ? route('seller.orders.pending') : '#' }}"
-                   class="seller-subnav-link {{ request()->routeIs('seller.orders.pending') ? 'active' : '' }}">
+                <a href="{{ route('seller.orders.index', ['status' => 'pending']) }}"
+                   class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'pending' ? 'active' : '' }}">
                     <span>Chờ xác nhận</span>
                     <span class="seller-menu-badge">{{ $pendingOrderCount }}</span>
                 </a>
 
-                <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.shipping') ? route('seller.orders.shipping') : '#' }}"
-                   class="seller-subnav-link {{ request()->routeIs('seller.orders.shipping') ? 'active' : '' }}">
+                <a href="{{ route('seller.orders.index', ['status' => 'shipping']) }}"
+                   class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'shipping' ? 'active' : '' }}">
                     Đang vận chuyển
                 </a>
 
-                <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.delivered') ? route('seller.orders.delivered') : '#' }}"
-                   class="seller-subnav-link {{ request()->routeIs('seller.orders.delivered') ? 'active' : '' }}">
+                <a href="{{ route('seller.orders.index', ['status' => 'completed']) }}"
+                   class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'completed' ? 'active' : '' }}">
                     Đã hoàn thành
                 </a>
 
-                <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.cancelled') ? route('seller.orders.cancelled') : '#' }}"
-                   class="seller-subnav-link {{ request()->routeIs('seller.orders.cancelled') ? 'active' : '' }}">
+                <a href="{{ route('seller.orders.index', ['status' => 'cancelled']) }}"
+                   class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'cancelled' ? 'active' : '' }}">
                     Đơn hủy / Trả hàng
                 </a>
             </nav>
@@ -271,29 +270,29 @@
 
             <div id="sellerOrderMenuMobile" class="collapse {{ $ordersOpen ? 'show' : '' }}">
                 <nav class="seller-submenu" aria-label="Đơn hàng">
-                    <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.index') ? route('seller.orders.index') : '#' }}"
-                       class="seller-subnav-link {{ request()->routeIs('seller.orders.index') ? 'active' : '' }}">
+                    <a href="{{ route('seller.orders.index', ['status' => 'all']) }}"
+                       class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'all' ? 'active' : '' }}">
                         Tất cả đơn hàng
                     </a>
 
-                    <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.pending') ? route('seller.orders.pending') : '#' }}"
-                       class="seller-subnav-link {{ request()->routeIs('seller.orders.pending') ? 'active' : '' }}">
+                    <a href="{{ route('seller.orders.index', ['status' => 'pending']) }}"
+                       class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'pending' ? 'active' : '' }}">
                         <span>Chờ xác nhận</span>
                         <span class="seller-menu-badge">{{ $pendingOrderCount }}</span>
                     </a>
 
-                    <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.shipping') ? route('seller.orders.shipping') : '#' }}"
-                       class="seller-subnav-link">
+                    <a href="{{ route('seller.orders.index', ['status' => 'shipping']) }}"
+                       class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'shipping' ? 'active' : '' }}">
                         Đang vận chuyển
                     </a>
 
-                    <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.delivered') ? route('seller.orders.delivered') : '#' }}"
-                       class="seller-subnav-link">
+                    <a href="{{ route('seller.orders.index', ['status' => 'completed']) }}"
+                       class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'completed' ? 'active' : '' }}">
                         Đã hoàn thành
                     </a>
 
-                    <a href="{{ \Illuminate\Support\Facades\Route::has('seller.orders.cancelled') ? route('seller.orders.cancelled') : '#' }}"
-                       class="seller-subnav-link">
+                    <a href="{{ route('seller.orders.index', ['status' => 'cancelled']) }}"
+                       class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'cancelled' ? 'active' : '' }}">
                         Đơn hủy / Trả hàng
                     </a>
                 </nav>
