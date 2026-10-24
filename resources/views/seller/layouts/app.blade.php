@@ -11,7 +11,7 @@
             try {
                 document.documentElement.dataset.theme =
                     localStorage.getItem('seller-theme') === 'dark' ? 'dark' : 'light';
-            } catch (error) {
+            } catch {
                 document.documentElement.dataset.theme = 'light';
             }
         })();
@@ -44,16 +44,17 @@
         [data-theme="dark"] {
             color-scheme: dark;
 
-            --seller-primary: #60A5FA;
-            --seller-primary-hover: #3B82F6;
-            --seller-primary-light: #1E293B;
-            --seller-page-bg: #0B0F19;
-            --seller-card-bg: #0F172A;
-            --seller-sidebar-bg: #0F172A;
-            --seller-hover-bg: #1E293B;
-            --seller-text: #F1F5F9;
+            /* Đồng bộ palette tối với Admin Center */
+            --seller-primary: #0D6EFD;
+            --seller-primary-hover: #0B5ED7;
+            --seller-primary-light: #172A46;
+            --seller-page-bg: #0F172A;
+            --seller-card-bg: #1E293B;
+            --seller-sidebar-bg: #0B192C;
+            --seller-hover-bg: #172A46;
+            --seller-text: #F8FAFC;
             --seller-text-muted: #94A3B8;
-            --seller-border: #1E293B;
+            --seller-border: #26364D;
             --seller-price: #FB7185;
             --seller-shadow: 0 2px 8px rgba(0, 0, 0, .2);
         }
@@ -139,11 +140,6 @@
             color: var(--seller-text-muted);
         }
 
-        .seller-nav-link:hover {
-            color: var(--seller-primary);
-            background: var(--seller-hover-bg);
-        }
-
         .seller-nav-link.active {
             color: var(--seller-primary) !important;
             background: var(--seller-primary-light) !important;
@@ -219,22 +215,25 @@
     </style>
 
     @stack('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/dashboard-layout.css') }}">
 </head>
 
 <body>
-    <div class="d-flex min-vh-100">
+    <div class="app-wrapper">
         @include('seller.layouts.sidebar')
 
-        <div class="seller-main flex-grow-1">
+        <div class="app-main seller-main">
             @include('seller.layouts.header')
 
-            <main class="seller-content container-fluid px-3 px-lg-4 py-4">
+            <main class="content-body seller-content container-fluid px-3 px-lg-4 py-4">
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="status">
                         <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
                         {{ session('success') }}
-                        <button type="button" class="btn-close"
-                                data-bs-dismiss="alert" aria-label="Đóng"></button>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Đóng"></button>
                     </div>
                 @endif
 
@@ -242,8 +241,10 @@
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
                         {{ session('error') }}
-                        <button type="button" class="btn-close"
-                                data-bs-dismiss="alert" aria-label="Đóng"></button>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Đóng"></button>
                     </div>
                 @endif
 
@@ -256,51 +257,60 @@
 
     <script src="{{ asset('assets/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
+    {{-- Một bộ xử lý duy nhất cho nút theme seller --}}
     <script>
         (() => {
             const root = document.documentElement;
-            const selector = '#sellerThemeToggle, #sellerThemeToggleMobile';
+            const themeSelector =
+                '#sellerThemeToggle, #sellerThemeToggleMobile';
 
-            const updateThemeButtons = () => {
-                const dark = root.dataset.theme === 'dark';
+            function syncThemeButtons() {
+                const isDark = root.dataset.theme === 'dark';
 
-                document.querySelectorAll(selector).forEach((button) => {
+                document.querySelectorAll(themeSelector).forEach((button) => {
+                    button.setAttribute('aria-pressed', String(isDark));
+
                     const icon = button.querySelector('[data-theme-icon]');
                     const label = button.querySelector('[data-theme-label]');
 
                     if (icon) {
-                        icon.className = `bi ${dark ? 'bi-sun' : 'bi-moon-stars'}`;
+                        icon.className = isDark
+                            ? 'bi bi-sun'
+                            : 'bi bi-moon-stars';
                     }
 
                     if (label) {
-                        label.textContent = dark ? 'Giao diện sáng' : 'Giao diện tối';
+                        label.textContent = isDark
+                            ? 'Giao diện sáng'
+                            : 'Giao diện tối';
                     }
                 });
-            };
+            }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                updateThemeButtons();
+            document.addEventListener('click', (event) => {
+                const button = event.target.closest(themeSelector);
+                if (!button) return;
 
-                document.querySelectorAll(selector).forEach((button) => {
-                    button.addEventListener('click', () => {
-                        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-                        root.dataset.theme = next;
+                const nextTheme =
+                    root.dataset.theme === 'dark' ? 'light' : 'dark';
 
-                        try {
-                            localStorage.setItem('seller-theme', next);
-                        } catch (error) {
-                            // Vẫn đổi theme cho phiên hiện tại nếu localStorage không khả dụng.
-                        }
+                root.dataset.theme = nextTheme;
 
-                        updateThemeButtons();
-                    });
-                });
+                try {
+                    localStorage.setItem('seller-theme', nextTheme);
+                } catch {
+                    // Giao diện vẫn đổi trong phiên hiện tại nếu localStorage bị chặn.
+                }
 
-                document.querySelectorAll('.alert.alert-dismissible').forEach((alert) => {
-                    window.setTimeout(() => {
-                        bootstrap.Alert.getOrCreateInstance(alert).close();
-                    }, 4500);
-                });
+                syncThemeButtons();
+            });
+
+            syncThemeButtons();
+
+            document.querySelectorAll('.alert.alert-dismissible').forEach((alert) => {
+                window.setTimeout(() => {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }, 4500);
             });
         })();
     </script>

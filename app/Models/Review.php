@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+use App\Models\ReviewImage;
 
 class Review extends Model
 {
@@ -21,7 +24,9 @@ class Review extends Model
 
     protected function casts(): array
     {
-        return ['rating' => 'integer'];
+        return [
+            'rating' => 'integer',
+        ];
     }
 
     public function product(): BelongsTo
@@ -33,8 +38,14 @@ class Review extends Model
     {
         return $this->belongsTo(Account::class, 'account_id', 'account_id');
     }
+
     public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class, 'order_item_id', 'order_item_id');
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ReviewImage::class, 'review_id', 'review_id');
     }
 }

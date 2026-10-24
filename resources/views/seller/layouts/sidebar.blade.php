@@ -467,15 +467,15 @@
         flex: 1;
     }
 
+    /* Giống rule Admin: hover, focus và active dùng chung highlight */
     .seller-nav-link:hover,
-    .seller-nav-link:focus-visible {
-        color: var(--seller-primary, #1A94FF);
-        background: var(--seller-hover-bg, #F8FAFC);
-    }
-
+    .seller-nav-link:focus-visible,
     .seller-nav-link.active {
         color: var(--seller-primary, #1A94FF);
         background: var(--seller-primary-light, #EBF5FF);
+    }
+
+    .seller-nav-link.active {
         font-weight: 600;
     }
 
@@ -587,58 +587,3 @@
         }
     }
 </style>
-
-<script>
-    (() => {
-        const root = document.documentElement;
-        const buttons = document.querySelectorAll(
-            '#sellerThemeToggle, #sellerThemeToggleMobile'
-        );
-
-        const syncThemeButtons = () => {
-            const isDark = root.dataset.theme === 'dark';
-
-            buttons.forEach((button) => {
-                button.setAttribute('aria-pressed', String(isDark));
-
-                const icon = button.querySelector('[data-theme-icon]');
-                const label = button.querySelector('[data-theme-label]');
-
-                if (icon) {
-                    icon.className = isDark
-                        ? 'bi bi-sun'
-                        : 'bi bi-moon-stars';
-                }
-
-                if (label) {
-                    label.textContent = isDark ? 'Giao diện sáng' : 'Giao diện tối';
-                }
-            });
-        };
-
-        window.toggleAppTheme = window.toggleAppTheme || (() => {
-            const nextTheme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-            root.dataset.theme = nextTheme;
-
-            try {
-                localStorage.setItem('seller-theme', nextTheme);
-            } catch {
-                // Theme vẫn đổi trong phiên hiện tại nếu localStorage không khả dụng.
-            }
-
-            syncThemeButtons();
-            return nextTheme;
-        });
-
-        buttons.forEach((button) => {
-            button.addEventListener('click', window.toggleAppTheme);
-        });
-
-        new MutationObserver(syncThemeButtons).observe(root, {
-            attributes: true,
-            attributeFilter: ['data-theme'],
-        });
-
-        syncThemeButtons();
-    })();
-</script>

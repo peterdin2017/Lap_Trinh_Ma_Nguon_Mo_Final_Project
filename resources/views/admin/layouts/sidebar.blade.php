@@ -1,9 +1,8 @@
 @php
-    $storeMenuOpen = request()->routeIs('admin.stores.*', 'admin.sellers.*');
+    $storeMenuOpen = request()->routeIs('admin.sellers.*');
     $accountMenuOpen = request()->routeIs('admin.accounts.*');
     $productMenuOpen = request()->routeIs('admin.products.*', 'admin.categories.*');
-    $orderMenuOpen = request()->routeIs('admin.orders.*', 'admin.reports.*');
-    $settingsActive = request()->routeIs('admin.settings.*');
+    $reportMenuOpen = request()->routeIs('admin.reports.*');
 @endphp
 
 {{-- Sidebar desktop --}}
@@ -18,95 +17,10 @@
 
     <div class="admin-sidebar__section">Menu chính</div>
 
-    <nav class="admin-sidebar__nav" aria-label="Menu quản trị">
-        <a href="{{ route('admin.home') }}"
-           class="admin-nav-link {{ request()->routeIs('admin.home') ? 'active' : '' }}">
-            <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
-            <span>Tổng quan</span>
-        </a>
-
-        <button class="admin-nav-link admin-nav-toggle {{ $storeMenuOpen ? 'active' : '' }}"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#adminStoreMenu"
-                aria-expanded="{{ $storeMenuOpen ? 'true' : 'false' }}"
-                aria-controls="adminStoreMenu">
-            <i class="bi bi-shop" aria-hidden="true"></i>
-            <span>Quản lý Cửa hàng</span>
-            <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
-        </button>
-        <div id="adminStoreMenu" class="collapse {{ $storeMenuOpen ? 'show' : '' }}">
-            <nav class="admin-submenu" aria-label="Quản lý cửa hàng">
-                <a href="#" class="admin-subnav-link {{ request()->routeIs('admin.stores.index') ? 'active' : '' }}">
-                    Danh sách cửa hàng
-                </a>
-                <a href="{{ route('admin.sellers.index') }}"
-                   class="admin-subnav-link {{ request()->routeIs('admin.sellers.*') ? 'active' : '' }}">
-                    Duyệt hồ sơ
-                </a>
-                <a href="{{ route('admin.sellers.index') }}" class="admin-subnav-link">Cửa hàng vi phạm</a>
-            </nav>
-        </div>
-
-        <button class="admin-nav-link admin-nav-toggle {{ $accountMenuOpen ? 'active' : '' }}"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#adminAccountMenu"
-                aria-expanded="{{ $accountMenuOpen ? 'true' : 'false' }}"
-                aria-controls="adminAccountMenu">
-            <i class="bi bi-people-fill" aria-hidden="true"></i>
-            <span>Quản lý Tài khoản</span>
-            <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
-        </button>
-        <div id="adminAccountMenu" class="collapse {{ $accountMenuOpen ? 'show' : '' }}">
-            <nav class="admin-submenu" aria-label="Quản lý tài khoản">
-                <a href="{{ route('admin.accounts.index', ['role'=>'user']) }}" class="admin-subnav-link">Khách hàng</a>
-                <a href="{{ route('admin.accounts.index', ['role'=>'seller']) }}" class="admin-subnav-link">Người bán</a>
-                <a href="{{ route('admin.accounts.index', ['role'=>'admin']) }}" class="admin-subnav-link">Quản trị viên</a>
-            </nav>
-        </div>
-
-        <button class="admin-nav-link admin-nav-toggle {{ $productMenuOpen ? 'active' : '' }}"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#adminProductMenu"
-                aria-expanded="{{ $productMenuOpen ? 'true' : 'false' }}"
-                aria-controls="adminProductMenu">
-            <i class="bi bi-box-seam" aria-hidden="true"></i>
-            <span>Quản lý Sản phẩm</span>
-            <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
-        </button>
-        <div id="adminProductMenu" class="collapse {{ $productMenuOpen ? 'show' : '' }}">
-            <nav class="admin-submenu" aria-label="Quản lý sản phẩm">
-                <a href="{{ route('admin.products.index') }}" class="admin-subnav-link">Danh sách sản phẩm</a>
-                <a href="{{ route('admin.categories.index') }}" class="admin-subnav-link">Danh mục ngành hàng</a>
-                <a href="{{ route('admin.products.index', ['status'=>'locked']) }}" class="admin-subnav-link">Sản phẩm vi phạm</a>
-            </nav>
-        </div>
-
-        <button class="admin-nav-link admin-nav-toggle {{ $orderMenuOpen ? 'active' : '' }}"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#adminOrderMenu"
-                aria-expanded="{{ $orderMenuOpen ? 'true' : 'false' }}"
-                aria-controls="adminOrderMenu">
-            <i class="bi bi-receipt" aria-hidden="true"></i>
-            <span>Đơn hàng &amp; Báo cáo</span>
-            <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
-        </button>
-        <div id="adminOrderMenu" class="collapse {{ $orderMenuOpen ? 'show' : '' }}">
-            <nav class="admin-submenu" aria-label="Đơn hàng và báo cáo">
-                <a href="{{ route('admin.reports.index') }}" class="admin-subnav-link">Báo cáo vi phạm</a>
-                <a href="{{ route('admin.home') }}" class="admin-subnav-link">Thống kê tổng quan</a>
-            </nav>
-        </div>
-
-        <a href="#"
-           class="admin-nav-link {{ $settingsActive ? 'active' : '' }}">
-            <i class="bi bi-gear" aria-hidden="true"></i>
-            <span>Cài đặt hệ thống</span>
-        </a>
-    </nav>
+    @include('admin.partials.navigation', [
+        'suffix' => '',
+        'label' => 'Menu quản trị',
+    ])
 
     <div class="admin-sidebar__bottom">
         <button id="adminThemeToggle"
@@ -155,92 +69,10 @@
     <div class="offcanvas-body d-flex flex-column">
         <div class="admin-sidebar__section">Menu chính</div>
 
-        <nav class="admin-sidebar__nav" aria-label="Menu quản trị trên điện thoại">
-            <a href="{{ route('admin.home') }}"
-               class="admin-nav-link {{ request()->routeIs('admin.home') ? 'active' : '' }}">
-                <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
-                <span>Tổng quan</span>
-            </a>
-
-            <button class="admin-nav-link admin-nav-toggle {{ $storeMenuOpen ? 'active' : '' }}"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#adminStoreMenuMobile"
-                    aria-expanded="{{ $storeMenuOpen ? 'true' : 'false' }}"
-                    aria-controls="adminStoreMenuMobile">
-                <i class="bi bi-shop" aria-hidden="true"></i>
-                <span>Quản lý Cửa hàng</span>
-                <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
-            </button>
-            <div id="adminStoreMenuMobile" class="collapse {{ $storeMenuOpen ? 'show' : '' }}">
-                <nav class="admin-submenu" aria-label="Quản lý cửa hàng">
-                    <a href="{{ route('admin.sellers.index') }}" class="admin-subnav-link">Danh sách cửa hàng</a>
-                    <a href="{{ route('admin.sellers.index') }}"
-                       class="admin-subnav-link {{ request()->routeIs('admin.sellers.*') ? 'active' : '' }}">
-                        Duyệt hồ sơ
-                    </a>
-                    <a href="{{ route('admin.sellers.index') }}" class="admin-subnav-link">Cửa hàng vi phạm</a>
-                </nav>
-            </div>
-
-            <button class="admin-nav-link admin-nav-toggle {{ $accountMenuOpen ? 'active' : '' }}"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#adminAccountMenuMobile"
-                    aria-expanded="{{ $accountMenuOpen ? 'true' : 'false' }}"
-                    aria-controls="adminAccountMenuMobile">
-                <i class="bi bi-people-fill" aria-hidden="true"></i>
-                <span>Quản lý Tài khoản</span>
-                <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
-            </button>
-            <div id="adminAccountMenuMobile" class="collapse {{ $accountMenuOpen ? 'show' : '' }}">
-                <nav class="admin-submenu" aria-label="Quản lý tài khoản">
-                    <a href="{{ route('admin.accounts.index', ['role'=>'user']) }}" class="admin-subnav-link">Khách hàng</a>
-                    <a href="{{ route('admin.accounts.index', ['role'=>'seller']) }}" class="admin-subnav-link">Người bán</a>
-                    <a href="{{ route('admin.accounts.index', ['role'=>'admin']) }}" class="admin-subnav-link">Quản trị viên</a>
-                </nav>
-            </div>
-
-            <button class="admin-nav-link admin-nav-toggle {{ $productMenuOpen ? 'active' : '' }}"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#adminProductMenuMobile"
-                    aria-expanded="{{ $productMenuOpen ? 'true' : 'false' }}"
-                    aria-controls="adminProductMenuMobile">
-                <i class="bi bi-box-seam" aria-hidden="true"></i>
-                <span>Quản lý Sản phẩm</span>
-                <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
-            </button>
-            <div id="adminProductMenuMobile" class="collapse {{ $productMenuOpen ? 'show' : '' }}">
-                <nav class="admin-submenu" aria-label="Quản lý sản phẩm">
-                    <a href="{{ route('admin.products.index') }}" class="admin-subnav-link">Danh sách sản phẩm</a>
-                    <a href="{{ route('admin.categories.index') }}" class="admin-subnav-link">Danh mục ngành hàng</a>
-                    <a href="{{ route('admin.products.index', ['status'=>'locked']) }}" class="admin-subnav-link">Sản phẩm vi phạm</a>
-                </nav>
-            </div>
-
-            <button class="admin-nav-link admin-nav-toggle {{ $orderMenuOpen ? 'active' : '' }}"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#adminOrderMenuMobile"
-                    aria-expanded="{{ $orderMenuOpen ? 'true' : 'false' }}"
-                    aria-controls="adminOrderMenuMobile">
-                <i class="bi bi-receipt" aria-hidden="true"></i>
-                <span>Đơn hàng &amp; Báo cáo</span>
-                <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
-            </button>
-            <div id="adminOrderMenuMobile" class="collapse {{ $orderMenuOpen ? 'show' : '' }}">
-                <nav class="admin-submenu" aria-label="Đơn hàng và báo cáo">
-                    <a href="{{ route('admin.reports.index') }}" class="admin-subnav-link">Báo cáo vi phạm</a>
-                    <a href="{{ route('admin.home') }}" class="admin-subnav-link">Thống kê tổng quan</a>
-                </nav>
-            </div>
-
-            <a href="#" class="admin-nav-link {{ $settingsActive ? 'active' : '' }}">
-                <i class="bi bi-gear" aria-hidden="true"></i>
-                <span>Cài đặt hệ thống</span>
-            </a>
-        </nav>
+        @include('admin.partials.navigation', [
+            'suffix' => 'Mobile',
+            'label' => 'Menu quản trị trên điện thoại',
+        ])
 
         <div class="admin-sidebar__bottom mt-auto">
             <button id="adminThemeToggleMobile"

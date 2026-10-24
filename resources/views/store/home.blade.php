@@ -31,9 +31,7 @@
         <div class="container py-4 py-lg-5">
             <section class="home-hero" aria-labelledby="home-hero-title">
                 <div class="home-hero__content">
-                    <span class="home-hero__eyebrow">
-                        Mua sắm trực tuyến
-                    </span>
+                    <span class="home-hero__eyebrow">Mua sắm trực tuyến</span>
 
                     <h1 id="home-hero-title" class="home-hero__title">
                         Tìm món đồ yêu thích của bạn
@@ -44,10 +42,7 @@
                         và đặt mua dễ dàng.
                     </p>
 
-                    <a
-                        href="{{ route('store.products.index') }}"
-                        class="btn home-hero__button"
-                    >
+                    <a href="{{ route('store.products.index') }}" class="btn home-hero__button">
                         Mua sắm ngay
                         <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
                     </a>
@@ -58,10 +53,7 @@
                 </div>
             </section>
 
-            <section
-                class="home-policy-bar"
-                aria-label="Thông tin dịch vụ"
-            >
+            <section class="home-policy-bar" aria-label="Thông tin dịch vụ">
                 <div class="row g-0">
                     <div class="col-6 col-md-3">
                         <div class="home-policy-item">
@@ -106,10 +98,7 @@
             </section>
 
             @if ($featuredCategories->isNotEmpty())
-                <section
-                    class="home-section"
-                    aria-labelledby="featured-categories-title"
-                >
+                <section class="home-section" aria-labelledby="featured-categories-title">
                     <div class="home-section__heading">
                         <div>
                             <span class="home-section__eyebrow">Khám phá</span>
@@ -118,10 +107,7 @@
                             </h2>
                         </div>
 
-                        <a
-                            href="{{ route('store.products.index') }}"
-                            class="home-section__more"
-                        >
+                        <a href="{{ route('store.products.index') }}" class="home-section__more">
                             Xem tất cả
                             <i class="bi bi-arrow-right" aria-hidden="true"></i>
                         </a>
@@ -166,10 +152,7 @@
                 </section>
             @endif
 
-            <section
-                class="home-section home-products"
-                aria-labelledby="showcase-title"
-            >
+            <section class="home-section home-products" aria-labelledby="showcase-title">
                 <div class="home-section__heading home-products__heading">
                     <div>
                         <span class="home-section__eyebrow">Dành cho bạn</span>
@@ -205,9 +188,7 @@
                     <div class="home-empty-state">
                         <i class="bi bi-basket" aria-hidden="true"></i>
                         <h3>Chưa có sản phẩm để hiển thị</h3>
-                        <p>
-                            Sản phẩm sẽ xuất hiện tại đây khi cửa hàng có dữ liệu.
-                        </p>
+                        <p>Sản phẩm sẽ xuất hiện tại đây khi cửa hàng có dữ liệu.</p>
                     </div>
                 @else
                     <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
@@ -243,9 +224,7 @@
                                             @endif
 
                                             @if ($isNew)
-                                                <span class="home-product-card__badge">
-                                                    Mới
-                                                </span>
+                                                <span class="home-product-card__badge">Mới</span>
                                             @elseif ($product->sold_count > 0)
                                                 <span class="home-product-card__badge home-product-card__badge--popular">
                                                     Bán chạy
@@ -271,7 +250,17 @@
                                         >
                                             <span class="home-product-card__stars" aria-hidden="true">
                                                 @for ($star = 1; $star <= 5; $star++)
-                                                    <i class="bi {{ $star <= round($rating) ? 'bi-star-fill' : 'bi-star' }}"></i>
+                                                    @php
+                                                        $starValue = $rating - ($star - 1);
+                                                    @endphp
+
+                                                    @if ($starValue >= 0.75)
+                                                        <i class="bi bi-star-fill"></i>
+                                                    @elseif ($starValue >= 0.25)
+                                                        <i class="bi bi-star-half"></i>
+                                                    @else
+                                                        <i class="bi bi-star"></i>
+                                                    @endif
                                                 @endfor
                                             </span>
 
@@ -317,16 +306,8 @@
                                                     name="product_id"
                                                     value="{{ $product->product_id }}"
                                                 >
-                                                <input
-                                                    type="hidden"
-                                                    name="quantity"
-                                                    value="1"
-                                                >
-                                                <input
-                                                    type="hidden"
-                                                    name="intent"
-                                                    value="cart"
-                                                >
+                                                <input type="hidden" name="quantity" value="1">
+                                                <input type="hidden" name="intent" value="cart">
 
                                                 <button
                                                     type="submit"
