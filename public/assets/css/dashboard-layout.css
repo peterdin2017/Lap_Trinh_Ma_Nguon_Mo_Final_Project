@@ -1,0 +1,212 @@
+/* Khóa viewport; nội dung dashboard tự cuộn bên trong vùng chính. */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+.app-wrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Admin sidebar desktop */
+.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) {
+    display: flex !important;
+    flex: 0 0 260px;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 260px;
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) > .admin-sidebar__brand,
+.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) > .admin-sidebar__section,
+.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) > .admin-sidebar__bottom {
+    flex: 0 0 auto;
+}
+
+.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) > .admin-sidebar__nav {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Khung nội dung admin */
+.app-main {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: calc(100vw - 260px);
+    height: 100vh;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--app-page-bg, #F4F7FA);
+}
+
+/* Header admin */
+.app-main > .admin-header {
+    display: flex;
+    flex: 0 0 60px;
+    width: 100%;
+    height: 60px;
+    min-height: 60px;
+    align-items: center;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    position: relative;
+    z-index: 5;
+}
+
+/* Vùng cuộn nội dung admin */
+.content-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1.5rem;
+}
+
+/* Sidebar admin mobile dùng Bootstrap offcanvas */
+.app-wrapper > .admin-sidebar--mobile {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 991.98px) {
+    .app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) {
+        display: none !important;
+    }
+
+    .app-main {
+        width: 100vw;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .content-body {
+        padding: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .content-body {
+        scroll-behavior: auto;
+    }
+}
+
+/* Seller sidebar desktop */
+.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) {
+    position: relative !important;
+    inset: auto !important;
+    z-index: auto;
+    display: flex !important;
+    flex: 0 0 260px;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 260px !important;
+    height: 100vh;
+    min-height: 0 !important;
+    overflow: hidden;
+}
+
+.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) > .seller-brand,
+.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) > .seller-sidebar__section,
+.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) > .seller-sidebar__footer {
+    flex: 0 0 auto;
+}
+
+.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) > .seller-sidebar__nav {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Khung nội dung seller */
+.app-main.seller-main {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: calc(100vw - 260px);
+    height: 100vh;
+    min-width: 0;
+    min-height: 0;
+    margin-left: 0;
+    overflow: hidden;
+    color: var(--seller-text);
+    background: var(--seller-page-bg);
+}
+
+/* Header seller */
+.app-main.seller-main > .seller-topbar {
+    display: flex;
+    flex: 0 0 60px;
+    width: 100%;
+    height: 60px;
+    min-height: 60px;
+    align-items: center;
+    position: relative;
+    z-index: 5;
+}
+
+/* Vùng cuộn nội dung seller */
+.app-main.seller-main > .seller-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.app-main.seller-main > .seller-footer {
+    flex: 0 0 auto;
+}
+
+/* Sidebar seller mobile dùng Bootstrap offcanvas */
+.app-wrapper > .seller-sidebar--mobile {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 991.98px) {
+    .app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) {
+        display: none !important;
+    }
+
+    .app-main.seller-main {
+        width: 100vw;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .app-main.seller-main > .seller-content {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+}
+
+/* Hover và focus sidebar seller đồng nhất với màu xanh của admin. */
+.app-wrapper .seller-sidebar .seller-nav-link:not(.disabled):hover,
+.app-wrapper .seller-sidebar .seller-nav-link:not(.disabled):focus-visible,
+.app-wrapper .seller-sidebar .seller-subnav-link:hover,
+.app-wrapper .seller-sidebar .seller-subnav-link:focus-visible {
+    color: var(--seller-primary) !important;
+    background-color: var(--seller-primary-light) !important;
+}

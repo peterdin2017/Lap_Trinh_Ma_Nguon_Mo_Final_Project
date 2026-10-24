@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Store\HomeController;
 use App\Http\Controllers\Store\Product\ProductController;
+use App\Http\Controllers\Store\Account\BuyerOrderController;
 
 Route::get('/', [HomeController::class, 'index'])
     ->name('store.home');
@@ -23,6 +24,9 @@ require __DIR__ . '/products/catalog.php';
 require __DIR__ . '/account/profile.php';
 require __DIR__ . '/account/password.php';
 require __DIR__ . '/account/addresses.php';
+require __DIR__ . '/account/orders.php';
+require __DIR__ . '/products/reviews.php';
+require __DIR__ . '/products/reports.php';
 
 // Checkout
 require __DIR__ . '/checkout/checkout.php';

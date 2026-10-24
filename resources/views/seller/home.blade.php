@@ -4,6 +4,16 @@
 
 @section('content')
     <style>
+        .seller-dashboard {
+            color: var(--seller-text);
+        }
+
+        .seller-dashboard__description,
+        .seller-dashboard__metric-label,
+        .seller-dashboard__welcome-description {
+            color: var(--seller-text-muted);
+        }
+
         .seller-dashboard .dashboard-card,
         .seller-dashboard .welcome-card {
             color: var(--seller-text);
@@ -23,12 +33,12 @@
         }
 
         .seller-dashboard .dashboard-icon {
+            display: inline-flex;
             width: 2.75rem;
             height: 2.75rem;
-            display: inline-flex;
+            flex: 0 0 auto;
             align-items: center;
             justify-content: center;
-            flex: 0 0 auto;
             color: var(--seller-primary);
             background: var(--seller-primary-light);
             border-radius: 50%;
@@ -44,12 +54,12 @@
     </style>
 
     <div class="seller-dashboard">
-        <div class="mb-4">
+        <header class="mb-4">
             <h2 class="h3 fw-bold mb-1">Tổng quan cửa hàng</h2>
-            <p class="text-secondary mb-0">
+            <p class="seller-dashboard__description mb-0">
                 Theo dõi tình hình hoạt động của cửa hàng tại đây.
             </p>
-        </div>
+        </header>
 
         <div class="row g-3">
             <div class="col-sm-6 col-xl-3">
@@ -57,7 +67,9 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start gap-3">
                             <div>
-                                <div class="text-secondary mb-2">Sản phẩm</div>
+                                <div class="seller-dashboard__metric-label mb-2">
+                                    Sản phẩm
+                                </div>
                                 <div class="fs-3 fw-bold">0</div>
                             </div>
                             <span class="dashboard-icon">
@@ -73,7 +85,9 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start gap-3">
                             <div>
-                                <div class="text-secondary mb-2">Đơn hàng mới</div>
+                                <div class="seller-dashboard__metric-label mb-2">
+                                    Đơn hàng mới
+                                </div>
                                 <div class="fs-3 fw-bold">0</div>
                             </div>
                             <span class="dashboard-icon">
@@ -89,7 +103,9 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start gap-3">
                             <div>
-                                <div class="text-secondary mb-2">Đơn cần xử lý</div>
+                                <div class="seller-dashboard__metric-label mb-2">
+                                    Đơn cần xử lý
+                                </div>
                                 <div class="fs-3 fw-bold">0</div>
                             </div>
                             <span class="dashboard-icon">
@@ -105,7 +121,9 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start gap-3">
                             <div>
-                                <div class="text-secondary mb-2">Doanh thu</div>
+                                <div class="seller-dashboard__metric-label mb-2">
+                                    Doanh thu
+                                </div>
                                 <div class="fs-3 fw-bold">0₫</div>
                             </div>
                             <span class="dashboard-icon">
@@ -122,9 +140,12 @@
                 <span class="dashboard-icon">
                     <i class="bi bi-shop fs-4" aria-hidden="true"></i>
                 </span>
+
                 <div>
-                    <h3 class="h5 fw-bold mb-2">Chào mừng đến với Seller Center</h3>
-                    <p class="text-secondary mb-0">
+                    <h3 class="h5 fw-bold mb-2">
+                        Chào mừng đến với Seller Center
+                    </h3>
+                    <p class="seller-dashboard__welcome-description mb-0">
                         Các số liệu sẽ được cập nhật khi chức năng sản phẩm và đơn hàng được triển khai.
                     </p>
                 </div>

@@ -20,8 +20,9 @@
         })();
     </script>
 
-    <link href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/admin/custom.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/dashboard-layout.css') }}">
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
@@ -55,7 +56,6 @@
         }
 
         body {
-            min-height: 100vh;
             background: var(--app-page-bg);
             color: var(--app-text);
             font-family: Inter, Roboto, "Segoe UI", sans-serif;
@@ -81,7 +81,7 @@
             --bs-btn-border-color: var(--app-primary);
             --bs-btn-hover-color: #fff;
             --bs-btn-hover-bg: var(--app-primary);
-            --bs-btn-hover-border-color: var(--app-primary);
+            --bs-btn-hover-border-color: var(--app-primary-hover);
             --bs-btn-active-color: #fff;
             --bs-btn-active-bg: var(--app-primary-hover);
             --bs-btn-active-border-color: var(--app-primary-hover);
@@ -150,26 +150,30 @@
 </head>
 
 <body>
-    <div class="d-flex min-vh-100">
+    <div class="app-wrapper">
         @include('admin.layouts.sidebar')
 
-        <div class="flex-grow-1 min-vh-100">
+        <div class="app-main">
             @include('admin.layouts.header')
 
-            <main class="container-fluid px-3 px-lg-4 py-4">
+            <main class="content-body container-fluid px-3 px-lg-4 py-4">
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="status">
                         {{ session('success') }}
-                        <button type="button" class="btn-close"
-                                data-bs-dismiss="alert" aria-label="Đóng"></button>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Đóng"></button>
                     </div>
                 @endif
 
                 @if (session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         {{ session('error') }}
-                        <button type="button" class="btn-close"
-                                data-bs-dismiss="alert" aria-label="Đóng"></button>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Đóng"></button>
                     </div>
                 @endif
 
