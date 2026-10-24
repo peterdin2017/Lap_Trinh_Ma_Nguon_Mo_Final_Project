@@ -61,7 +61,7 @@ class StoreCatalogSeeder extends Seeder
     {
         $account = Account::firstOrCreate(
             ['email' => $email, 'role' => 'seller'],
-            ['password_hash' => 'password123', 'status' => 'active', 'is_verified' => true]
+            ['password_hash' => \Illuminate\Support\Facades\Hash::make('Seller@123456'), 'status' => 'active', 'is_verified' => true]
         );
 
         return Seller::firstOrCreate(

@@ -44,7 +44,7 @@
                    class="admin-subnav-link {{ request()->routeIs('admin.sellers.*') ? 'active' : '' }}">
                     Duyệt hồ sơ
                 </a>
-                <a href="#" class="admin-subnav-link">Cửa hàng vi phạm</a>
+                <a href="{{ route('admin.sellers.index') }}" class="admin-subnav-link">Cửa hàng vi phạm</a>
             </nav>
         </div>
 
@@ -60,9 +60,9 @@
         </button>
         <div id="adminAccountMenu" class="collapse {{ $accountMenuOpen ? 'show' : '' }}">
             <nav class="admin-submenu" aria-label="Quản lý tài khoản">
-                <a href="#" class="admin-subnav-link">Khách hàng</a>
-                <a href="#" class="admin-subnav-link">Người bán</a>
-                <a href="#" class="admin-subnav-link">Quản trị viên</a>
+                <a href="{{ route('admin.accounts.index', ['role'=>'user']) }}" class="admin-subnav-link">Khách hàng</a>
+                <a href="{{ route('admin.accounts.index', ['role'=>'seller']) }}" class="admin-subnav-link">Người bán</a>
+                <a href="{{ route('admin.accounts.index', ['role'=>'admin']) }}" class="admin-subnav-link">Quản trị viên</a>
             </nav>
         </div>
 
@@ -78,9 +78,9 @@
         </button>
         <div id="adminProductMenu" class="collapse {{ $productMenuOpen ? 'show' : '' }}">
             <nav class="admin-submenu" aria-label="Quản lý sản phẩm">
-                <a href="#" class="admin-subnav-link">Danh sách sản phẩm</a>
-                <a href="#" class="admin-subnav-link">Danh mục ngành hàng</a>
-                <a href="#" class="admin-subnav-link">Sản phẩm vi phạm</a>
+                <a href="{{ route('admin.products.index') }}" class="admin-subnav-link">Danh sách sản phẩm</a>
+                <a href="{{ route('admin.categories.index') }}" class="admin-subnav-link">Danh mục ngành hàng</a>
+                <a href="{{ route('admin.products.index', ['status'=>'locked']) }}" class="admin-subnav-link">Sản phẩm vi phạm</a>
             </nav>
         </div>
 
@@ -96,8 +96,8 @@
         </button>
         <div id="adminOrderMenu" class="collapse {{ $orderMenuOpen ? 'show' : '' }}">
             <nav class="admin-submenu" aria-label="Đơn hàng và báo cáo">
-                <a href="#" class="admin-subnav-link">Đơn hàng toàn sàn</a>
-                <a href="#" class="admin-subnav-link">Doanh thu &amp; Thống kê</a>
+                <a href="{{ route('admin.reports.index') }}" class="admin-subnav-link">Báo cáo vi phạm</a>
+                <a href="{{ route('admin.home') }}" class="admin-subnav-link">Thống kê tổng quan</a>
             </nav>
         </div>
 
@@ -174,12 +174,12 @@
             </button>
             <div id="adminStoreMenuMobile" class="collapse {{ $storeMenuOpen ? 'show' : '' }}">
                 <nav class="admin-submenu" aria-label="Quản lý cửa hàng">
-                    <a href="#" class="admin-subnav-link">Danh sách cửa hàng</a>
+                    <a href="{{ route('admin.sellers.index') }}" class="admin-subnav-link">Danh sách cửa hàng</a>
                     <a href="{{ route('admin.sellers.index') }}"
                        class="admin-subnav-link {{ request()->routeIs('admin.sellers.*') ? 'active' : '' }}">
                         Duyệt hồ sơ
                     </a>
-                    <a href="#" class="admin-subnav-link">Cửa hàng vi phạm</a>
+                    <a href="{{ route('admin.sellers.index') }}" class="admin-subnav-link">Cửa hàng vi phạm</a>
                 </nav>
             </div>
 
@@ -195,9 +195,9 @@
             </button>
             <div id="adminAccountMenuMobile" class="collapse {{ $accountMenuOpen ? 'show' : '' }}">
                 <nav class="admin-submenu" aria-label="Quản lý tài khoản">
-                    <a href="#" class="admin-subnav-link">Khách hàng</a>
-                    <a href="#" class="admin-subnav-link">Người bán</a>
-                    <a href="#" class="admin-subnav-link">Quản trị viên</a>
+                    <a href="{{ route('admin.accounts.index', ['role'=>'user']) }}" class="admin-subnav-link">Khách hàng</a>
+                    <a href="{{ route('admin.accounts.index', ['role'=>'seller']) }}" class="admin-subnav-link">Người bán</a>
+                    <a href="{{ route('admin.accounts.index', ['role'=>'admin']) }}" class="admin-subnav-link">Quản trị viên</a>
                 </nav>
             </div>
 
@@ -213,9 +213,9 @@
             </button>
             <div id="adminProductMenuMobile" class="collapse {{ $productMenuOpen ? 'show' : '' }}">
                 <nav class="admin-submenu" aria-label="Quản lý sản phẩm">
-                    <a href="#" class="admin-subnav-link">Danh sách sản phẩm</a>
-                    <a href="#" class="admin-subnav-link">Danh mục ngành hàng</a>
-                    <a href="#" class="admin-subnav-link">Sản phẩm vi phạm</a>
+                    <a href="{{ route('admin.products.index') }}" class="admin-subnav-link">Danh sách sản phẩm</a>
+                    <a href="{{ route('admin.categories.index') }}" class="admin-subnav-link">Danh mục ngành hàng</a>
+                    <a href="{{ route('admin.products.index', ['status'=>'locked']) }}" class="admin-subnav-link">Sản phẩm vi phạm</a>
                 </nav>
             </div>
 
@@ -231,8 +231,8 @@
             </button>
             <div id="adminOrderMenuMobile" class="collapse {{ $orderMenuOpen ? 'show' : '' }}">
                 <nav class="admin-submenu" aria-label="Đơn hàng và báo cáo">
-                    <a href="#" class="admin-subnav-link">Đơn hàng toàn sàn</a>
-                    <a href="#" class="admin-subnav-link">Doanh thu &amp; Thống kê</a>
+                    <a href="{{ route('admin.reports.index') }}" class="admin-subnav-link">Báo cáo vi phạm</a>
+                    <a href="{{ route('admin.home') }}" class="admin-subnav-link">Thống kê tổng quan</a>
                 </nav>
             </div>
 
