@@ -4,6 +4,13 @@
     $stock = (int) $item['stock_quantity'];
     $available = (bool) ($item['available'] ?? true);
     $lineTotal = $unitPrice * $quantity;
+
+    $buyNowKey = (string) request()->query('buy_now', '');
+    $cartItemKey = (string) $key;
+    $cartItemId = (string) ($item['cart_item_id'] ?? '');
+
+    $isBuyNowItem = $buyNowKey !== ''
+        && ($buyNowKey === $cartItemKey || $buyNowKey === $cartItemId);
 @endphp
 
 <article
@@ -25,7 +32,7 @@
             name="cart_item_ids[]"
             value="{{ $item['cart_item_id'] }}"
             form="checkout-form"
-            @checked(request()->query('buy_now') === $key)
+            @checked($isBuyNowItem && $available)
             @disabled(!$available)
             aria-label="Chọn {{ $item['product_name'] }}"
         >

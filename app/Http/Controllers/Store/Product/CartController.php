@@ -40,8 +40,7 @@ class CartController extends Controller
                 continue;
             }
 
-            $isSimpleItem = $item->item_key
-                === $product->product_id . ':simple';
+            $isSimpleItem = $item->item_key === $product->product_id . ':simple';
 
             $hasInvalidVariant = (
                 $item->variant_id === null && ! $isSimpleItem
@@ -103,7 +102,7 @@ class CartController extends Controller
             'quantity.min' => 'Số lượng phải lớn hơn 0.',
         ]);
 
-        $itemKey = DB::transaction(function () use ($accountId, $data): string {
+        $cartItemId = DB::transaction(function () use ($accountId, $data): int {
             $product = Product::query()
                 ->where('status', 'active')
                 ->whereHas('seller', fn ($query) => $query->where('status', 'active'))
@@ -167,7 +166,7 @@ class CartController extends Controller
                 ]);
             }
 
-            $cart->items()->updateOrCreate(
+            $cartItem = $cart->items()->updateOrCreate(
                 ['item_key' => $itemKey],
                 [
                     'product_id' => $product->product_id,
@@ -176,12 +175,12 @@ class CartController extends Controller
                 ]
             );
 
-            return $itemKey;
+            return (int) $cartItem->getKey();
         });
 
         if (($data['intent'] ?? 'cart') === 'buy_now') {
             return redirect()
-                ->route('store.cart.index', ['buy_now' => $itemKey])
+                ->route('store.cart.index', ['buy_now' => $cartItemId])
                 ->with('success', 'Đã chuẩn bị sản phẩm để mua. Kiểm tra giỏ hàng trước khi tiếp tục.');
         }
 
