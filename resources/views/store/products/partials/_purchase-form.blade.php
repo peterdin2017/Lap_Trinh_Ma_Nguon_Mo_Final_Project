@@ -6,7 +6,12 @@
 >
     @csrf
 
-    <input type="hidden" name="product_id" value="{{ $product->product_id }}">
+    <input
+        type="hidden"
+        name="product_id"
+        value="{{ $product->product_id }}"
+    >
+
     <input
         type="hidden"
         name="variant_id"
@@ -16,6 +21,7 @@
 
     <div class="mb-3" style="max-width: 160px;">
         <label for="quantity" class="form-label">Số lượng</label>
+
         <input
             id="quantity"
             name="quantity"
@@ -45,7 +51,10 @@
             value="cart"
             class="btn btn-outline-primary"
             id="addToCartButton"
-            @disabled(!$hasVariants && $initialStock < 1)
+            @disabled(
+                ($hasVariants && !$selectedVariant)
+                || (!$hasVariants && $initialStock < 1)
+            )
         >
             <i class="bi bi-cart-plus me-1" aria-hidden="true"></i>
             Thêm vào giỏ hàng
@@ -57,7 +66,10 @@
             value="buy_now"
             class="btn btn-primary"
             id="buyNowButton"
-            @disabled(!$hasVariants && $initialStock < 1)
+            @disabled(
+                ($hasVariants && !$selectedVariant)
+                || (!$hasVariants && $initialStock < 1)
+            )
         >
             <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>
             Mua ngay

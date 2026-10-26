@@ -11,9 +11,9 @@ use App\Models\Seller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Intervention\Image\ImageManager;
@@ -95,6 +95,9 @@ class ProductController extends Controller
 
     /**
      * Lưu sản phẩm mới.
+     *
+     * Tạo sản phẩm trước để lấy product_id, sau đó lưu ảnh vào thư mục:
+     * products/{seller_id}/{product_id}/
      */
     public function store(StoreProductRequest $request): RedirectResponse
     {
@@ -121,56 +124,73 @@ class ProductController extends Controller
         $storedPaths = [];
 
         try {
-            // Lưu ảnh riêng cho từng mẫu mã.
-            foreach ($variants as $index => &$variant) {
-                $variantImage = $request->file("variants.{$index}.image");
-
-                if ($variantImage) {
-                    $path = $this->storeConvertedImage($variantImage);
-                    $variant['image_url'] = $path;
-                    $storedPaths[] = $path;
-                }
-            }
-            unset($variant);
-
-            $mainImagePath = null;
-
-            if ($request->hasFile('image')) {
-                $mainImagePath = $this->storeConvertedImage(
-                    $request->file('image')
-                );
-
-                $storedPaths[] = $mainImagePath;
-            }
-
-            $extraImagePaths = [];
-
-            foreach ($request->file('images', []) as $image) {
-                $path = $this->storeConvertedImage($image);
-                $extraImagePaths[] = $path;
-                $storedPaths[] = $path;
-            }
-
             DB::transaction(function () use (
+                $request,
                 $seller,
                 $data,
                 $status,
-                $variants,
-                $mainImagePath,
-                $extraImagePaths
+                &$variants,
+                &$storedPaths
             ): void {
+                // Phải tạo sản phẩm trước để có product_id.
                 $product = new Product();
                 $product->fill($data);
-
                 $product->seller_id = $seller->seller_id;
                 $product->status = $status;
-                $product->image_url = $mainImagePath;
                 $product->save();
+
+                // Lưu ảnh chính.
+                if ($request->hasFile('image')) {
+                    $mainImagePath = $this->storeConvertedImage(
+                        $request->file('image'),
+                        (int) $seller->seller_id,
+                        (int) $product->product_id
+                    );
+
+                    $product->image_url = $mainImagePath;
+                    $product->save();
+
+                    $storedPaths[] = $mainImagePath;
+                }
+
+                // Lưu ảnh phụ.
+                $extraImagePaths = [];
+
+                foreach ($request->file('images', []) as $image) {
+                    $path = $this->storeConvertedImage(
+                        $image,
+                        (int) $seller->seller_id,
+                        (int) $product->product_id
+                    );
+
+                    $extraImagePaths[] = $path;
+                    $storedPaths[] = $path;
+                }
+
+                // Lưu ảnh riêng cho từng mẫu mã.
+                foreach ($variants as $index => &$variant) {
+                    $variantImage = $request->file(
+                        "variants.{$index}.image"
+                    );
+
+                    if ($variantImage) {
+                        $path = $this->storeConvertedImage(
+                            $variantImage,
+                            (int) $seller->seller_id,
+                            (int) $product->product_id
+                        );
+
+                        $variant['image_url'] = $path;
+                        $storedPaths[] = $path;
+                    }
+                }
+                unset($variant);
 
                 $this->insertGalleryImages($product, $extraImagePaths);
                 $this->insertVariants($product, $variants);
             });
         } catch (Throwable $exception) {
+            // Transaction thất bại thì xóa các file đã lưu lên disk.
             Storage::disk('public')->delete($storedPaths);
 
             throw $exception;
@@ -258,7 +278,9 @@ class ProductController extends Controller
 
         if ($imagesToRemove->count() !== count($removeIds)) {
             return back()
-                ->withErrors(['images' => 'Danh sách ảnh cần xóa không hợp lệ.'])
+                ->withErrors([
+                    'images' => 'Danh sách ảnh cần xóa không hợp lệ.',
+                ])
                 ->withInput();
         }
 
@@ -267,7 +289,9 @@ class ProductController extends Controller
 
         if ($remainingImageCount + count($newImages) > 8) {
             return back()
-                ->withErrors(['images' => 'Sản phẩm chỉ được có tối đa 8 ảnh phụ.'])
+                ->withErrors([
+                    'images' => 'Sản phẩm chỉ được có tối đa 8 ảnh phụ.',
+                ])
                 ->withInput();
         }
 
@@ -276,21 +300,31 @@ class ProductController extends Controller
         $newGalleryPaths = [];
 
         try {
-            // Lưu ảnh mẫu mã mới. Không có file mới thì giữ ảnh cũ.
+            // Ảnh mẫu mã mới. Không có file mới thì giữ ảnh cũ.
             foreach ($variants as $index => &$variant) {
-                $variantImage = $request->file("variants.{$index}.image");
+                $variantImage = $request->file(
+                    "variants.{$index}.image"
+                );
 
                 if ($variantImage) {
-                    $path = $this->storeConvertedImage($variantImage);
+                    $path = $this->storeConvertedImage(
+                        $variantImage,
+                        (int) $seller->seller_id,
+                        (int) $productModel->product_id
+                    );
+
                     $variant['image_url'] = $path;
                     $newPaths[] = $path;
                 }
             }
             unset($variant);
 
+            // Ảnh chính mới.
             if ($request->hasFile('image')) {
                 $newMainImagePath = $this->storeConvertedImage(
-                    $request->file('image')
+                    $request->file('image'),
+                    (int) $seller->seller_id,
+                    (int) $productModel->product_id
                 );
 
                 $newPaths[] = $newMainImagePath;
@@ -302,8 +336,14 @@ class ProductController extends Controller
                 $data['image_url'] = $newMainImagePath;
             }
 
+            // Ảnh phụ mới.
             foreach ($newImages as $image) {
-                $path = $this->storeConvertedImage($image);
+                $path = $this->storeConvertedImage(
+                    $image,
+                    (int) $seller->seller_id,
+                    (int) $productModel->product_id
+                );
+
                 $newGalleryPaths[] = $path;
                 $newPaths[] = $path;
             }
@@ -326,12 +366,18 @@ class ProductController extends Controller
                     $image->delete();
                 }
 
-                $this->insertGalleryImages($productModel, $newGalleryPaths);
+                $this->insertGalleryImages(
+                    $productModel,
+                    $newGalleryPaths
+                );
 
                 if ($variantsWereSubmitted) {
                     $oldPathsToDelete = array_merge(
                         $oldPathsToDelete,
-                        $this->syncVariantsSafely($productModel, $variants)
+                        $this->syncVariantsSafely(
+                            $productModel,
+                            $variants
+                        )
                     );
                 }
             });
@@ -418,7 +464,9 @@ class ProductController extends Controller
 
         $productModel->save();
 
-        $label = $productModel->status === 'active' ? 'Đang bán' : 'Đã ẩn';
+        $label = $productModel->status === 'active'
+            ? 'Đang bán'
+            : 'Đã ẩn';
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -428,15 +476,20 @@ class ProductController extends Controller
             ]);
         }
 
-        return back()->with('success', "Đã đổi trạng thái sản phẩm: {$label}.");
+        return back()->with(
+            'success',
+            "Đã đổi trạng thái sản phẩm: {$label}."
+        );
     }
 
     /**
      * Đồng bộ biến thể; giữ ảnh cũ nếu không tải ảnh mới.
      * Trả về đường dẫn ảnh cũ cần xóa sau khi transaction thành công.
      */
-    private function syncVariantsSafely(Product $product, array $variants): array
-    {
+    private function syncVariantsSafely(
+        Product $product,
+        array $variants
+    ): array {
         $keptIds = [];
         $pathsToDelete = [];
 
@@ -485,7 +538,10 @@ class ProductController extends Controller
         $variantsToRemove = $product->variants()
             ->when(
                 $keptIds !== [],
-                fn ($query) => $query->whereNotIn('variant_id', $keptIds)
+                fn ($query) => $query->whereNotIn(
+                    'variant_id',
+                    $keptIds
+                )
             )
             ->get();
 
@@ -495,7 +551,10 @@ class ProductController extends Controller
                 ->exists();
 
             $isInOrder = DB::table('order_items')
-                ->where('product_variant_id', $variant->variant_id)
+                ->where(
+                    'product_variant_id',
+                    $variant->variant_id
+                )
                 ->exists();
 
             if ($isInCart || $isInOrder) {
@@ -511,12 +570,18 @@ class ProductController extends Controller
             $variant->delete();
         }
 
-        return array_values(array_unique(array_filter($pathsToDelete)));
+        return array_values(
+            array_unique(array_filter($pathsToDelete))
+        );
     }
 
-    private function insertGalleryImages(Product $product, array $paths): void
-    {
-        $nextSortOrder = (int) ($product->images()->max('sort_order') ?? 0) + 1;
+    private function insertGalleryImages(
+        Product $product,
+        array $paths
+    ): void {
+        $nextSortOrder = (int) (
+            $product->images()->max('sort_order') ?? 0
+        ) + 1;
 
         foreach ($paths as $path) {
             $product->images()->create([
@@ -526,8 +591,10 @@ class ProductController extends Controller
         }
     }
 
-    private function insertVariants(Product $product, array $variants): void
-    {
+    private function insertVariants(
+        Product $product,
+        array $variants
+    ): void {
         foreach ($variants as $variant) {
             $product->variants()->create([
                 'variant_name' => $variant['variant_name'],
@@ -539,10 +606,13 @@ class ProductController extends Controller
     }
 
     /**
-     * Chuẩn hóa ảnh tải lên thành PNG hoặc JPG.
+     * Chuẩn hóa ảnh tải lên thành PNG hoặc JPG rồi lưu vào:
+     * products/{seller_id}/{product_id}/{seller_id}-{product_id}-{random}.{extension}
      */
     private function storeConvertedImage(
-        \Illuminate\Http\UploadedFile $file
+        UploadedFile $file,
+        int $sellerId,
+        int $productId
     ): string {
         $image = ImageManager::gd()->read($file->getPathname());
         $isPng = $file->getMimeType() === 'image/png';
@@ -552,9 +622,17 @@ class ProductController extends Controller
             ? $image->toPng()
             : $image->toJpeg(85);
 
-        $path = 'products/' . Str::uuid() . '.' . $extension;
+        $directory = "products/{$sellerId}/{$productId}";
+        $disk = Storage::disk('public');
 
-        Storage::disk('public')->put($path, (string) $encodedImage);
+        // Sinh số ngẫu nhiên mới nếu tên file đã tồn tại.
+        do {
+            $randomNumber = random_int(100000, 999999);
+            $filename = "{$sellerId}-{$productId}-{$randomNumber}.{$extension}";
+            $path = "{$directory}/{$filename}";
+        } while ($disk->exists($path));
+
+        $disk->put($path, (string) $encodedImage);
 
         return $path;
     }
@@ -586,7 +664,9 @@ class ProductController extends Controller
         return Category::query()
             ->whereNull('parent_id')
             ->with([
-                'children' => fn ($query) => $query->orderBy('category_name'),
+                'children' => fn ($query) => $query->orderBy(
+                    'category_name'
+                ),
             ])
             ->orderBy('category_name')
             ->get();

@@ -73,4 +73,126 @@
 
     {{-- Tạo file này để bật chức năng xem ảnh đánh giá phóng to --}}
     @includeIf('store.products.partials._review-image-lightbox')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const variantButtons = document.querySelectorAll('.variant-option');
+            const selectedVariantInput = document.getElementById('selectedVariantId');
+            const priceElement = document.getElementById('productPrice');
+            const statusElement = document.getElementById('productStatus');
+            const stockElement = document.getElementById('productStock');
+            const quantityInput = document.getElementById('quantity');
+            const clientHint = document.getElementById('clientHint');
+            const purchaseForm = document.getElementById('purchaseForm');
+
+            const purchaseButtons = [
+                document.getElementById('addToCartButton'),
+                document.getElementById('buyNowButton'),
+            ].filter(Boolean);
+
+            if (!variantButtons.length) {
+                return;
+            }
+
+            const formatPrice = (price) =>
+                new Intl.NumberFormat('vi-VN').format(Number(price)) + '₫';
+
+            const selectVariant = (selectedButton) => {
+                if (selectedButton.disabled) {
+                    return;
+                }
+
+                variantButtons.forEach((button) => {
+                    const isSelected = button === selectedButton;
+
+                    button.classList.toggle('active', isSelected);
+                    button.setAttribute(
+                        'aria-pressed',
+                        isSelected ? 'true' : 'false'
+                    );
+                });
+
+                const variantId = selectedButton.dataset.variantId;
+                const price = Number(selectedButton.dataset.price || 0);
+                const stock = Number(selectedButton.dataset.stock || 0);
+
+                if (selectedVariantInput) {
+                    selectedVariantInput.value = variantId;
+                }
+
+                if (priceElement) {
+                    priceElement.textContent = formatPrice(price);
+                }
+
+                if (stockElement) {
+                    stockElement.textContent = new Intl.NumberFormat('vi-VN')
+                        .format(stock);
+                }
+
+                if (statusElement) {
+                    statusElement.innerHTML = stock > 0
+                        ? '<span class="text-success">Còn hàng</span>'
+                        : '<span class="text-danger">Hết hàng</span>';
+                }
+
+                if (quantityInput) {
+                    quantityInput.max = String(Math.max(stock, 1));
+                    quantityInput.disabled = stock < 1;
+
+                    const currentQuantity = Number(quantityInput.value || 1);
+                    quantityInput.value = String(
+                        Math.min(
+                            Math.max(currentQuantity, 1),
+                            Math.max(stock, 1)
+                        )
+                    );
+                }
+
+                purchaseButtons.forEach((button) => {
+                    button.disabled = stock < 1;
+                });
+
+                if (clientHint) {
+                    clientHint.textContent = '';
+                    clientHint.hidden = true;
+                }
+            };
+
+            variantButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    selectVariant(button);
+                });
+            });
+
+            // Khôi phục mẫu mã cũ nếu form được trả về do lỗi validation.
+            const oldVariantId = selectedVariantInput?.value;
+
+            if (oldVariantId) {
+                const oldButton = [...variantButtons].find(
+                    (button) => button.dataset.variantId === oldVariantId
+                );
+
+                if (oldButton) {
+                    selectVariant(oldButton);
+                }
+            }
+
+            purchaseForm?.addEventListener('submit', (event) => {
+                if (!selectedVariantInput?.value) {
+                    event.preventDefault();
+
+                    if (clientHint) {
+                        clientHint.textContent =
+                            'Vui lòng chọn mẫu mã sản phẩm.';
+                        clientHint.hidden = false;
+                    }
+
+                    document.querySelector('.variant-list')?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                    });
+                }
+            });
+        });
+    </script>
 @endsection
