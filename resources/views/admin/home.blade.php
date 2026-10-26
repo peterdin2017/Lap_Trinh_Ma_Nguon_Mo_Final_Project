@@ -1,13 +1,69 @@
 @extends('admin.layouts.app')
-@section('title','Tổng quan quản trị')
-@section('page-title','Tổng quan hệ thống')
+@section('title', 'Tổng quan quản trị')
+@section('page-title', 'Tổng quan hệ thống')
 @section('content')
-<div class="admin-hero"><div><span class="admin-eyebrow">ADMIN CENTER / DASHBOARD</span><h2>Quản trị cửa hàng thông minh</h2><p>Theo dõi toàn sàn, xử lý hồ sơ và kiểm duyệt tập trung.</p></div><i class="bi bi-shield-check admin-hero-icon"></i></div>
-<div class="row g-3 mb-4">
-@foreach ([['Tài khoản',$accountCount,'people','primary'],['Seller',$sellerCount,'person-badge','info'],['Shop hoạt động',$shopCount,'shop','success'],['Shop chờ duyệt',$pendingShopCount,'hourglass-split','warning'],['Sản phẩm',$productCount,'box-seam','primary'],['Sản phẩm bị khóa',$lockedProductCount,'shield-x','danger'],['Đơn hàng',$orderCount,'receipt','info'],['Báo cáo chờ',$pendingReportCount,'flag','danger']] as $stat)
-<div class="col-6 col-xl-3"><div class="admin-kpi"><div class="admin-kpi-label">{{ $stat[0] }}</div><div class="admin-kpi-number">{{ number_format($stat[1]) }}</div><i class="bi bi-{{ $stat[2] }} admin-kpi-symbol"></i></div></div>
-@endforeach
-</div>
-<div class="row g-3"><div class="col-lg-5"><div class="admin-panel h-100"><div class="admin-panel-heading"><h3>Thao tác nhanh</h3></div><div class="admin-quick-links"><a href="{{ route('admin.sellers.index') }}"><i class="bi bi-check2-square"></i>Duyệt hồ sơ shop <i class="bi bi-arrow-right"></i></a><a href="{{ route('admin.accounts.index') }}"><i class="bi bi-people"></i>Quản lý tài khoản<i class="bi bi-arrow-right"></i></a><a href="{{ route('admin.categories.index') }}"><i class="bi bi-diagram-3"></i>Danh mục sản phẩm<i class="bi bi-arrow-right"></i></a><a href="{{ route('admin.products.index') }}"><i class="bi bi-box"></i>Kiểm duyệt sản phẩm<i class="bi bi-arrow-right"></i></a><a href="{{ route('admin.reports.index') }}"><i class="bi bi-flag"></i>Báo cáo vi phạm<i class="bi bi-arrow-right"></i></a></div></div></div>
-<div class="col-lg-7"><div class="admin-panel h-100"><div class="admin-panel-heading"><h3>Shop mới chờ duyệt</h3><a href="{{ route('admin.sellers.index') }}">Xem tất cả <i class="bi bi-arrow-up-right"></i></a></div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Shop</th><th>Ngày gửi</th><th>Trạng thái</th></tr></thead><tbody>@forelse($recentShops as $shop)<tr><td class="fw-semibold">{{ $shop->shop_name }}</td><td>{{ $shop->created_at?->format('d/m/Y') }}</td><td><span class="admin-pill warning">Chờ duyệt</span></td></tr>@empty<tr><td colspan="3" class="text-secondary text-center py-4">Không có hồ sơ chờ duyệt</td></tr>@endforelse</tbody></table></div></div></div></div>
+    <div class="admin-hero">
+        <div><span class="admin-eyebrow">ADMIN CENTER / DASHBOARD</span>
+            <h2>Quản trị cửa hàng thông minh</h2>
+            <p>Theo dõi toàn sàn, xử lý hồ sơ và kiểm duyệt tập trung.</p>
+        </div><i class="bi bi-shield-check admin-hero-icon"></i>
+    </div>
+    <div class="row g-3 mb-4">
+        @foreach ([['Tài khoản', $accountCount, 'people', 'primary'], ['Seller', $sellerCount, 'person-badge', 'info'], ['Shop hoạt động', $shopCount, 'shop', 'success'], ['Shop chờ duyệt', $pendingShopCount, 'hourglass-split', 'warning'], ['Sản phẩm', $productCount, 'box-seam', 'primary'], ['Sản phẩm bị khóa', $lockedProductCount, 'shield-x', 'danger'], ['Đơn hàng', $orderCount, 'receipt', 'info'], ['Báo cáo chờ', $pendingReportCount, 'flag', 'danger']] as $stat)
+            <div class="col-6 col-xl-3">
+                <div class="admin-kpi">
+                    <div class="admin-kpi-label">{{ $stat[0] }}</div>
+                    <div class="admin-kpi-number">{{ number_format($stat[1]) }}</div><i
+                        class="bi bi-{{ $stat[2] }} admin-kpi-symbol"></i>
+                </div>
+            </div>
+        @endforeach
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="admin-panel h-100">
+                <div class="admin-panel-heading">
+                    <h3>Thao tác nhanh</h3>
+                </div>
+                <div class="admin-quick-links"><a href="{{ route('admin.sellers.index') }}"><i
+                            class="bi bi-check2-square"></i>Duyệt hồ sơ shop <i class="bi bi-arrow-right"></i></a><a
+                        href="{{ route('admin.accounts.index') }}"><i class="bi bi-people"></i>Quản lý tài khoản<i
+                            class="bi bi-arrow-right"></i></a><a href="{{ route('admin.categories.index') }}"><i
+                            class="bi bi-diagram-3"></i>Danh mục sản phẩm<i class="bi bi-arrow-right"></i></a><a
+                        href="{{ route('admin.products.index') }}"><i class="bi bi-box"></i>Kiểm duyệt sản phẩm<i
+                            class="bi bi-arrow-right"></i></a><a href="{{ route('admin.reports.index') }}"><i
+                            class="bi bi-flag"></i>Báo cáo vi phạm<i class="bi bi-arrow-right"></i></a></div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="admin-panel h-100">
+                <div class="admin-panel-heading">
+                    <h3>Shop mới chờ duyệt</h3><a href="{{ route('admin.sellers.index') }}">Xem tất cả <i
+                            class="bi bi-arrow-up-right"></i></a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Shop</th>
+                                <th>Ngày gửi</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($recentShops as $shop)
+                                <tr>
+                                    <td class="fw-semibold">{{ $shop->shop_name }}</td>
+                                    <td>{{ $shop->created_at?->format('d/m/Y') }}</td>
+                                    <td><span class="admin-pill warning">Chờ duyệt</span></td>
+                            </tr>@empty<tr>
+                                    <td colspan="3" class="text-secondary text-center py-4">Không có hồ sơ chờ duyệt</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
