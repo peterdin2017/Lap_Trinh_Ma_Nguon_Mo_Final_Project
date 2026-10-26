@@ -12,8 +12,10 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Seller;
+use App\Models\SellerVoucher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -79,6 +81,18 @@ class CheckoutController extends Controller
         });
 
         $shippingFee = $cartGroups->count() * self::SHIPPING_FEE_PER_STORE;
+        $voucherCodes = old('voucher_codes', []);
+
+        if (! is_array($voucherCodes)) {
+            $voucherCodes = [];
+        }
+
+        $voucherDiscounts = $this->previewVoucherDiscounts(
+            $cartGroups,
+            $voucherCodes
+        );
+
+        $discountTotal = array_sum($voucherDiscounts);
 
         $addresses = Address::query()
             ->where('account_id', $accountId)
@@ -93,7 +107,10 @@ class CheckoutController extends Controller
             'defaultAddress' => $addresses->first(),
             'subtotal' => $subtotal,
             'shippingFee' => $shippingFee,
-            'totalAmount' => $subtotal + $shippingFee,
+            'voucherCodes' => $voucherCodes,
+            'voucherDiscounts' => $voucherDiscounts,
+            'discountTotal' => $discountTotal,
+            'totalAmount' => max(0, $subtotal + $shippingFee - $discountTotal),
         ]);
     }
 
@@ -112,10 +129,25 @@ class CheckoutController extends Controller
             ->unique()
             ->values();
 
+        $voucherCodes = $data['voucher_codes'] ?? [];
+
+        if (($data['intent'] ?? 'place_order') === 'apply_vouchers') {
+            $this->validateVouchersForCheckout(
+                $accountId,
+                $cartItemIds,
+                $voucherCodes
+            );
+
+            return back()
+                ->withInput($request->except(['_token', 'intent']))
+                ->with('success', 'Voucher hợp lệ đã được áp dụng cho từng Shop.');
+        }
+
         $orderCodes = DB::transaction(function () use (
             $accountId,
             $data,
-            $cartItemIds
+            $cartItemIds,
+            $voucherCodes
         ): array {
             $cart = Cart::query()
                 ->where('account_id', $accountId)
@@ -204,7 +236,7 @@ class CheckoutController extends Controller
 
             $orderCodes = [];
 
-            foreach ($linesBySeller as $sellerLines) {
+            foreach ($linesBySeller as $sellerId => $sellerLines) {
                 $seller = $sellerLines[0]['seller'];
 
                 $orderSubtotal = collect($sellerLines)->sum(
@@ -212,6 +244,21 @@ class CheckoutController extends Controller
                 );
 
                 $orderShippingFee = self::SHIPPING_FEE_PER_STORE;
+                $voucherCode = trim((string) ($voucherCodes[$sellerId] ?? ''));
+                $voucher = null;
+                $voucherDiscount = 0;
+
+                if ($voucherCode !== '') {
+                    $voucherData = $this->resolveVoucher(
+                        $voucherCode,
+                        (int) $sellerId,
+                        (float) $orderSubtotal,
+                        true
+                    );
+
+                    $voucher = $voucherData['voucher'];
+                    $voucherDiscount = $voucherData['discount'];
+                }
 
                 // Dùng ngày theo múi giờ Việt Nam cho mã đơn hàng.
                 $localOrderDate = now('Asia/Ho_Chi_Minh')->format('Y-m-d');
@@ -230,8 +277,11 @@ class CheckoutController extends Controller
                     'order_status' => 'pending',
                     'subtotal' => $orderSubtotal,
                     'shipping_fee' => $orderShippingFee,
-                    'discount_amount' => 0,
-                    'total_amount' => $orderSubtotal + $orderShippingFee,
+                    'discount_amount' => $voucherDiscount,
+                    'total_amount' => max(
+                        0,
+                        $orderSubtotal + $orderShippingFee - $voucherDiscount
+                    ),
                     'note' => $data['note'] ?? null,
                 ]);
 
@@ -274,10 +324,13 @@ class CheckoutController extends Controller
                         ]);
                     }
 
-                    // Cộng số lượng đã bán sau khi tạo chi tiết đơn thành công.
                     Product::query()
                         ->whereKey($product->product_id)
                         ->increment('sold_count', $quantity);
+                }
+
+                if ($voucher) {
+                    $voucher->increment('used_count');
                 }
 
                 $orderCodes[] = $order->order_code;
@@ -304,6 +357,169 @@ class CheckoutController extends Controller
         }
 
         return view('store.checkout.success', compact('orderCodes'));
+    }
+
+    private function validateVouchersForCheckout(
+        int $accountId,
+        Collection $cartItemIds,
+        array $voucherCodes
+    ): void {
+        $codes = collect($voucherCodes)
+            ->filter(fn ($code) => trim((string) $code) !== '');
+
+        if ($codes->isEmpty()) {
+            throw ValidationException::withMessages([
+                'voucher_codes' => 'Nhập mã voucher của ít nhất một Shop trước khi áp dụng.',
+            ]);
+        }
+
+        $cart = Cart::query()
+            ->where('account_id', $accountId)
+            ->first();
+
+        if (! $cart) {
+            throw ValidationException::withMessages([
+                'cart_item_ids' => 'Giỏ hàng của bạn hiện đang trống.',
+            ]);
+        }
+
+        $items = $cart->items()
+            ->whereIn('cart_item_id', $cartItemIds)
+            ->with(['product.seller', 'product.variants', 'variant'])
+            ->get();
+
+        if ($items->count() !== $cartItemIds->count()) {
+            throw ValidationException::withMessages([
+                'cart_item_ids' => 'Giỏ hàng đã thay đổi. Vui lòng quay lại chọn sản phẩm.',
+            ]);
+        }
+
+        foreach ($items as $item) {
+            if (! $this->isAvailable($item)) {
+                throw ValidationException::withMessages([
+                    'cart_item_ids' => 'Có sản phẩm đã hết hàng hoặc ngừng bán. Vui lòng kiểm tra lại giỏ hàng.',
+                ]);
+            }
+        }
+
+        $groups = $items->groupBy(
+            fn ($item) => $item->product->seller_id
+        );
+
+        foreach ($codes as $sellerId => $code) {
+            $sellerId = (int) $sellerId;
+            $group = $groups->get($sellerId);
+
+            if (! $group) {
+                throw ValidationException::withMessages([
+                    "voucher_codes.{$sellerId}" => 'Shop này không có sản phẩm trong đơn hàng.',
+                ]);
+            }
+
+            $sellerSubtotal = $group->sum(function ($item): float {
+                $price = (float) ($item->variant?->price ?? $item->product->price);
+
+                return $price * (int) $item->quantity;
+            });
+
+            $this->resolveVoucher(
+                trim((string) $code),
+                $sellerId,
+                (float) $sellerSubtotal,
+                false
+            );
+        }
+    }
+
+    private function previewVoucherDiscounts(
+        Collection $cartGroups,
+        array $voucherCodes
+    ): array {
+        $discounts = [];
+
+        foreach ($voucherCodes as $sellerId => $code) {
+            $code = trim((string) $code);
+            $sellerId = (int) $sellerId;
+            $group = $cartGroups->get($sellerId);
+
+            if ($code === '' || ! $group) {
+                continue;
+            }
+
+            $sellerSubtotal = $group->sum(function ($item): float {
+                $price = (float) ($item->variant?->price ?? $item->product->price);
+
+                return $price * (int) $item->quantity;
+            });
+
+            try {
+                $voucherData = $this->resolveVoucher(
+                    $code,
+                    $sellerId,
+                    (float) $sellerSubtotal,
+                    false
+                );
+
+                $discounts[$sellerId] = $voucherData['discount'];
+            } catch (ValidationException) {
+                // Mã không hợp lệ sẽ hiện lỗi từ lần bấm Áp dụng;
+                // không tính giảm giá vào phần xem trước.
+            }
+        }
+
+        return $discounts;
+    }
+
+    private function resolveVoucher(
+        string $code,
+        int $sellerId,
+        float $sellerSubtotal,
+        bool $lockForUpdate
+    ): array {
+        $query = SellerVoucher::query()
+            ->where('seller_id', $sellerId)
+            ->whereRaw('LOWER(code) = ?', [strtolower($code)]);
+
+        if ($lockForUpdate) {
+            $query->lockForUpdate();
+        }
+
+        $voucher = $query->first();
+
+        if (! $voucher) {
+            throw ValidationException::withMessages([
+                "voucher_codes.{$sellerId}" => 'Mã voucher không tồn tại ở Shop này.',
+            ]);
+        }
+
+        if (! $voucher->isAvailable()) {
+            throw ValidationException::withMessages([
+                "voucher_codes.{$sellerId}" => 'Voucher đã tạm dừng, hết hạn hoặc hết lượt sử dụng.',
+            ]);
+        }
+
+        if ($sellerSubtotal < (float) $voucher->min_order_amount) {
+            throw ValidationException::withMessages([
+                "voucher_codes.{$sellerId}" => 'Đơn hàng chưa đạt giá trị tối thiểu của voucher.',
+            ]);
+        }
+
+        if ($voucher->discount_type === 'percent') {
+            $discount = $sellerSubtotal * (float) $voucher->discount_value / 100;
+
+            if ($voucher->max_discount !== null) {
+                $discount = min($discount, (float) $voucher->max_discount);
+            }
+        } else {
+            $discount = (float) $voucher->discount_value;
+        }
+
+        $discount = round(min($discount, $sellerSubtotal), 2);
+
+        return [
+            'voucher' => $voucher,
+            'discount' => $discount,
+        ];
     }
 
     private function accountId(Request $request): ?int
@@ -346,4 +562,3 @@ class CheckoutController extends Controller
             >= (int) $item->quantity;
     }
 }
-

@@ -29,6 +29,7 @@ Route::middleware(['auth', 'seller.status'])->group(function () {
     require __DIR__ . '/account/change-password.php';
     require __DIR__ . '/chat/chat.php';
     require __DIR__ . '/order/order.php';
+    require __DIR__ . '/voucher/voucher.php';
 });
 
 

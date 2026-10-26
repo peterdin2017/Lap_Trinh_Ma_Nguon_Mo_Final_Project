@@ -87,6 +87,18 @@
             font-weight: 700;
         }
 
+        .checkout-voucher-shop {
+            margin: 10px 0 12px;
+            padding: 12px;
+            border: 1px solid var(--checkout-border);
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .checkout-voucher-applied {
+            color: #198754;
+        }
+
         .checkout-product-row {
             display: flex;
             align-items: center;
@@ -278,6 +290,12 @@
                 Kiểm tra địa chỉ và thông tin đơn trước khi đặt hàng.
             </p>
         </div>
+
+        @if (session('success'))
+            <div class="alert alert-success" role="status">
+                {{ session('success') }}
+            </div>
+        @endif
 
         @if ($errors->any())
             <div class="alert alert-danger" role="alert">
@@ -490,15 +508,59 @@
                                 Sản phẩm đặt mua
                             </h2>
 
-                            @foreach ($cartGroups as $sellerItems)
+                            @foreach ($cartGroups as $sellerId => $sellerItems)
                                 @php
                                     $shop = $sellerItems->first()->product->seller;
+                                    $voucherDiscount = (float) ($voucherDiscounts[$sellerId] ?? 0);
+                                    $voucherCode = $voucherCodes[$sellerId] ?? '';
+                                    $voucherErrorKey = 'voucher_codes.' . $sellerId;
                                 @endphp
 
                                 <div class="checkout-store-block">
                                     <div class="checkout-store-title">
                                         <i class="bi bi-shop me-2" aria-hidden="true"></i>
                                         {{ $shop->shop_name }}
+                                    </div>
+
+                                    <div class="checkout-voucher-shop">
+                                        <label
+                                            for="voucher-code-{{ $sellerId }}"
+                                            class="form-label small fw-semibold mb-2"
+                                        >
+                                            Voucher của Shop
+                                        </label>
+
+                                        <div class="input-group">
+                                            <input
+                                                id="voucher-code-{{ $sellerId }}"
+                                                name="voucher_codes[{{ $sellerId }}]"
+                                                class="form-control"
+                                                type="text"
+                                                value="{{ $voucherCode }}"
+                                                maxlength="30"
+                                                placeholder="Nhập mã voucher của Shop"
+                                                autocomplete="off"
+                                                aria-describedby="voucher-help-{{ $sellerId }}"
+                                            >
+                                        </div>
+
+                                        <div id="voucher-help-{{ $sellerId }}" class="form-text">
+                                            Mỗi voucher chỉ áp dụng cho sản phẩm của Shop này.
+                                        </div>
+
+                                        @if ($voucherDiscount > 0)
+                                            <div class="checkout-voucher-applied small mt-2">
+                                                <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
+                                                Đã áp dụng, giảm
+                                                {{ number_format($voucherDiscount, 0, ',', '.') }}₫
+                                            </div>
+                                        @endif
+
+                                        @if ($errors->has($voucherErrorKey))
+                                            <div class="text-danger small mt-2">
+                                                {{ $errors->first($voucherErrorKey) }}
+                                            </div>
+                                        @endif
                                     </div>
 
                                     @foreach ($sellerItems as $cartItem)
@@ -618,6 +680,7 @@
                             <label id="note-title" for="note" class="form-label fw-bold">
                                 Ghi chú cho người bán
                             </label>
+
                             <textarea
                                 id="note"
                                 name="note"
@@ -638,28 +701,20 @@
                             </h2>
 
                             <div class="checkout-voucher mb-3">
-                                <label for="voucher" class="form-label small fw-semibold">
-                                    Mã giảm giá / Voucher
-                                </label>
-                                <div class="input-group">
-                                    <input
-                                        id="voucher"
-                                        class="form-control"
-                                        type="text"
-                                        placeholder="Nhập mã voucher"
-                                        disabled
-                                    >
-                                    <button
-                                        class="btn btn-outline-primary"
-                                        type="button"
-                                        disabled
-                                    >
-                                        Áp dụng
-                                    </button>
+                                <div class="small text-secondary">
+                                    Nhập mã trong từng Shop ở danh sách sản phẩm, sau đó áp dụng tại đây.
                                 </div>
-                                <small class="text-secondary">
-                                    Chưa có chương trình voucher được cấu hình.
-                                </small>
+
+                                <button
+                                    type="submit"
+                                    name="intent"
+                                    value="apply_vouchers"
+                                    class="btn btn-outline-primary w-100 mt-2"
+                                    formnovalidate
+                                >
+                                    <i class="bi bi-ticket-perforated me-1" aria-hidden="true"></i>
+                                    Áp dụng voucher
+                                </button>
                             </div>
 
                             <div class="checkout-summary-line">
@@ -674,7 +729,9 @@
 
                             <div class="checkout-summary-line">
                                 <span>Giảm giá</span>
-                                <strong>0₫</strong>
+                                <strong class="text-success">
+                                    −{{ number_format($discountTotal, 0, ',', '.') }}₫
+                                </strong>
                             </div>
 
                             <hr>
@@ -691,6 +748,8 @@
 
                             <button
                                 type="submit"
+                                name="intent"
+                                value="place_order"
                                 class="btn btn-primary btn-lg w-100 fw-bold mt-2"
                             >
                                 <i class="bi bi-lock me-2" aria-hidden="true"></i>
@@ -726,6 +785,7 @@
                             >
                                 Chọn địa chỉ nhận hàng
                             </h2>
+
                             <button
                                 type="button"
                                 class="btn-close"
@@ -754,6 +814,7 @@
                                             <span class="text-secondary">
                                                 {{ $address->phone }}
                                             </span>
+
                                             @if ($address->is_default)
                                                 <span class="badge rounded-pill text-bg-primary">
                                                     Mặc định
@@ -779,6 +840,7 @@
                             >
                                 Quản lý địa chỉ
                             </a>
+
                             <button
                                 type="button"
                                 class="btn btn-primary"
