@@ -11,19 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('order_items', function (Blueprint $table) {
+        Schema::create('order_items', function (Blueprint $table): void {
             $table->bigIncrements('order_item_id');
 
             $table->unsignedBigInteger('order_id');
             $table->unsignedBigInteger('product_id')->nullable();
             $table->unsignedBigInteger('product_variant_id')->nullable();
 
-            // Lưu ảnh chụp thông tin tại thời điểm đặt hàng
+            // Ảnh chụp thông tin sản phẩm tại thời điểm đặt hàng.
             $table->string('product_name');
             $table->string('variant_name')->nullable();
             $table->decimal('price', 14, 2);
             $table->unsignedInteger('quantity');
             $table->decimal('total_price', 14, 2);
+
+            // Ảnh chụp voucher và số tiền giảm trên dòng sản phẩm.
+            $table->string('seller_voucher_code', 50)->nullable();
+            $table->decimal('seller_voucher_discount', 14, 2)->default(0);
+
+            $table->string('platform_voucher_code', 50)->nullable();
+            $table->decimal('platform_voucher_discount', 14, 2)->default(0);
 
             $table->timestamps();
 

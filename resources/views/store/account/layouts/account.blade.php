@@ -29,11 +29,19 @@
                                 <i class="bi bi-geo-alt me-2" aria-hidden="true"></i>
                                 Địa chỉ nhận hàng
                             </a>
+
                             <a href="{{ route('store.account.orders.index') }}"
                                 class="nav-link {{ request()->routeIs('store.account.orders.*') ? 'active' : 'text-dark' }}"
                                 @if (request()->routeIs('store.account.orders.*')) aria-current="page" @endif>
                                 <i class="bi bi-receipt me-2" aria-hidden="true"></i>
                                 Đơn hàng của tôi
+                            </a>
+
+                            <a href="{{ route('store.account.vouchers.index') }}"
+                                class="nav-link {{ request()->routeIs('store.account.vouchers.*') ? 'active' : 'text-dark' }}"
+                                @if (request()->routeIs('store.account.vouchers.*')) aria-current="page" @endif>
+                                <i class="bi bi-ticket-perforated me-2" aria-hidden="true"></i>
+                                Voucher của tôi
                             </a>
                         </nav>
                     </div>

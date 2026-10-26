@@ -18,6 +18,10 @@ class OrderItem extends Model
         'price',
         'quantity',
         'total_price',
+        'seller_voucher_code',
+        'seller_voucher_discount',
+        'platform_voucher_code',
+        'platform_voucher_discount',
     ];
 
     protected function casts(): array
@@ -26,6 +30,8 @@ class OrderItem extends Model
             'price' => 'decimal:2',
             'quantity' => 'integer',
             'total_price' => 'decimal:2',
+            'seller_voucher_discount' => 'decimal:2',
+            'platform_voucher_discount' => 'decimal:2',
         ];
     }
 

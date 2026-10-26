@@ -69,6 +69,11 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a class="dropdown-item" href="{{ route('store.account.vouchers.index') }}">
+                                        <i class="bi bi-ticket-perforated me-2" aria-hidden="true"></i>
+                                        Voucher của tôi
+                                    </a>
+                                </li>                                <li>
                                     <a class="dropdown-item" href="{{ route('store.account.orders.index') }}">
                                         <i class="bi bi-receipt me-2" aria-hidden="true"></i>
                                         Đơn hàng của tôi

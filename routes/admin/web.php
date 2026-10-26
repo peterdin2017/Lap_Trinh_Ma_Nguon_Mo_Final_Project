@@ -14,4 +14,5 @@ Route::middleware(['auth', 'admin'])->group(function (): void {
     require __DIR__ . '/category/category.php';
     require __DIR__ . '/product/product.php';
     require __DIR__ . '/report/report.php';
+    require __DIR__ . '/vouchers/voucher.php';
 });

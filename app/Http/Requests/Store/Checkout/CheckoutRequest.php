@@ -31,12 +31,21 @@ class CheckoutRequest extends FormRequest
                 'distinct',
             ],
 
+            // Mỗi Shop có thể có một voucher riêng.
             'voucher_codes' => ['nullable', 'array', 'max:100'],
             'voucher_codes.*' => [
                 'nullable',
                 'string',
                 'alpha_dash:ascii',
                 'max:30',
+            ],
+
+            // Voucher sàn được gửi riêng, không dùng chung với voucher Shop.
+            'platform_voucher_code' => [
+                'nullable',
+                'string',
+                'alpha_dash:ascii',
+                'max:50',
             ],
 
             'shipping_name' => [
@@ -91,8 +100,9 @@ class CheckoutRequest extends FormRequest
             'ward' => 'phường/xã',
             'payment_method' => 'phương thức thanh toán',
             'note' => 'ghi chú',
-            'voucher_codes' => 'mã voucher',
-            'voucher_codes.*' => 'mã voucher',
+            'voucher_codes' => 'mã voucher Shop',
+            'voucher_codes.*' => 'mã voucher Shop',
+            'platform_voucher_code' => 'mã voucher sàn',
         ];
     }
 
@@ -100,8 +110,14 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'voucher_codes.*.alpha_dash' =>
-                'Mã voucher chỉ gồm chữ không dấu, số, dấu gạch ngang hoặc gạch dưới.',
-            'voucher_codes.*.max' => 'Mã voucher không được vượt quá 30 ký tự.',
+                'Mã voucher Shop chỉ gồm chữ không dấu, số, dấu gạch ngang hoặc gạch dưới.',
+            'voucher_codes.*.max' =>
+                'Mã voucher Shop không được vượt quá 30 ký tự.',
+
+            'platform_voucher_code.alpha_dash' =>
+                'Mã voucher sàn chỉ gồm chữ không dấu, số, dấu gạch ngang hoặc gạch dưới.',
+            'platform_voucher_code.max' =>
+                'Mã voucher sàn không được vượt quá 50 ký tự.',
         ];
     }
 }

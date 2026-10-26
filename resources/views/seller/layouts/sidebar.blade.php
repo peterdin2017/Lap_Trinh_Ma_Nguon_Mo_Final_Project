@@ -4,11 +4,7 @@
     $reportsOpen = request()->routeIs('seller.reports.*', 'seller.analytics.*');
     $vouchersOpen = request()->routeIs('seller.vouchers.*');
 
-    $shopSettingsOpen = request()->routeIs(
-        'seller.shop-information.*',
-        'seller.shipping.*',
-        'seller.promotions.*',
-    );
+    $shopSettingsOpen = request()->routeIs('seller.shop-information.*', 'seller.shipping.*', 'seller.promotions.*');
 
     $pendingOrderCount = $pendingOrdersCount ?? 0;
     $currentOrderStatus = request()->query('status', 'all');
@@ -103,8 +99,7 @@
         </div>
 
         {{-- Voucher của Shop --}}
-        <a href="{{ route('seller.vouchers.index') }}"
-            class="seller-nav-link {{ $vouchersOpen ? 'active' : '' }}">
+        <a href="{{ route('seller.vouchers.index') }}" class="seller-nav-link {{ $vouchersOpen ? 'active' : '' }}">
             <i class="bi bi-ticket-perforated" aria-hidden="true"></i>
             <span>Voucher</span>
         </a>
@@ -120,7 +115,7 @@
 
         <div id="sellerReportsMenu" class="collapse {{ $reportsOpen ? 'show' : '' }}">
             <nav class="seller-submenu" aria-label="Doanh thu và thống kê">
-                <a href="{{ \Illuminate\Support\Facades\Route::has('seller.reports.revenue') ? route('seller.reports.revenue') : '#' }}"
+                <a href="{{ route('seller.reports.revenue') }}"
                     class="seller-subnav-link {{ request()->routeIs('seller.reports.revenue') ? 'active' : '' }}">
                     Báo cáo doanh thu
                 </a>
@@ -297,13 +292,13 @@
 
             <div id="sellerReportsMenuMobile" class="collapse {{ $reportsOpen ? 'show' : '' }}">
                 <nav class="seller-submenu" aria-label="Báo cáo">
-                    <a href="{{ \Illuminate\Support\Facades\Route::has('seller.reports.revenue') ? route('seller.reports.revenue') : '#' }}"
-                        class="seller-subnav-link">
+                    <a href="{{ route('seller.reports.revenue') }}"
+                        class="seller-subnav-link {{ request()->routeIs('seller.reports.revenue') ? 'active' : '' }}">
                         Báo cáo doanh thu
                     </a>
 
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.analytics.index') ? route('seller.analytics.index') : '#' }}"
-                        class="seller-subnav-link">
+                        class="seller-subnav-link {{ request()->routeIs('seller.analytics.*') ? 'active' : '' }}">
                         Phân tích bán hàng
                     </a>
                 </nav>
@@ -326,7 +321,7 @@
                     </a>
 
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.shipping.edit') ? route('seller.shipping.edit') : '#' }}"
-                        class="seller-subnav-link">
+                        class="seller-subnav-link {{ request()->routeIs('seller.shipping.*') ? 'active' : '' }}">
                         Cài đặt vận chuyển
                     </a>
                 </nav>
@@ -445,7 +440,7 @@
         flex: 1;
     }
 
-    /* Giống rule Admin: hover, focus và active dùng chung highlight */
+    /* Hover, focus và active dùng chung highlight */
     .seller-nav-link:hover,
     .seller-nav-link:focus-visible,
     .seller-nav-link.active {
@@ -558,6 +553,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
+
         .seller-nav-link,
         .seller-subnav-link,
         .seller-nav-chevron {

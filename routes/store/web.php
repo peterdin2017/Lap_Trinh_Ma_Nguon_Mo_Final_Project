@@ -27,6 +27,7 @@ require __DIR__ . '/account/addresses.php';
 require __DIR__ . '/account/orders.php';
 require __DIR__ . '/products/reviews.php';
 require __DIR__ . '/products/reports.php';
+require __DIR__ . '/account/vouchers.php';
 
 // Checkout
 require __DIR__ . '/checkout/checkout.php';

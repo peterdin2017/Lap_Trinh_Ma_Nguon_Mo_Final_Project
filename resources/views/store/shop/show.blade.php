@@ -74,6 +74,82 @@
                 </div>
             </div>
         </section>
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="status">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>
+        @endif
+
+        @if (($shopVouchers ?? collect())->isNotEmpty())
+            <section class="shop-vouchers-section mb-4" aria-labelledby="shopVouchersTitle">
+                <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+                    <div>
+                        <h2 id="shopVouchersTitle" class="h5 fw-bold mb-1">Voucher của Shop</h2>
+                        <p class="small text-secondary mb-0">Lưu ưu đãi của {{ $seller->shop_name }} để dùng khi mua hàng.</p>
+                    </div>
+                    <span class="badge rounded-pill text-bg-light border">
+                        {{ $shopVouchers->count() }} voucher
+                    </span>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+                    @foreach ($shopVouchers as $voucher)
+                        @php
+                            $isSaved = in_array((int) $voucher->voucher_id, $savedVoucherIds ?? [], true);
+                            $discountLabel = $voucher->discount_type === 'percent'
+                                ? 'Giảm ' . rtrim(rtrim(number_format((float) $voucher->discount_value, 2, '.', ''), '0'), '.') . '%'
+                                : 'Giảm ' . number_format((float) $voucher->discount_value, 0, ',', '.') . '₫';
+                        @endphp
+
+                        <article class="shop-voucher-card h-100">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <span class="badge text-bg-info">Voucher Shop</span>
+                                <i class="bi bi-ticket-perforated shop-voucher-icon" aria-hidden="true"></i>
+                            </div>
+
+                            <div class="shop-voucher-discount mt-2">{{ $discountLabel }}</div>
+                            <div class="small text-secondary">
+                                Mã <strong class="text-dark">{{ $voucher->code }}</strong>
+                            </div>
+
+                            <div class="shop-voucher-details small text-secondary mt-2">
+                                <div>
+                                    Đơn tối thiểu {{ number_format((float) $voucher->min_order_amount, 0, ',', '.') }}₫
+                                </div>
+                                @if ($voucher->discount_type === 'percent' && $voucher->max_discount)
+                                    <div>Giảm tối đa {{ number_format((float) $voucher->max_discount, 0, ',', '.') }}₫</div>
+                                @endif
+                                <div>Hạn dùng đến {{ $voucher->expires_at->format('d/m/Y H:i') }}</div>
+                            </div>
+
+                            <div class="mt-auto pt-3">
+                                @if ($isSaved)
+                                    <button type="button" class="btn btn-success btn-sm w-100" disabled>
+                                        <i class="bi bi-check2 me-1" aria-hidden="true"></i>Đã lưu
+                                    </button>
+                                @elseif (session()->has('account_id'))
+                                    <form method="POST" action="{{ route('store.account.vouchers.save', ['type' => 'seller', 'voucher' => $voucher->voucher_id]) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="bi bi-bookmark-plus me-1" aria-hidden="true"></i>Lưu voucher
+                                        </button>
+                                    </form>
+                                @else
+                                    <a href="{{ route('login.form') }}" class="btn btn-outline-primary btn-sm w-100">
+                                        Đăng nhập để lưu
+                                    </a>
+                                @endif
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            </section>
+        @endif
 
         <section id="shopProducts" class="shop-products-section">
             <div class="shop-products-heading">
@@ -230,6 +306,39 @@
                 overflow-wrap: anywhere;
             }
 
+
+            .shop-vouchers-section {
+                padding: 22px;
+                border: 1px solid var(--shop-border, #e2e8f0);
+                border-radius: 12px;
+                background: var(--shop-card-bg, #fff);
+                box-shadow: var(--shop-shadow, 0 2px 8px rgba(0, 0, 0, .04));
+            }
+
+            .shop-voucher-card {
+                display: flex;
+                flex-direction: column;
+                padding: 16px;
+                border: 1px solid var(--shop-border, #e2e8f0);
+                border-left: 4px solid var(--shop-primary, #1a94ff);
+                border-radius: 10px;
+                background: var(--shop-card-bg, #fff);
+            }
+
+            .shop-voucher-icon {
+                color: var(--shop-primary, #1a94ff);
+                font-size: 1.25rem;
+            }
+
+            .shop-voucher-discount {
+                color: var(--shop-price, #ee4d2d);
+                font-size: 1.15rem;
+                font-weight: 700;
+            }
+
+            .shop-voucher-details {
+                line-height: 1.7;
+            }
             .shop-products-heading {
                 display: flex;
                 justify-content: space-between;
@@ -336,7 +445,8 @@
                     padding: 18px;
                 }
 
-                .shop-products-heading {
+
+            .shop-products-heading {
                     align-items: stretch;
                     flex-direction: column;
                 }
