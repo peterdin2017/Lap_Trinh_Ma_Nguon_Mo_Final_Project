@@ -273,6 +273,11 @@ class CheckoutController extends Controller
                             'cart_item_ids' => 'Tồn kho vừa thay đổi. Vui lòng kiểm tra lại giỏ hàng.',
                         ]);
                     }
+
+                    // Cộng số lượng đã bán sau khi tạo chi tiết đơn thành công.
+                    Product::query()
+                        ->whereKey($product->product_id)
+                        ->increment('sold_count', $quantity);
                 }
 
                 $orderCodes[] = $order->order_code;
@@ -341,3 +346,4 @@ class CheckoutController extends Controller
             >= (int) $item->quantity;
     }
 }
+

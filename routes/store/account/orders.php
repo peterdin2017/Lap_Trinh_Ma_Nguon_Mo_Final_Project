@@ -13,3 +13,7 @@ Route::patch('/account/orders/{id}/confirm-receipt', [BuyerOrderController::clas
 Route::patch('/account/orders/{id}/cancel', [BuyerOrderController::class, 'cancelOrder'])
     ->whereNumber('id')
     ->name('store.account.orders.cancel');
+
+Route::post('/account/orders/{id}/return-request', [BuyerOrderController::class, 'requestReturn'])
+    ->whereNumber('id')
+    ->name('store.account.orders.return-request');

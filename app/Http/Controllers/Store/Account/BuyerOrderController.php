@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Store\Account;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderReturnRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Review;
@@ -21,6 +22,7 @@ class BuyerOrderController extends Controller
         'shipping',
         'completed',
         'cancelled',
+        'return_requested',
     ];
 
     public function index(Request $request): View
@@ -41,7 +43,16 @@ class BuyerOrderController extends Controller
                 'items.variant',
             ])
             ->when(
-                $status !== 'all',
+                $status === 'return_requested',
+                fn ($query) => $query->whereIn(
+                    'order_id',
+                    OrderReturnRequest::query()
+                        ->where('account_id', $accountId)
+                        ->select('order_id')
+                )
+            )
+            ->when(
+                $status !== 'all' && $status !== 'return_requested',
                 fn ($query) => $query->where('order_status', $status)
             )
             ->latest('created_at')
@@ -82,19 +93,29 @@ class BuyerOrderController extends Controller
             }
         }
 
-        $orderItemIds = $orders->getCollection()
-            ->flatMap(fn ($order) => $order->items->pluck('order_item_id'))
-            ->values();
+        $orderIds = $orders->getCollection()->pluck('order_id');
 
         $reviewedItemIds = Review::query()
-            ->whereIn('order_item_id', $orderItemIds)
+            ->whereIn(
+                'order_item_id',
+                $orders->getCollection()
+                    ->flatMap(fn ($order) => $order->items->pluck('order_item_id'))
+                    ->values()
+            )
             ->pluck('order_item_id')
             ->map(fn ($id) => (int) $id);
+
+        $returnRequests = OrderReturnRequest::query()
+            ->where('account_id', $accountId)
+            ->whereIn('order_id', $orderIds)
+            ->get()
+            ->keyBy('order_id');
 
         return view('store.account.orders.index', compact(
             'orders',
             'status',
-            'reviewedItemIds'
+            'reviewedItemIds',
+            'returnRequests'
         ));
     }
 
@@ -132,9 +153,9 @@ class BuyerOrderController extends Controller
                 ->lockForUpdate()
                 ->findOrFail($id);
 
-            if ($order->order_status !== 'pending') {
+            if (! in_array($order->order_status, ['pending', 'processing'], true)) {
                 throw ValidationException::withMessages([
-                    'order' => 'Chỉ có thể hủy đơn hàng đang chờ xác nhận.',
+                    'order' => 'Chỉ có thể hủy đơn hàng trước khi bàn giao cho đơn vị vận chuyển.',
                 ]);
             }
 
@@ -183,7 +204,7 @@ class BuyerOrderController extends Controller
                 }
 
                 if ($variant) {
-                    // Checkout giảm cả tồn kho biến thể và tồn kho tổng sản phẩm.
+                    // Checkout giảm tồn kho biến thể và tồn kho tổng sản phẩm.
                     $variant->increment('stock_quantity', (int) $item->quantity);
                     $product->increment('stock_quantity', (int) $item->quantity);
                 } else {
@@ -203,6 +224,63 @@ class BuyerOrderController extends Controller
         return back()->with('success', 'Đơn hàng đã được hủy.');
     }
 
+    public function requestReturn(Request $request, int $id): RedirectResponse
+    {
+        $accountId = $this->accountId();
+
+        $data = $request->validate([
+            'request_type' => ['required', 'in:return,refund'],
+            'reason' => [
+                'required',
+                'in:damaged,wrong_item,missing_parts,not_as_described,changed_mind,other',
+            ],
+            'description' => ['nullable', 'string', 'max:2000'],
+        ], [
+            'request_type.required' => 'Vui lòng chọn hình thức yêu cầu.',
+            'request_type.in' => 'Hình thức yêu cầu không hợp lệ.',
+            'reason.required' => 'Vui lòng chọn lý do.',
+            'reason.in' => 'Lý do yêu cầu không hợp lệ.',
+            'description.max' => 'Mô tả không được vượt quá 2000 ký tự.',
+        ]);
+
+        DB::transaction(function () use ($id, $accountId, $data): void {
+            $order = Order::query()
+                ->where('account_id', $accountId)
+                ->lockForUpdate()
+                ->findOrFail($id);
+
+            if ($order->order_status !== 'completed') {
+                throw ValidationException::withMessages([
+                    'return' => 'Chỉ có thể yêu cầu trả hàng/hoàn tiền cho đơn đã hoàn thành.',
+                ]);
+            }
+
+            $alreadyRequested = OrderReturnRequest::query()
+                ->where('order_id', $order->order_id)
+                ->exists();
+
+            if ($alreadyRequested) {
+                throw ValidationException::withMessages([
+                    'return' => 'Đơn hàng này đã có yêu cầu trả hàng/hoàn tiền.',
+                ]);
+            }
+
+            OrderReturnRequest::query()->create([
+                'order_id' => $order->order_id,
+                'account_id' => $accountId,
+                'request_type' => $data['request_type'],
+                'reason' => $data['reason'],
+                'description' => $data['description'] ?? null,
+                'status' => 'pending',
+            ]);
+        }, 3);
+
+        return back()->with(
+            'return_success',
+            'Yêu cầu trả hàng/hoàn tiền đã được gửi. Cửa hàng sẽ kiểm tra và phản hồi.'
+        );
+    }
+
     private function accountId(): int
     {
         abort_unless(
@@ -214,3 +292,4 @@ class BuyerOrderController extends Controller
         return (int) session('account_id');
     }
 }
+

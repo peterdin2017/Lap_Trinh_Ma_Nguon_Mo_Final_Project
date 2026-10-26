@@ -8,6 +8,7 @@
         $search = $filters['q'] ?? '';
 
         $allOrdersCount = $allOrdersCount ?? ($statusCounts?->sum() ?? 0);
+        $returnRequests = $returnRequests ?? collect();
 
         $tabs = [
             'all' => ['Tất cả', $allOrdersCount],
@@ -26,12 +27,29 @@
             'cancelled' => ['Đã hủy', 'order-status--cancelled'],
         ];
 
+        $returnStatusMeta = [
+            'pending' => ['Chờ xử lý yêu cầu trả hàng', 'order-status--return'],
+            'approved' => ['Đã chấp nhận trả hàng', 'order-status--return-approved'],
+            'rejected' => ['Đã từ chối yêu cầu', 'order-status--cancelled'],
+            'completed' => ['Đã xử lý yêu cầu', 'order-status--completed'],
+        ];
+
+        $returnReasonLabels = [
+            'damaged' => 'Sản phẩm bị hư hỏng',
+            'wrong_item' => 'Nhận sai sản phẩm',
+            'missing_parts' => 'Sản phẩm thiếu phụ kiện',
+            'not_as_described' => 'Sản phẩm không đúng mô tả',
+            'changed_mind' => 'Khách đổi ý, không còn nhu cầu',
+            'other' => 'Lý do khác',
+        ];
+
         $paymentLabels = [
             'cod' => 'COD',
             'vnpay' => 'VNPAY',
             'bank_transfer' => 'Chuyển khoản',
         ];
     @endphp
+
     <style>
         .seller-orders {
             --orders-primary: var(--seller-primary, #1a94ff);
@@ -40,7 +58,6 @@
             --orders-surface: var(--seller-card-bg, #fff);
             --orders-soft: var(--seller-hover-bg, #f8fafc);
             --orders-border: var(--seller-border, #e2e8f0);
-
             color: var(--orders-text);
         }
 
@@ -128,6 +145,19 @@
         .seller-orders__code:hover {
             color: var(--orders-primary);
             text-decoration: underline;
+        }
+
+        .seller-orders__return-notice {
+            margin: 14px 18px 0;
+            padding: 12px 14px;
+            border: 1px solid #fed7aa;
+            border-radius: 10px;
+            background: #fff7ed;
+            color: #7c2d12;
+        }
+
+        .seller-orders__return-notice-title {
+            font-weight: 700;
         }
 
         .seller-orders__item {
@@ -219,6 +249,16 @@
             background: #fee2e2;
         }
 
+        .order-status--return {
+            color: #9a3412;
+            background: #ffedd5;
+        }
+
+        .order-status--return-approved {
+            color: #075985;
+            background: #e0f2fe;
+        }
+
         .seller-orders__empty {
             padding: 56px 20px;
             text-align: center;
@@ -249,6 +289,11 @@
             .seller-orders__summary {
                 padding: 12px;
             }
+
+            .seller-orders__return-notice {
+                margin-right: 12px;
+                margin-left: 12px;
+            }
         }
     </style>
 
@@ -277,10 +322,13 @@
         <section class="seller-orders__panel p-3 p-lg-4 mb-3">
             <nav class="seller-orders__tabs mb-3" aria-label="Lọc trạng thái đơn hàng">
                 @foreach ($tabs as $value => [$label, $count])
-                    <a href="{{ route('seller.orders.index', array_merge(request()->except(['status', 'page']), ['status' => $value])) }}"
+                    <a
+                        href="{{ route('seller.orders.index', array_merge(request()->except(['status', 'page']), ['status' => $value])) }}"
                         class="{{ $status === $value ? 'active' : '' }}"
-                        @if ($status === $value) aria-current="page" @endif>
+                        @if ($status === $value) aria-current="page" @endif
+                    >
                         <span>{{ $label }}</span>
+
                         @if ((int) $count > 0)
                             <span class="badge rounded-pill {{ $value === 'pending' ? 'text-bg-danger' : 'seller-orders__count' }}">
                                 {{ number_format((int) $count) }}
@@ -298,28 +346,48 @@
                         <label for="order-search" class="form-label small fw-semibold">
                             Mã đơn, tên hoặc số điện thoại khách
                         </label>
-                        <input id="order-search" type="search" name="q" value="{{ $search }}"
-                            class="form-control" maxlength="100" placeholder="Nhập thông tin cần tìm">
+                        <input
+                            id="order-search"
+                            type="search"
+                            name="q"
+                            value="{{ $search }}"
+                            class="form-control"
+                            maxlength="100"
+                            placeholder="Nhập thông tin cần tìm"
+                        >
                     </div>
 
                     <div class="col-6 col-lg-2">
                         <label for="date-from" class="form-label small fw-semibold">Từ ngày</label>
-                        <input id="date-from" type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
-                            class="form-control">
+                        <input
+                            id="date-from"
+                            type="date"
+                            name="date_from"
+                            value="{{ $filters['date_from'] ?? '' }}"
+                            class="form-control"
+                        >
                     </div>
 
                     <div class="col-6 col-lg-2">
                         <label for="date-to" class="form-label small fw-semibold">Đến ngày</label>
-                        <input id="date-to" type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
-                            class="form-control">
+                        <input
+                            id="date-to"
+                            type="date"
+                            name="date_to"
+                            value="{{ $filters['date_to'] ?? '' }}"
+                            class="form-control"
+                        >
                     </div>
 
                     <div class="col-12 col-lg-3 d-flex gap-2">
                         <button class="btn btn-primary flex-grow-1" type="submit">
                             <i class="bi bi-search me-1" aria-hidden="true"></i>Lọc
                         </button>
-                        <a href="{{ route('seller.orders.index', $status === 'all' ? [] : ['status' => $status]) }}"
-                            class="btn btn-outline-secondary">
+
+                        <a
+                            href="{{ route('seller.orders.index', $status === 'all' ? [] : ['status' => $status]) }}"
+                            class="btn btn-outline-secondary"
+                        >
                             Xóa lọc
                         </a>
                     </div>
@@ -329,10 +397,26 @@
 
         @forelse ($orders as $order)
             @php
-                [$statusLabel, $statusClass] = $statusMeta[$order->order_status] ?? [
-                    $order->order_status,
-                    'order-status--processing',
-                ];
+                $returnRequest = $returnRequests->get($order->order_id);
+
+                if ($returnRequest) {
+                    [$statusLabel, $statusClass] = $returnStatusMeta[$returnRequest->status]
+                        ?? ['Có yêu cầu trả hàng', 'order-status--return'];
+                } else {
+                    [$statusLabel, $statusClass] = $statusMeta[$order->order_status] ?? [
+                        $order->order_status,
+                        'order-status--processing',
+                    ];
+                }
+
+                $returnTypeLabel = match ($returnRequest?->request_type) {
+                    'return' => 'Trả hàng và hoàn tiền',
+                    'refund' => 'Chỉ yêu cầu hoàn tiền',
+                    default => null,
+                };
+
+                $returnReasonLabel = $returnReasonLabels[$returnRequest?->reason]
+                    ?? $returnRequest?->reason;
             @endphp
 
             <article class="seller-orders__card">
@@ -341,10 +425,12 @@
                         <a class="seller-orders__code" href="{{ route('seller.orders.show', $order->order_id) }}">
                             {{ $order->order_code }}
                         </a>
+
                         <span class="small text-secondary">
                             <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
                             {{ $order->created_at?->format('d/m/Y H:i') }}
                         </span>
+
                         <span class="small">
                             <i class="bi bi-person me-1" aria-hidden="true"></i>
                             {{ $order->shipping_name }}
@@ -354,6 +440,63 @@
                     <span class="order-status {{ $statusClass }}">{{ $statusLabel }}</span>
                 </header>
 
+                @if ($returnRequest)
+                    <section class="seller-orders__return-notice" aria-label="Thông tin yêu cầu trả hàng">
+                        <div class="seller-orders__return-notice-title">
+                            <i class="bi bi-arrow-return-left me-1" aria-hidden="true"></i>
+                            Khách yêu cầu {{ $returnTypeLabel }}
+                        </div>
+
+                        <div class="small mt-1">
+                            <strong>Lý do:</strong> {{ $returnReasonLabel }}
+                        </div>
+
+                        @if ($returnRequest->description)
+                            <div class="small mt-1">
+                                <strong>Mô tả:</strong> {{ $returnRequest->description }}
+                            </div>
+                        @endif
+
+                        <div class="small mt-1">
+                            Sản phẩm thuộc yêu cầu được hiển thị bên dưới.
+                        </div>
+
+                        @if ($returnRequest->status === 'pending')
+                            <div class="d-flex flex-wrap gap-2 mt-3">
+                                <form
+                                    method="POST"
+                                    action="{{ route('seller.orders.return-requests.update', $returnRequest->return_request_id) }}"
+                                    onsubmit="return confirm('Chấp nhận yêu cầu trả hàng/hoàn tiền này?')"
+                                >
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="decision" value="approved">
+
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
+                                        Chấp nhận
+                                    </button>
+                                </form>
+
+                                <form
+                                    method="POST"
+                                    action="{{ route('seller.orders.return-requests.update', $returnRequest->return_request_id) }}"
+                                    onsubmit="return confirm('Từ chối yêu cầu trả hàng/hoàn tiền này?')"
+                                >
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="decision" value="rejected">
+
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-x-circle me-1" aria-hidden="true"></i>
+                                        Từ chối
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+                    </section>
+                @endif
+
                 <div>
                     @foreach ($order->items as $item)
                         @php
@@ -362,9 +505,12 @@
 
                         <div class="seller-orders__item">
                             @if ($itemImage)
-                                <img class="seller-orders__image"
+                                <img
+                                    class="seller-orders__image"
                                     src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($itemImage) }}"
-                                    alt="" loading="lazy">
+                                    alt="{{ $item->product_name }}"
+                                    loading="lazy"
+                                >
                             @else
                                 <div class="seller-orders__image d-flex align-items-center justify-content-center">
                                     <i class="bi bi-image text-secondary" aria-hidden="true"></i>
@@ -373,13 +519,23 @@
 
                             <div>
                                 <div class="seller-orders__item-name">{{ $item->product_name }}</div>
+
                                 @if ($item->variant_name)
-                                    <div class="small text-secondary">{{ $item->variant_name }}</div>
+                                    <div class="small text-secondary">
+                                        Phân loại: {{ $item->variant_name }}
+                                    </div>
                                 @endif
+
                                 <div class="small text-secondary">
                                     Số lượng: {{ number_format($item->quantity) }}
                                     × {{ number_format((float) $item->price, 0, ',', '.') }}₫
                                 </div>
+
+                                @if ($returnRequest)
+                                    <span class="badge text-bg-warning mt-1">
+                                        Sản phẩm trong yêu cầu trả
+                                    </span>
+                                @endif
                             </div>
 
                             <div class="seller-orders__item-price text-end fw-semibold">
@@ -389,14 +545,14 @@
                     @endforeach
                 </div>
 
-                <footer
-                    class="seller-orders__summary d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <footer class="seller-orders__summary d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <span class="small text-secondary">
                             Khách:
                             <strong class="text-dark">{{ $order->shipping_name }}</strong>
                             · {{ $order->shipping_phone }}
                         </span>
+
                         <span class="badge text-bg-light border">
                             {{ $paymentLabels[$order->payment_method] ?? strtoupper($order->payment_method) }}
                         </span>
@@ -410,8 +566,12 @@
                             </strong>
                         </div>
 
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                            data-bs-target="#orderDetail{{ $order->order_id }}">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#orderDetail{{ $order->order_id }}"
+                        >
                             <i class="bi bi-eye me-1" aria-hidden="true"></i>Chi tiết
                         </button>
 
@@ -420,19 +580,27 @@
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="status" value="processing">
+
                                 <button class="btn btn-sm btn-primary" type="submit">
                                     <i class="bi bi-check2 me-1" aria-hidden="true"></i>Xác nhận đơn
                                 </button>
                             </form>
 
-                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
-                                data-bs-target="#cancelOrder{{ $order->order_id }}">
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#cancelOrder{{ $order->order_id }}"
+                            >
                                 Hủy đơn
                             </button>
                         @elseif ($order->order_status === 'processing')
-                            <a class="btn btn-sm btn-outline-secondary"
-                                href="{{ route('seller.orders.shipping-label', $order->order_id) }}" target="_blank"
-                                rel="noopener">
+                            <a
+                                class="btn btn-sm btn-outline-secondary"
+                                href="{{ route('seller.orders.shipping-label', $order->order_id) }}"
+                                target="_blank"
+                                rel="noopener"
+                            >
                                 <i class="bi bi-printer me-1" aria-hidden="true"></i>In phiếu
                             </a>
 
@@ -440,25 +608,22 @@
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="status" value="shipping">
+
                                 <button class="btn btn-sm btn-primary" type="submit">
                                     Bàn giao vận chuyển
                                 </button>
                             </form>
                         @elseif ($order->order_status === 'shipping')
-                            <a class="btn btn-sm btn-outline-secondary"
-                                href="{{ route('seller.orders.shipping-label', $order->order_id) }}" target="_blank"
-                                rel="noopener">
+                            <a
+                                class="btn btn-sm btn-outline-secondary"
+                                href="{{ route('seller.orders.shipping-label', $order->order_id) }}"
+                                target="_blank"
+                                rel="noopener"
+                            >
                                 <i class="bi bi-printer me-1" aria-hidden="true"></i>In phiếu
                             </a>
 
-                            <form method="POST" action="{{ route('seller.orders.status', $order->order_id) }}">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="status" value="completed">
-                                <button class="btn btn-sm btn-success" type="submit">
-                                    Đã giao thành công
-                                </button>
-                            </form>
+                            <span class="small text-secondary"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>Chờ khách xác nhận đã nhận hàng</span>
                         @endif
                     </div>
                 </footer>
@@ -469,6 +634,7 @@
                 'statusLabel' => $statusLabel,
                 'statusClass' => $statusClass,
                 'paymentLabels' => $paymentLabels,
+                'returnRequest' => $returnRequest,
             ])
         @empty
             <div class="seller-orders__panel seller-orders__empty">

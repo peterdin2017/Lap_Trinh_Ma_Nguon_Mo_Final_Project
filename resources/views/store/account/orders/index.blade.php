@@ -9,6 +9,7 @@
             'pending' => 'Chờ xác nhận',
             'shipping' => 'Đang giao',
             'completed' => 'Hoàn thành',
+            'return_requested' => 'Trả hàng/Hoàn tiền',
             'cancelled' => 'Đã hủy',
         ];
 
@@ -20,7 +21,15 @@
             'cancelled' => ['Đã hủy', 'buyer-order-status--cancelled'],
         ];
 
+        $returnStatusMeta = [
+            'pending' => ['Đang chờ cửa hàng xử lý', 'text-bg-warning'],
+            'approved' => ['Đã chấp nhận', 'text-bg-success'],
+            'rejected' => ['Không được chấp nhận', 'text-bg-danger'],
+            'completed' => ['Đã xử lý xong', 'text-bg-success'],
+        ];
+
         $reviewedItemIds = $reviewedItemIds ?? collect();
+        $returnRequests = $returnRequests ?? collect();
     @endphp
 
     <style>
@@ -35,7 +44,7 @@
         .buyer-orders__panel,
         .buyer-orders__card {
             overflow: hidden;
-            border: 1px solid #E2E8F0;
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
             background: #fff;
             box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
@@ -48,7 +57,7 @@
         .buyer-orders__tabs {
             display: flex;
             overflow-x: auto;
-            border-bottom: 1px solid #E2E8F0;
+            border-bottom: 1px solid #e2e8f0;
             scrollbar-width: thin;
         }
 
@@ -68,7 +77,7 @@
 
         .buyer-orders__tab:hover,
         .buyer-orders__tab.active {
-            color: #1A94FF;
+            color: #1a94ff;
         }
 
         .buyer-orders__tab:hover {
@@ -76,7 +85,7 @@
         }
 
         .buyer-orders__tab.active {
-            border-bottom-color: #1A94FF;
+            border-bottom-color: #1a94ff;
             font-weight: 700;
         }
 
@@ -95,7 +104,7 @@
         }
 
         .buyer-orders__header {
-            border-bottom: 1px solid #E2E8F0;
+            border-bottom: 1px solid #e2e8f0;
             background: #f8fafc;
         }
 
@@ -106,7 +115,7 @@
         }
 
         .buyer-orders__shop:hover {
-            color: #1A94FF;
+            color: #1a94ff;
         }
 
         .buyer-orders__muted {
@@ -169,7 +178,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border: 1px solid #E2E8F0;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
             background: #f8fafc;
             color: #94a3b8;
@@ -195,7 +204,7 @@
         }
 
         .buyer-orders__footer {
-            border-top: 1px solid #E2E8F0;
+            border-top: 1px solid #e2e8f0;
             background: #fff;
         }
 
@@ -205,15 +214,17 @@
             font-weight: 700;
         }
 
-        .buyer-orders__empty {
-            padding: 48px 20px;
-            color: #64748b;
-            text-align: center;
+        .buyer-orders__actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
         }
 
         .buyer-orders__btn-primary {
-            border-color: #1A94FF;
-            background: #1A94FF;
+            border-color: #1a94ff;
+            background: #1a94ff;
             color: #fff;
         }
 
@@ -221,6 +232,23 @@
             border-color: #087bd8;
             background: #087bd8;
             color: #fff;
+        }
+
+        .buyer-orders__btn-return {
+            border-color: #e2e8f0;
+            background: #fff;
+            color: #334155;
+        }
+
+        .buyer-orders__btn-return:hover {
+            border-color: #1a94ff;
+            color: #087bd8;
+        }
+
+        .buyer-orders__empty {
+            padding: 48px 20px;
+            color: #64748b;
+            text-align: center;
         }
 
         #imagePreviewContainer .review-image-preview {
@@ -233,7 +261,7 @@
             display: block;
             width: 60px;
             height: 60px;
-            border: 1px solid #E2E8F0;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
             object-fit: cover;
         }
@@ -280,6 +308,23 @@
                 grid-column: 2;
                 text-align: left;
             }
+
+            .buyer-orders__footer {
+                align-items: flex-start;
+            }
+
+            .buyer-orders__actions {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .buyer-orders__actions > * {
+                flex: 1 1 auto;
+            }
+
+            .buyer-orders__actions .btn {
+                width: 100%;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -301,9 +346,21 @@
             </div>
         @endif
 
-        @if ($errors->has('order') || $errors->has('review'))
+        @if (session('return_success'))
+            <div class="alert alert-success" role="status">
+                {{ session('return_success') }}
+            </div>
+        @endif
+
+        @if (session('success'))
+            <div class="alert alert-success" role="status">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if ($errors->has('order') || $errors->has('review') || $errors->has('return'))
             <div class="alert alert-danger" role="alert">
-                {{ $errors->first('order') ?: $errors->first('review') }}
+                {{ $errors->first('order') ?: ($errors->first('review') ?: $errors->first('return')) }}
             </div>
         @endif
 
@@ -323,17 +380,35 @@
 
         @forelse ($orders as $order)
             @php
-                [$statusLabel, $statusClass] = $statusMeta[$order->order_status]
-                    ?? [$order->order_status, 'buyer-order-status--processing'];
+                [$statusLabel, $statusClass] = $statusMeta[$order->order_status] ?? [
+                    $order->order_status,
+                    'buyer-order-status--processing',
+                ];
+
+                $returnRequest = $returnRequests->get($order->order_id);
+                [$returnLabel, $returnBadgeClass] = $returnStatusMeta[$returnRequest?->status] ?? [
+                    'Yêu cầu đang được xử lý',
+                    'text-bg-secondary',
+                ];
             @endphp
 
             <article class="buyer-orders__card">
                 <header class="buyer-orders__header">
                     <div class="d-flex flex-wrap align-items-center gap-3">
-                        <span class="buyer-orders__shop">
-                            <i class="bi bi-shop me-1" aria-hidden="true"></i>
-                            {{ $order->seller?->shop_name ?? 'Cửa hàng' }}
-                        </span>
+                        @if ($order->seller)
+                            <a
+                                href="{{ route('store.shops.show', $order->seller->seller_id) }}"
+                                class="buyer-orders__shop text-decoration-none"
+                            >
+                                <i class="bi bi-shop me-1" aria-hidden="true"></i>
+                                {{ $order->seller->shop_name ?? 'Cửa hàng' }}
+                            </a>
+                        @else
+                            <span class="buyer-orders__shop">
+                                <i class="bi bi-shop me-1" aria-hidden="true"></i>
+                                Cửa hàng
+                            </span>
+                        @endif
 
                         <span class="buyer-orders__muted">
                             Mã đơn: {{ $order->order_code ?? $order->order_id }}
@@ -349,18 +424,26 @@
                     </span>
                 </header>
 
+                @if ($order->order_status === 'cancelled')
+                    <div class="alert alert-danger mx-3 mt-3 mb-0" role="status">
+                        <strong>Đơn hàng đã bị hủy.</strong>
+                        @if (filled($order->cancellation_reason))
+                            <div class="mt-1">
+                                Lý do: {{ $order->cancellation_reason }}
+                            </div>
+                        @endif
+                    </div>
+                @endif
                 @forelse ($order->items as $item)
                     @php
-                        $imagePath = $item->variant?->image_url
-                            ?: $item->product?->image_url;
+                        $imagePath = $item->variant?->image_url ?: $item->product?->image_url;
 
                         $imageUrl = $imagePath
                             ? \Illuminate\Support\Facades\Storage::disk('public')->url($imagePath)
                             : null;
 
                         $productName = $item->product_name
-                            ?? $item->product?->product_name
-                            ?? 'Sản phẩm';
+                            ?? ($item->product?->product_name ?? 'Sản phẩm');
 
                         $alreadyReviewed = $reviewedItemIds->contains(
                             (int) $item->order_item_id
@@ -398,23 +481,8 @@
                                 Số lượng: {{ number_format((int) $item->quantity) }}
                             </div>
 
-                            @if ($order->order_status === 'completed' && $item->product)
-                                @if ($alreadyReviewed)
-                                    <span class="badge text-bg-success mt-2">Đã đánh giá</span>
-                                @else
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-warning mt-2"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#reviewModal"
-                                        data-review-url="{{ route('store.products.reviews.store', $item->product->product_id) }}"
-                                        data-order-item-id="{{ $item->order_item_id }}"
-                                        data-product-name="{{ $productName }}"
-                                    >
-                                        <i class="bi bi-star me-1" aria-hidden="true"></i>
-                                        Đánh giá sản phẩm
-                                    </button>
-                                @endif
+                            @if ($order->order_status === 'completed' && $item->product && $alreadyReviewed)
+                                <span class="badge text-bg-success mt-2">Đã đánh giá</span>
                             @endif
                         </div>
 
@@ -440,8 +508,8 @@
                         </div>
                     </div>
 
-                    <div class="d-flex flex-wrap gap-2">
-                        @if ($order->order_status === 'pending')
+                    <div class="buyer-orders__actions">
+                        @if (in_array($order->order_status, ['pending', 'processing'], true))
                             <form
                                 method="POST"
                                 action="{{ route('store.account.orders.cancel', $order->order_id) }}"
@@ -464,14 +532,53 @@
                                 @method('PATCH')
 
                                 <button class="btn buyer-orders__btn-primary" type="submit">
-                                    Đã nhận được hàng
+                                    <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+                                    Xác nhận đã nhận hàng
                                 </button>
                             </form>
                         @elseif ($order->order_status === 'completed')
-                            <a
-                                class="btn buyer-orders__btn-primary"
-                                href="{{ route('store.products.index') }}"
-                            >
+                            @foreach ($order->items as $reviewItem)
+                                @php
+                                    $reviewProductName = $reviewItem->product_name
+                                        ?? ($reviewItem->product?->product_name ?? 'Sản phẩm');
+                                @endphp
+
+                                @if ($reviewItem->product && ! $reviewedItemIds->contains((int) $reviewItem->order_item_id))
+                                    <button
+                                        type="button"
+                                        class="btn btn-warning"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#reviewModal"
+                                        data-review-url="{{ route('store.products.reviews.store', $reviewItem->product->product_id) }}"
+                                        data-order-item-id="{{ $reviewItem->order_item_id }}"
+                                        data-product-name="{{ $reviewProductName }}"
+                                    >
+                                        <i class="bi bi-star me-1" aria-hidden="true"></i>
+                                        Đánh giá
+                                    </button>
+                                @endif
+                            @endforeach
+
+                            @if ($returnRequest)
+                                <span class="badge {{ $returnBadgeClass }} py-2 px-3">
+                                    <i class="bi bi-arrow-return-left me-1" aria-hidden="true"></i>
+                                    {{ $returnLabel }}
+                                </span>
+                            @else
+                                <button
+                                    type="button"
+                                    class="btn buyer-orders__btn-return"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#returnRequestModal"
+                                    data-return-url="{{ route('store.account.orders.return-request', $order->order_id) }}"
+                                    data-order-code="{{ $order->order_code ?? $order->order_id }}"
+                                >
+                                    <i class="bi bi-arrow-return-left me-1" aria-hidden="true"></i>
+                                    Yêu cầu Trả hàng/Hoàn tiền
+                                </button>
+                            @endif
+
+                            <a class="btn buyer-orders__btn-primary" href="{{ route('store.products.index') }}">
                                 <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>
                                 Mua lại
                             </a>
@@ -482,8 +589,17 @@
         @empty
             <section class="buyer-orders__panel buyer-orders__empty">
                 <i class="bi bi-receipt fs-1 d-block mb-3" aria-hidden="true"></i>
-                <h2 class="h5 text-dark">Bạn chưa có đơn hàng</h2>
-                <p class="mb-0">Các đơn hàng của bạn sẽ hiển thị tại đây.</p>
+
+                @if (($status ?? 'all') === 'return_requested')
+                    <h2 class="h5 text-dark">Bạn chưa có yêu cầu trả hàng/hoàn tiền</h2>
+                    <p class="mb-0">Các yêu cầu đã gửi sẽ hiển thị tại đây.</p>
+                @elseif (($status ?? 'all') === 'cancelled')
+                    <h2 class="h5 text-dark">Bạn chưa có đơn hàng đã hủy</h2>
+                    <p class="mb-0">Đơn hàng đã hủy sẽ hiển thị tại đây.</p>
+                @else
+                    <h2 class="h5 text-dark">Bạn chưa có đơn hàng</h2>
+                    <p class="mb-0">Các đơn hàng của bạn sẽ hiển thị tại đây.</p>
+                @endif
             </section>
         @endforelse
 
@@ -494,7 +610,92 @@
         @endif
     </main>
 
-    {{-- Modal dùng chung cho tất cả sản phẩm trong danh sách đơn --}}
+    {{-- Modal gửi yêu cầu trả hàng/hoàn tiền --}}
+    <div
+        class="modal fade"
+        id="returnRequestModal"
+        tabindex="-1"
+        aria-labelledby="returnRequestModalLabel"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4">
+                <form id="returnRequestForm" method="POST">
+                    @csrf
+
+                    <div class="modal-header">
+                        <div>
+                            <h2 class="modal-title fs-5 fw-bold" id="returnRequestModalLabel">
+                                Yêu cầu Trả hàng/Hoàn tiền
+                            </h2>
+                            <div class="small text-secondary">
+                                Mã đơn: <span id="returnRequestOrderCode"></span>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Đóng"
+                        ></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <label for="returnRequestType" class="form-label fw-semibold">
+                            Hình thức yêu cầu
+                        </label>
+                        <select id="returnRequestType" name="request_type" class="form-select mb-3" required>
+                            <option value="">Chọn hình thức</option>
+                            <option value="return">Trả hàng và hoàn tiền</option>
+                            <option value="refund">Chỉ yêu cầu hoàn tiền</option>
+                        </select>
+
+                        <label for="returnRequestReason" class="form-label fw-semibold">
+                            Lý do
+                        </label>
+                        <select id="returnRequestReason" name="reason" class="form-select mb-3" required>
+                            <option value="">Chọn lý do</option>
+                            <option value="damaged">Sản phẩm bị hư hỏng</option>
+                            <option value="wrong_item">Nhận sai sản phẩm</option>
+                            <option value="missing_parts">Sản phẩm thiếu phụ kiện</option>
+                            <option value="not_as_described">Sản phẩm không đúng mô tả</option>
+                            <option value="changed_mind">Đổi ý, không còn nhu cầu</option>
+                            <option value="other">Lý do khác</option>
+                        </select>
+
+                        <label for="returnRequestDescription" class="form-label fw-semibold">
+                            Mô tả thêm
+                            <span class="text-secondary fw-normal">(không bắt buộc)</span>
+                        </label>
+                        <textarea
+                            id="returnRequestDescription"
+                            name="description"
+                            rows="4"
+                            maxlength="2000"
+                            class="form-control"
+                            placeholder="Mô tả tình trạng sản phẩm hoặc vấn đề bạn gặp phải"
+                        ></textarea>
+
+                        <div class="form-text">
+                            Cửa hàng sẽ xem xét yêu cầu và phản hồi trong phần lịch sử đơn hàng.
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Để sau
+                        </button>
+                        <button type="submit" class="btn buyer-orders__btn-primary">
+                            Gửi yêu cầu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal đánh giá sản phẩm --}}
     <div
         class="modal fade"
         id="reviewModal"
@@ -585,19 +786,38 @@
 
     <script>
         (() => {
-            const modal = document.getElementById('reviewModal');
-            const form = document.getElementById('reviewForm');
+            const returnModal = document.getElementById('returnRequestModal');
+            const returnForm = document.getElementById('returnRequestForm');
+            const returnOrderCode = document.getElementById('returnRequestOrderCode');
+
+            if (returnModal && returnForm) {
+                document.querySelectorAll('[data-bs-target="#returnRequestModal"]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        returnForm.action = button.dataset.returnUrl;
+                        returnOrderCode.textContent = button.dataset.orderCode || '';
+                    });
+                });
+
+                returnModal.addEventListener('hidden.bs.modal', () => {
+                    returnForm.reset();
+                });
+            }
+
+            const reviewModal = document.getElementById('reviewModal');
+            const reviewForm = document.getElementById('reviewForm');
             const orderItemInput = document.getElementById('reviewOrderItemId');
             const productName = document.getElementById('reviewProductName');
             const fileInput = document.getElementById('reviewImagesInput');
             const chooseButton = document.getElementById('chooseReviewImages');
             const preview = document.getElementById('imagePreviewContainer');
 
-            if (!modal || !form || !fileInput || !preview) return;
+            if (!reviewModal || !reviewForm || !fileInput || !preview || !chooseButton) {
+                return;
+            }
 
             document.querySelectorAll('[data-bs-target="#reviewModal"]').forEach((button) => {
                 button.addEventListener('click', () => {
-                    form.action = button.dataset.reviewUrl;
+                    reviewForm.action = button.dataset.reviewUrl;
                     orderItemInput.value = button.dataset.orderItemId;
                     productName.textContent = button.dataset.productName || '';
                 });
@@ -649,10 +869,13 @@
                 renderPreview();
             });
 
-            modal.addEventListener('hidden.bs.modal', () => {
-                form.reset();
+            reviewModal.addEventListener('hidden.bs.modal', () => {
+                reviewForm.reset();
                 preview.replaceChildren();
             });
         })();
     </script>
 @endsection
+
+
+

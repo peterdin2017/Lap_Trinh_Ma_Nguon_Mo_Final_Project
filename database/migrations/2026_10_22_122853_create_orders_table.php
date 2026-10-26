@@ -46,7 +46,7 @@ return new class extends Migration
             $table->decimal('discount_amount', 14, 2)->default(0);
             $table->decimal('total_amount', 14, 2)->default(0);
             $table->text('note')->nullable();
-
+            $table->text('cancellation_reason')->nullable();
             $table->timestamps();
 
             $table->foreign('account_id')

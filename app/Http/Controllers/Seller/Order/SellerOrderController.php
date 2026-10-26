@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Seller\Order;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderReturnRequest;
 use App\Models\Seller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,14 +14,6 @@ use Illuminate\View\View;
 
 class SellerOrderController extends Controller
 {
-    private const ORDER_STATUSES = [
-        'pending',
-        'processing',
-        'shipping',
-        'completed',
-        'cancelled',
-    ];
-
     public function index(Request $request): View
     {
         $filters = $request->validate([
@@ -38,20 +31,31 @@ class SellerOrderController extends Controller
         ]);
 
         $seller = $this->currentSeller($request);
+        $selectedStatus = $filters['status'] ?? 'all';
 
-        $orders = $this->sellerOrders($seller)
+        $ordersQuery = $this->sellerOrders($seller)
             ->with([
                 'account',
                 'items.product',
                 'items.variant',
-            ])
-            ->when($filters['status'] ?? null, function ($query, $status): void {
-                if ($status !== 'all') {
-                    $query->where('order_status', $status);
-                }
-            })
-            ->when($filters['q'] ?? null, function ($query, $keyword): void {
-                $query->where(function ($query) use ($keyword): void {
+            ]);
+
+        if ($selectedStatus === 'cancelled') {
+            // Tab này gồm đơn đã hủy và đơn có yêu cầu trả hàng/hoàn tiền.
+            $ordersQuery->where(function ($query) {
+                $query->where('order_status', 'cancelled')
+                    ->orWhereIn(
+                        'order_id',
+                        OrderReturnRequest::query()->select('order_id')
+                    );
+            });
+        } elseif ($selectedStatus !== 'all') {
+            $ordersQuery->where('order_status', $selectedStatus);
+        }
+
+        $orders = $ordersQuery
+            ->when($filters['q'] ?? null, function ($query, $keyword) {
+                $query->where(function ($query) use ($keyword) {
                     $query->where('order_code', 'like', "%{$keyword}%")
                         ->orWhere('shipping_name', 'like', "%{$keyword}%")
                         ->orWhere('shipping_phone', 'like', "%{$keyword}%");
@@ -59,41 +63,55 @@ class SellerOrderController extends Controller
             })
             ->when(
                 $filters['date_from'] ?? null,
-                fn ($query, $date) => $query->whereDate('created_at', '>=', $date)
+                fn($query, $date) => $query->whereDate('created_at', '>=', $date)
             )
             ->when(
                 $filters['date_to'] ?? null,
-                fn ($query, $date) => $query->whereDate('created_at', '<=', $date)
+                fn($query, $date) => $query->whereDate('created_at', '<=', $date)
             )
             ->latest('created_at')
             ->paginate(10)
             ->withQueryString();
 
-        // Đếm tất cả đơn của Seller, không áp dụng tab, từ khóa hoặc ngày lọc.
-        $groupedStatusCounts = $this->sellerOrders($seller)
-            ->selectRaw('order_status, COUNT(*) as aggregate')
+        $orderIds = $orders->getCollection()->pluck('order_id');
+
+        $returnRequests = OrderReturnRequest::query()
+            ->whereIn('order_id', $orderIds)
+            ->get()
+            ->keyBy('order_id');
+
+        $statusCounts = $this->sellerOrders($seller)
+            ->select('order_status', DB::raw('COUNT(*) as aggregate'))
             ->groupBy('order_status')
             ->pluck('aggregate', 'order_status');
 
-        // Khởi tạo đủ trạng thái để view luôn nhận được số 0 nếu chưa có đơn.
-        $statusCounts = collect(self::ORDER_STATUSES)
-            ->mapWithKeys(fn (string $status) => [
-                $status => (int) ($groupedStatusCounts[$status] ?? 0),
-            ]);
+        $cancelledOrdersCount = (int) $this->sellerOrders($seller)
+            ->where('order_status', 'cancelled')
+            ->count();
+
+        $returnRequestsCount = (int) OrderReturnRequest::query()
+            ->whereIn(
+                'order_id',
+                $this->sellerOrders($seller)->select('order_id')
+            )
+            ->count();
+
+        // Tab "Đơn hủy / Trả hàng" gộp hai loại đơn.
+        $statusCounts->put(
+            'cancelled',
+            $cancelledOrdersCount + $returnRequestsCount
+        );
 
         $allOrdersCount = (int) $this->sellerOrders($seller)->count();
-        $pendingOrdersCount = $statusCounts['pending'];
-        $status = $filters['status'] ?? 'all';
-        $search = trim($filters['q'] ?? '');
+        $pendingOrdersCount = (int) ($statusCounts['pending'] ?? 0);
 
         return view('seller.orders.index', compact(
             'orders',
             'filters',
-            'status',
-            'search',
             'statusCounts',
             'allOrdersCount',
-            'pendingOrdersCount'
+            'pendingOrdersCount',
+            'returnRequests'
         ));
     }
 
@@ -110,7 +128,11 @@ class SellerOrderController extends Controller
             ->where('order_id', $order)
             ->firstOrFail();
 
-        return view('seller.orders.show', compact('order'));
+        $returnRequest = OrderReturnRequest::query()
+            ->where('order_id', $order->order_id)
+            ->first();
+
+        return view('seller.orders.show', compact('order', 'returnRequest'));
     }
 
     public function updateStatus(Request $request, int $order): RedirectResponse
@@ -137,7 +159,7 @@ class SellerOrderController extends Controller
 
         $seller = $this->currentSeller($request);
 
-        DB::transaction(function () use ($seller, $order, $validated): void {
+        DB::transaction(function () use ($seller, $order, $validated) {
             $orderModel = $this->sellerOrders($seller)
                 ->where('order_id', $order)
                 ->lockForUpdate()
@@ -204,5 +226,42 @@ class SellerOrderController extends Controller
         );
 
         return $seller;
+    }
+    public function updateReturnRequest(Request $request, int $returnRequest): RedirectResponse
+    {
+        $validated = $request->validate([
+            'decision' => ['required', 'in:approved,rejected'],
+        ], [
+            'decision.required' => 'Vui lòng chọn cách xử lý yêu cầu.',
+            'decision.in' => 'Quyết định xử lý không hợp lệ.',
+        ]);
+
+        $seller = $this->currentSeller($request);
+
+        DB::transaction(function () use ($seller, $returnRequest, $validated): void {
+            $returnRequestModel = OrderReturnRequest::query()
+                ->whereHas('order', function ($query) use ($seller): void {
+                    $query->where('seller_id', $seller->seller_id);
+                })
+                ->lockForUpdate()
+                ->findOrFail($returnRequest);
+
+            if ($returnRequestModel->status !== 'pending') {
+                throw ValidationException::withMessages([
+                    'return_request' => 'Yêu cầu này đã được xử lý trước đó.',
+                ]);
+            }
+
+            $returnRequestModel->status = $validated['decision'];
+            $returnRequestModel->handled_by = $seller->account_id;
+            $returnRequestModel->handled_at = now();
+            $returnRequestModel->save();
+        }, 3);
+
+        $message = $validated['decision'] === 'approved'
+            ? 'Đã chấp nhận yêu cầu trả hàng/hoàn tiền.'
+            : 'Đã từ chối yêu cầu trả hàng/hoàn tiền.';
+
+        return back()->with('success', $message);
     }
 }

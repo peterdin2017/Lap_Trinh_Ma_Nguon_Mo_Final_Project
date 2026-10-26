@@ -20,4 +20,8 @@ Route::prefix('seller/orders')
         Route::get('/{order}/shipping-label', 'printShippingLabel')
             ->whereNumber('order')
             ->name('shipping-label');
+            
+        Route::patch('/return-requests/{returnRequest}/decision', 'updateReturnRequest')
+            ->whereNumber('returnRequest')
+            ->name('return-requests.update');
     });
