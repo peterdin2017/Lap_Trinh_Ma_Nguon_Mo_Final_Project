@@ -35,14 +35,18 @@ class CheckoutController extends Controller
             'cart_item_ids.*' => ['required', 'integer', 'min:1', 'distinct'],
         ]);
 
-        $cart = Cart::query()->where('account_id', $accountId)->first();
+        $cart = Cart::query()
+            ->where('account_id', $accountId)
+            ->first();
 
         if (! $cart) {
             return redirect()->route('store.cart.index')
                 ->withErrors(['cart' => 'Giỏ hàng của bạn hiện đang trống.']);
         }
 
-        $cartItemIds = collect($validated['cart_item_ids'])->map(fn ($id) => (int) $id);
+        $cartItemIds = collect($validated['cart_item_ids'])
+            ->map(fn ($id) => (int) $id);
+
         $items = $cart->items()
             ->whereIn('cart_item_id', $cartItemIds)
             ->with(['product.seller', 'product.variants', 'variant'])
@@ -50,23 +54,32 @@ class CheckoutController extends Controller
 
         if ($items->count() !== $cartItemIds->count()) {
             return redirect()->route('store.cart.index')
-                ->withErrors(['cart' => 'Một số sản phẩm đã thay đổi. Vui lòng chọn lại sản phẩm.']);
+                ->withErrors([
+                    'cart' => 'Một số sản phẩm đã thay đổi. Vui lòng chọn lại sản phẩm.',
+                ]);
         }
 
         foreach ($items as $item) {
             if (! $this->isAvailable($item)) {
                 return redirect()->route('store.cart.index')
-                    ->withErrors(['cart' => 'Có sản phẩm đã hết hàng hoặc ngừng bán. Vui lòng kiểm tra lại giỏ hàng.']);
+                    ->withErrors([
+                        'cart' => 'Có sản phẩm đã hết hàng hoặc ngừng bán. Vui lòng kiểm tra lại giỏ hàng.',
+                    ]);
             }
         }
 
-        $cartGroups = $items->groupBy(fn ($item) => $item->product->seller_id);
+        $cartGroups = $items->groupBy(
+            fn ($item) => $item->product->seller_id
+        );
+
         $subtotal = $items->sum(function ($item): float {
             $price = (float) ($item->variant?->price ?? $item->product->price);
 
             return $price * $item->quantity;
         });
+
         $shippingFee = $cartGroups->count() * self::SHIPPING_FEE_PER_STORE;
+
         $addresses = Address::query()
             ->where('account_id', $accountId)
             ->orderByDesc('is_default')
@@ -93,9 +106,17 @@ class CheckoutController extends Controller
         }
 
         $data = $request->validated();
-        $cartItemIds = collect($data['cart_item_ids'])->map(fn ($id) => (int) $id)->unique()->values();
 
-        $orderCodes = DB::transaction(function () use ($accountId, $data, $cartItemIds): array {
+        $cartItemIds = collect($data['cart_item_ids'])
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        $orderCodes = DB::transaction(function () use (
+            $accountId,
+            $data,
+            $cartItemIds
+        ): array {
             $cart = Cart::query()
                 ->where('account_id', $accountId)
                 ->lockForUpdate()
@@ -140,7 +161,7 @@ class CheckoutController extends Controller
 
                 $variant = null;
                 $hasVariants = $product->variants()->exists();
-                $isSimpleItem = $cartItem->item_key === $product->product_id.':simple';
+                $isSimpleItem = $cartItem->item_key === $product->product_id . ':simple';
 
                 if ($cartItem->variant_id !== null) {
                     $variant = ProductVariant::query()
@@ -180,17 +201,25 @@ class CheckoutController extends Controller
                 $data['district'],
                 $data['province'],
             ]);
+
             $orderCodes = [];
 
             foreach ($linesBySeller as $sellerLines) {
                 $seller = $sellerLines[0]['seller'];
+
                 $orderSubtotal = collect($sellerLines)->sum(
                     fn ($line) => $line['price'] * $line['quantity']
                 );
-                $orderShippingFee = 30000;
+
+                $orderShippingFee = self::SHIPPING_FEE_PER_STORE;
+
+                // Dùng ngày theo múi giờ Việt Nam cho mã đơn hàng.
+                $localOrderDate = now('Asia/Ho_Chi_Minh')->format('Y-m-d');
 
                 $order = Order::query()->create([
-                    'order_code' => 'DH-'.$seller->seller_id.'-'.now()->format('Y-m-d').'-'.random_int(1000, 9999),
+                    'order_code' => 'DH-' . $seller->seller_id . '-'
+                        . $localOrderDate . '-'
+                        . random_int(1000, 9999),
                     'account_id' => $accountId,
                     'seller_id' => $seller->seller_id,
                     'shipping_name' => $data['shipping_name'],
@@ -249,7 +278,9 @@ class CheckoutController extends Controller
                 $orderCodes[] = $order->order_code;
             }
 
-            $cart->items()->whereIn('cart_item_id', $cartItemIds)->delete();
+            $cart->items()
+                ->whereIn('cart_item_id', $cartItemIds)
+                ->delete();
 
             return $orderCodes;
         }, 3);
@@ -291,17 +322,22 @@ class CheckoutController extends Controller
     {
         $product = $item->product;
 
-        if (! $product || $product->status !== 'active' || $product->seller?->status !== 'active') {
+        if (
+            ! $product
+            || $product->status !== 'active'
+            || $product->seller?->status !== 'active'
+        ) {
             return false;
         }
 
         $hasVariants = $product->variants->isNotEmpty();
-        $isSimpleItem = $item->item_key === $product->product_id.':simple';
+        $isSimpleItem = $item->item_key === $product->product_id . ':simple';
 
         if (($hasVariants && ! $item->variant) || (! $hasVariants && ! $isSimpleItem)) {
             return false;
         }
 
-        return (int) ($item->variant?->stock_quantity ?? $product->stock_quantity) >= (int) $item->quantity;
+        return (int) ($item->variant?->stock_quantity ?? $product->stock_quantity)
+            >= (int) $item->quantity;
     }
 }

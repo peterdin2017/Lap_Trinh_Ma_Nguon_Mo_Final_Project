@@ -47,7 +47,7 @@ class ProductController extends Controller
             })
             ->when(
                 $categoryId,
-                fn ($query) => $query->where('category_id', $categoryId)
+                fn($query) => $query->where('category_id', $categoryId)
             );
 
         match ($status) {
@@ -114,6 +114,12 @@ class ProductController extends Controller
             $data['status']
         );
 
+        if (array_key_exists('description', $data)) {
+            $data['description'] = $this->normalizeDescription(
+                $data['description']
+            );
+        }
+
         if ($variants !== []) {
             $data['price'] = min(array_column($variants, 'price'));
             $data['stock_quantity'] = array_sum(
@@ -132,7 +138,7 @@ class ProductController extends Controller
                 &$variants,
                 &$storedPaths
             ): void {
-                // Phải tạo sản phẩm trước để có product_id.
+                // Tạo sản phẩm trước để lấy product_id.
                 $product = new Product();
                 $product->fill($data);
                 $product->seller_id = $seller->seller_id;
@@ -241,12 +247,15 @@ class ProductController extends Controller
         }
 
         $data = $request->validated();
+        $pricingMode = $data['pricing_mode'] ?? 'single';
         $variants = $data['variants'] ?? [];
         $removeIds = $data['remove_image_ids'] ?? [];
         $newImages = $request->file('images', []);
         $status = $data['status'] ?? $productModel->status;
 
-        $variantsWereSubmitted = $request->boolean('variants_present')
+        // Đồng bộ mẫu mã khi đang dùng mẫu mã hoặc form có gửi cờ variants_present.
+        $variantsWereSubmitted = $pricingMode === 'variants'
+            || $request->boolean('variants_present')
             || array_key_exists('variants', $data);
 
         unset(
@@ -255,19 +264,35 @@ class ProductController extends Controller
             $data['remove_image_ids'],
             $data['variants'],
             $data['variants_present'],
+            $data['pricing_mode'],
             $data['status']
         );
 
-        if ($variantsWereSubmitted && $variants !== []) {
+        if ($pricingMode === 'variants') {
+            if ($variants === []) {
+                throw ValidationException::withMessages([
+                    'variants' => 'Vui lòng thêm ít nhất một mẫu mã.',
+                ]);
+            }
+
+            // Giá sản phẩm là giá thấp nhất trong các mẫu mã.
             $data['price'] = min(array_column($variants, 'price'));
+
+            // Tồn kho sản phẩm là tổng tồn kho của các mẫu mã.
             $data['stock_quantity'] = array_sum(
                 array_column($variants, 'stock_quantity')
             );
         }
 
+        if (array_key_exists('description', $data)) {
+            $data['description'] = $this->normalizeDescription(
+                $data['description']
+            );
+        }
+
         $removeIds = collect($removeIds)
-            ->filter(fn ($id) => is_numeric($id))
-            ->map(fn ($id) => (int) $id)
+            ->filter(fn($id) => is_numeric($id))
+            ->map(fn($id) => (int) $id)
             ->unique()
             ->values()
             ->all();
@@ -300,7 +325,7 @@ class ProductController extends Controller
         $newGalleryPaths = [];
 
         try {
-            // Ảnh mẫu mã mới. Không có file mới thì giữ ảnh cũ.
+            // Ảnh mẫu mã mới. Không chọn ảnh mới thì giữ ảnh hiện tại.
             foreach ($variants as $index => &$variant) {
                 $variantImage = $request->file(
                     "variants.{$index}.image"
@@ -538,7 +563,7 @@ class ProductController extends Controller
         $variantsToRemove = $product->variants()
             ->when(
                 $keptIds !== [],
-                fn ($query) => $query->whereNotIn(
+                fn($query) => $query->whereNotIn(
                     'variant_id',
                     $keptIds
                 )
@@ -606,6 +631,38 @@ class ProductController extends Controller
     }
 
     /**
+     * Chuyển mô tả về văn bản thường, giữ lại ngắt dòng cơ bản.
+     */
+    private function normalizeDescription(?string $description): ?string
+    {
+        if ($description === null) {
+            return null;
+        }
+
+        $description = html_entity_decode(
+            $description,
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        );
+
+        $description = preg_replace(
+            '~<\s*(br\s*/?|/p|/div|/li)\s*>~i',
+            "\n",
+            $description
+        );
+
+        $description = strip_tags($description);
+        $description = preg_replace('/[ \t]+/u', ' ', $description);
+        $description = preg_replace(
+            '/\n{3,}/u',
+            "\n\n",
+            trim($description)
+        );
+
+        return $description;
+    }
+
+    /**
      * Chuẩn hóa ảnh tải lên thành PNG hoặc JPG rồi lưu vào:
      * products/{seller_id}/{product_id}/{seller_id}-{product_id}-{random}.{extension}
      */
@@ -664,7 +721,7 @@ class ProductController extends Controller
         return Category::query()
             ->whereNull('parent_id')
             ->with([
-                'children' => fn ($query) => $query->orderBy(
+                'children' => fn($query) => $query->orderBy(
                     'category_name'
                 ),
             ])

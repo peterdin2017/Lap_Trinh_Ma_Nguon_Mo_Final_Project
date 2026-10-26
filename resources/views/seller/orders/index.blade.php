@@ -6,7 +6,8 @@
     @php
         $status = $filters['status'] ?? 'all';
         $search = $filters['q'] ?? '';
-        $allOrdersCount = $statusCounts->sum();
+
+        $allOrdersCount = $allOrdersCount ?? ($statusCounts?->sum() ?? 0);
 
         $tabs = [
             'all' => ['Tất cả', $allOrdersCount],
@@ -31,78 +32,158 @@
             'bank_transfer' => 'Chuyển khoản',
         ];
     @endphp
-
     <style>
-        .seller-orders { color: #0f172a; }
+        .seller-orders {
+            --orders-primary: var(--seller-primary, #1a94ff);
+            --orders-text: var(--seller-text, #0f172a);
+            --orders-muted: var(--seller-text-muted, #64748b);
+            --orders-surface: var(--seller-card-bg, #fff);
+            --orders-soft: var(--seller-hover-bg, #f8fafc);
+            --orders-border: var(--seller-border, #e2e8f0);
+
+            color: var(--orders-text);
+        }
+
         .seller-orders__panel,
         .seller-orders__card {
-            background: #fff;
-            border: 1px solid #e2e8f0;
+            color: var(--orders-text);
+            background: var(--orders-surface);
+            border: 1px solid var(--orders-border);
             border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(15, 23, 42, .035);
+            box-shadow: var(--seller-shadow, 0 4px 16px rgba(15, 23, 42, .035));
         }
-        .seller-orders__panel { overflow: hidden; }
+
+        .seller-orders__panel {
+            overflow: hidden;
+        }
+
         .seller-orders__tabs {
             display: flex;
             gap: 1.25rem;
             overflow-x: auto;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--orders-border);
             scrollbar-width: thin;
         }
+
         .seller-orders__tabs a {
             display: inline-flex;
             align-items: center;
             gap: .4rem;
             padding: .65rem .1rem .8rem;
-            color: #64748b;
+            color: var(--orders-muted);
             text-decoration: none;
             white-space: nowrap;
             border-bottom: 2px solid transparent;
         }
+
         .seller-orders__tabs a:hover,
-        .seller-orders__tabs a.active { color: #1a94ff; }
         .seller-orders__tabs a.active {
-            border-color: #1a94ff;
+            color: var(--orders-primary);
+        }
+
+        .seller-orders__tabs a.active {
+            border-color: var(--orders-primary);
             font-weight: 700;
         }
-        .seller-orders__filter .form-control {
+
+        .seller-orders__filter .form-control,
+        .seller-orders__filter .form-select {
             min-height: 42px;
-            border-color: #e2e8f0;
+            color: var(--orders-text);
+            background-color: var(--orders-surface);
+            border-color: var(--orders-border);
             border-radius: 8px;
         }
-        .seller-orders__card { overflow: hidden; margin-bottom: 14px; }
+
+        .seller-orders__filter .form-control::placeholder {
+            color: var(--orders-muted);
+            opacity: .8;
+        }
+
+        .seller-orders__filter .form-control:focus,
+        .seller-orders__filter .form-select:focus {
+            color: var(--orders-text);
+            background-color: var(--orders-surface);
+            border-color: var(--orders-primary);
+            box-shadow: 0 0 0 .18rem rgba(26, 148, 255, .14);
+        }
+
+        .seller-orders__card {
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
         .seller-orders__card-head {
             padding: 14px 18px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
+            background: var(--orders-soft);
+            border-bottom: 1px solid var(--orders-border);
         }
+
         .seller-orders__code {
-            color: #1a94ff;
+            color: var(--orders-primary);
             font-weight: 700;
             text-decoration: none;
         }
+
+        .seller-orders__code:hover {
+            color: var(--orders-primary);
+            text-decoration: underline;
+        }
+
         .seller-orders__item {
             display: grid;
             grid-template-columns: 52px minmax(0, 1fr) auto;
             gap: 12px;
             align-items: center;
             padding: 12px 18px;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--orders-border);
         }
-        .seller-orders__item:last-child { border-bottom: 0; }
+
+        .seller-orders__item:last-child {
+            border-bottom: 0;
+        }
+
         .seller-orders__image {
             width: 52px;
             height: 52px;
             object-fit: cover;
-            border: 1px solid #e2e8f0;
+            color: var(--orders-muted);
+            border: 1px solid var(--orders-border);
             border-radius: 8px;
-            background: #f8fafc;
+            background: var(--orders-soft);
         }
-        .seller-orders__item-name { font-weight: 600; line-height: 1.35; }
+
+        .seller-orders__item-name {
+            color: var(--orders-text);
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        .seller-orders__item-price {
+            color: var(--orders-text);
+        }
+
         .seller-orders__summary {
             padding: 14px 18px;
-            border-top: 1px solid #e2e8f0;
+            background: var(--orders-surface);
+            border-top: 1px solid var(--orders-border);
         }
+
+        .seller-orders .text-secondary,
+        .seller-orders__empty {
+            color: var(--orders-muted) !important;
+        }
+
+        .seller-orders .text-dark {
+            color: var(--orders-text) !important;
+        }
+
+        .seller-orders .badge.text-bg-light {
+            color: var(--orders-text) !important;
+            background: var(--orders-soft) !important;
+            border-color: var(--orders-border) !important;
+        }
+
         .order-status {
             display: inline-flex;
             align-items: center;
@@ -112,27 +193,62 @@
             font-weight: 700;
             white-space: nowrap;
         }
-        .order-status--pending { color: #854d0e; background: #fef3c7; }
-        .order-status--processing { color: #075985; background: #e0f2fe; }
-        .order-status--shipping { color: #1d4ed8; background: #dbeafe; }
-        .order-status--completed { color: #166534; background: #dcfce7; }
-        .order-status--cancelled { color: #991b1b; background: #fee2e2; }
-        .seller-orders .modal-content { border: 0; border-radius: 14px; }
-        .seller-orders .modal-header { border-bottom: 1px solid #e2e8f0; }
+
+        .order-status--pending {
+            color: #854d0e;
+            background: #fef3c7;
+        }
+
+        .order-status--processing {
+            color: #075985;
+            background: #e0f2fe;
+        }
+
+        .order-status--shipping {
+            color: #1d4ed8;
+            background: #dbeafe;
+        }
+
+        .order-status--completed {
+            color: #166534;
+            background: #dcfce7;
+        }
+
+        .order-status--cancelled {
+            color: #991b1b;
+            background: #fee2e2;
+        }
+
         .seller-orders__empty {
             padding: 56px 20px;
-            color: #64748b;
             text-align: center;
         }
+
+        .seller-orders__count {
+            color: var(--orders-text);
+            background: var(--orders-soft);
+            border: 1px solid var(--orders-border);
+        }
+
         @media (max-width: 575.98px) {
             .seller-orders__item {
                 grid-template-columns: 44px minmax(0, 1fr);
                 padding: 10px 12px;
             }
-            .seller-orders__image { width: 44px; height: 44px; }
-            .seller-orders__item-price { grid-column: 2; }
+
+            .seller-orders__image {
+                width: 44px;
+                height: 44px;
+            }
+
+            .seller-orders__item-price {
+                grid-column: 2;
+            }
+
             .seller-orders__card-head,
-            .seller-orders__summary { padding: 12px; }
+            .seller-orders__summary {
+                padding: 12px;
+            }
         }
     </style>
 
@@ -161,15 +277,14 @@
         <section class="seller-orders__panel p-3 p-lg-4 mb-3">
             <nav class="seller-orders__tabs mb-3" aria-label="Lọc trạng thái đơn hàng">
                 @foreach ($tabs as $value => [$label, $count])
-                    <a
-                        href="{{ route('seller.orders.index', array_merge(request()->except(['status', 'page']), ['status' => $value])) }}"
+                    <a href="{{ route('seller.orders.index', array_merge(request()->except(['status', 'page']), ['status' => $value])) }}"
                         class="{{ $status === $value ? 'active' : '' }}"
-                        @if ($status === $value) aria-current="page" @endif
-                    >
-                        {{ $label }}
-
-                        @if ($value === 'pending')
-                            <span class="badge rounded-pill text-bg-danger">{{ $count }}</span>
+                        @if ($status === $value) aria-current="page" @endif>
+                        <span>{{ $label }}</span>
+                        @if ((int) $count > 0)
+                            <span class="badge rounded-pill {{ $value === 'pending' ? 'text-bg-danger' : 'seller-orders__count' }}">
+                                {{ number_format((int) $count) }}
+                            </span>
                         @endif
                     </a>
                 @endforeach
@@ -183,47 +298,28 @@
                         <label for="order-search" class="form-label small fw-semibold">
                             Mã đơn, tên hoặc số điện thoại khách
                         </label>
-                        <input
-                            id="order-search"
-                            type="search"
-                            name="q"
-                            value="{{ $search }}"
-                            class="form-control"
-                            maxlength="100"
-                            placeholder="Nhập thông tin cần tìm"
-                        >
+                        <input id="order-search" type="search" name="q" value="{{ $search }}"
+                            class="form-control" maxlength="100" placeholder="Nhập thông tin cần tìm">
                     </div>
 
                     <div class="col-6 col-lg-2">
                         <label for="date-from" class="form-label small fw-semibold">Từ ngày</label>
-                        <input
-                            id="date-from"
-                            type="date"
-                            name="date_from"
-                            value="{{ $filters['date_from'] ?? '' }}"
-                            class="form-control"
-                        >
+                        <input id="date-from" type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
+                            class="form-control">
                     </div>
 
                     <div class="col-6 col-lg-2">
                         <label for="date-to" class="form-label small fw-semibold">Đến ngày</label>
-                        <input
-                            id="date-to"
-                            type="date"
-                            name="date_to"
-                            value="{{ $filters['date_to'] ?? '' }}"
-                            class="form-control"
-                        >
+                        <input id="date-to" type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
+                            class="form-control">
                     </div>
 
                     <div class="col-12 col-lg-3 d-flex gap-2">
                         <button class="btn btn-primary flex-grow-1" type="submit">
                             <i class="bi bi-search me-1" aria-hidden="true"></i>Lọc
                         </button>
-                        <a
-                            href="{{ route('seller.orders.index', $status === 'all' ? [] : ['status' => $status]) }}"
-                            class="btn btn-outline-secondary"
-                        >
+                        <a href="{{ route('seller.orders.index', $status === 'all' ? [] : ['status' => $status]) }}"
+                            class="btn btn-outline-secondary">
                             Xóa lọc
                         </a>
                     </div>
@@ -233,8 +329,10 @@
 
         @forelse ($orders as $order)
             @php
-                [$statusLabel, $statusClass] = $statusMeta[$order->order_status]
-                    ?? [$order->order_status, 'order-status--processing'];
+                [$statusLabel, $statusClass] = $statusMeta[$order->order_status] ?? [
+                    $order->order_status,
+                    'order-status--processing',
+                ];
             @endphp
 
             <article class="seller-orders__card">
@@ -264,12 +362,9 @@
 
                         <div class="seller-orders__item">
                             @if ($itemImage)
-                                <img
-                                    class="seller-orders__image"
+                                <img class="seller-orders__image"
                                     src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($itemImage) }}"
-                                    alt=""
-                                    loading="lazy"
-                                >
+                                    alt="" loading="lazy">
                             @else
                                 <div class="seller-orders__image d-flex align-items-center justify-content-center">
                                     <i class="bi bi-image text-secondary" aria-hidden="true"></i>
@@ -294,7 +389,8 @@
                     @endforeach
                 </div>
 
-                <footer class="seller-orders__summary d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <footer
+                    class="seller-orders__summary d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <span class="small text-secondary">
                             Khách:
@@ -314,12 +410,8 @@
                             </strong>
                         </div>
 
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-outline-primary"
-                            data-bs-toggle="modal"
-                            data-bs-target="#orderDetail{{ $order->order_id }}"
-                        >
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                            data-bs-target="#orderDetail{{ $order->order_id }}">
                             <i class="bi bi-eye me-1" aria-hidden="true"></i>Chi tiết
                         </button>
 
@@ -333,21 +425,14 @@
                                 </button>
                             </form>
 
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-outline-danger"
-                                data-bs-toggle="modal"
-                                data-bs-target="#cancelOrder{{ $order->order_id }}"
-                            >
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                data-bs-target="#cancelOrder{{ $order->order_id }}">
                                 Hủy đơn
                             </button>
                         @elseif ($order->order_status === 'processing')
-                            <a
-                                class="btn btn-sm btn-outline-secondary"
-                                href="{{ route('seller.orders.shipping-label', $order->order_id) }}"
-                                target="_blank"
-                                rel="noopener"
-                            >
+                            <a class="btn btn-sm btn-outline-secondary"
+                                href="{{ route('seller.orders.shipping-label', $order->order_id) }}" target="_blank"
+                                rel="noopener">
                                 <i class="bi bi-printer me-1" aria-hidden="true"></i>In phiếu
                             </a>
 
@@ -360,12 +445,9 @@
                                 </button>
                             </form>
                         @elseif ($order->order_status === 'shipping')
-                            <a
-                                class="btn btn-sm btn-outline-secondary"
-                                href="{{ route('seller.orders.shipping-label', $order->order_id) }}"
-                                target="_blank"
-                                rel="noopener"
-                            >
+                            <a class="btn btn-sm btn-outline-secondary"
+                                href="{{ route('seller.orders.shipping-label', $order->order_id) }}" target="_blank"
+                                rel="noopener">
                                 <i class="bi bi-printer me-1" aria-hidden="true"></i>In phiếu
                             </a>
 
@@ -403,3 +485,4 @@
         @endif
     </main>
 @endsection
+

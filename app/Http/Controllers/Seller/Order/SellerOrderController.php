@@ -13,6 +13,14 @@ use Illuminate\View\View;
 
 class SellerOrderController extends Controller
 {
+    private const ORDER_STATUSES = [
+        'pending',
+        'processing',
+        'shipping',
+        'completed',
+        'cancelled',
+    ];
+
     public function index(Request $request): View
     {
         $filters = $request->validate([
@@ -37,13 +45,13 @@ class SellerOrderController extends Controller
                 'items.product',
                 'items.variant',
             ])
-            ->when($filters['status'] ?? null, function ($query, $status) {
+            ->when($filters['status'] ?? null, function ($query, $status): void {
                 if ($status !== 'all') {
                     $query->where('order_status', $status);
                 }
             })
-            ->when($filters['q'] ?? null, function ($query, $keyword) {
-                $query->where(function ($query) use ($keyword) {
+            ->when($filters['q'] ?? null, function ($query, $keyword): void {
+                $query->where(function ($query) use ($keyword): void {
                     $query->where('order_code', 'like', "%{$keyword}%")
                         ->orWhere('shipping_name', 'like', "%{$keyword}%")
                         ->orWhere('shipping_phone', 'like', "%{$keyword}%");
@@ -61,17 +69,30 @@ class SellerOrderController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $statusCounts = $this->sellerOrders($seller)
-            ->select('order_status', DB::raw('COUNT(*) as aggregate'))
+        // Đếm tất cả đơn của Seller, không áp dụng tab, từ khóa hoặc ngày lọc.
+        $groupedStatusCounts = $this->sellerOrders($seller)
+            ->selectRaw('order_status, COUNT(*) as aggregate')
             ->groupBy('order_status')
             ->pluck('aggregate', 'order_status');
 
-        $pendingOrdersCount = (int) ($statusCounts['pending'] ?? 0);
+        // Khởi tạo đủ trạng thái để view luôn nhận được số 0 nếu chưa có đơn.
+        $statusCounts = collect(self::ORDER_STATUSES)
+            ->mapWithKeys(fn (string $status) => [
+                $status => (int) ($groupedStatusCounts[$status] ?? 0),
+            ]);
+
+        $allOrdersCount = (int) $this->sellerOrders($seller)->count();
+        $pendingOrdersCount = $statusCounts['pending'];
+        $status = $filters['status'] ?? 'all';
+        $search = trim($filters['q'] ?? '');
 
         return view('seller.orders.index', compact(
             'orders',
             'filters',
+            'status',
+            'search',
             'statusCounts',
+            'allOrdersCount',
             'pendingOrdersCount'
         ));
     }
@@ -116,7 +137,7 @@ class SellerOrderController extends Controller
 
         $seller = $this->currentSeller($request);
 
-        DB::transaction(function () use ($seller, $order, $validated) {
+        DB::transaction(function () use ($seller, $order, $validated): void {
             $orderModel = $this->sellerOrders($seller)
                 ->where('order_id', $order)
                 ->lockForUpdate()
