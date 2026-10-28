@@ -12,17 +12,15 @@ use Illuminate\View\View;
 
 class LoginController extends Controller
 {
-    // Hiển thị form đăng nhập Admin.
     public function showLoginForm(): View|RedirectResponse
-{
-    if (Auth::check() && Auth::user()->role === 'admin') {
-        return redirect()->route('admin.home');
+    {
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.home');
+        }
+
+        return view('admin.auth.login');
     }
 
-    return view('admin.auth.login');
-}
-
-    // Kiểm tra thông tin và đăng nhập tài khoản Admin.
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
@@ -34,7 +32,8 @@ class LoginController extends Controller
             'password.required' => 'Vui lòng nhập mật khẩu.',
         ]);
 
-        $account = Account::where('email', $credentials['email'])
+        $account = Account::query()
+            ->where('email', $credentials['email'])
             ->where('role', 'admin')
             ->where('status', 'active')
             ->first();
@@ -48,18 +47,17 @@ class LoginController extends Controller
                 ->onlyInput('email');
         }
 
-        Auth::login($account);
+        Auth::guard('admin')->login($account);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.home'));
+        return redirect()->route('admin.home');
     }
 
-    // Đăng xuất Admin và làm mới session.
     public function logout(Request $request): RedirectResponse
     {
-        Auth::logout();
+        Auth::guard('admin')->logout();
 
-        $request->session()->invalidate();
+        // Chỉ đăng xuất guard admin, không xóa đăng nhập Store/Seller.
         $request->session()->regenerateToken();
 
         return redirect()

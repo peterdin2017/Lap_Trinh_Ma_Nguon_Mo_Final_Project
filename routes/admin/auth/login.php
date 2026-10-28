@@ -11,5 +11,5 @@ Route::post('/admin/login', [LoginController::class, 'login'])
     ->name('admin.login.submit');
 
 Route::post('/admin/logout', [LoginController::class, 'logout'])
-    ->middleware('auth')
+    ->middleware('auth:admin')
     ->name('admin.logout');
