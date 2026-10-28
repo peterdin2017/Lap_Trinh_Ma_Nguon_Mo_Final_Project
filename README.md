@@ -234,4 +234,3 @@ php artisan test
 - Không triển khai tài khoản và mật khẩu demo lên máy chủ công khai.
 - Trên môi trường production, đặt `APP_DEBUG=false`, bật HTTPS và cấu hình database, mail, session phù hợp.
 - Thay hoặc xóa dữ liệu tài khoản demo trước khi công khai hệ thống.
-
