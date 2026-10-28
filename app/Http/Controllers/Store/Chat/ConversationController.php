@@ -13,6 +13,40 @@ use Illuminate\Validation\ValidationException;
 
 class ConversationController extends Controller
 {
+    public function index(Request $request): JsonResponse
+    {
+        $account = $this->customer($request);
+
+        $conversations = Conversation::query()
+            ->where('customer_account_id', $account->account_id)
+            ->with(['seller', 'product', 'latestMessage'])
+            ->withCount([
+                'messages as unread_count' => fn ($query) => $query
+                    ->where('sender_account_id', '!=', $account->account_id)
+                    ->whereNull('read_at'),
+            ])
+            ->orderByDesc('last_message_at')
+            ->orderByDesc('conversation_id')
+            ->get()
+            ->map(fn (Conversation $conversation) => [
+                'id' => $conversation->conversation_id,
+                'shop_name' => $conversation->seller?->shop_name ?? 'Cửa hàng',
+                'product_name' => $conversation->product?->product_name,
+                'last_message' => $conversation->latestMessage?->body
+                    ?? 'Bắt đầu cuộc trò chuyện',
+                'last_message_at' => $conversation->last_message_at?->format('d/m H:i') ?? '',
+                'unread_count' => (int) $conversation->unread_count,
+                'messages_url' => route('store.chat.messages.index', $conversation),
+                'send_url' => route('store.chat.messages.store', $conversation),
+            ])
+            ->values();
+
+        return response()->json([
+            'conversations' => $conversations,
+            'unread_total' => (int) $conversations->sum('unread_count'),
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $account = $this->customer($request);

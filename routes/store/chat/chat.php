@@ -5,6 +5,9 @@ use App\Http\Controllers\Store\Chat\MessageController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('chat')->name('store.chat.')->group(function (): void {
+    Route::get('/conversations', [ConversationController::class, 'index'])
+        ->name('conversations.index');
+
     Route::post('/conversations', [ConversationController::class, 'store'])
         ->name('conversations.store');
 
