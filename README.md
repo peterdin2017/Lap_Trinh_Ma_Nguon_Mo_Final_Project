@@ -4,7 +4,7 @@
 
 **Hướng dẫn cài đặt, chạy thử và vận hành dự án**
 
-Laravel · PHP 8.3+ · Blade · Vite · SQLite
+Laravel · PHP 8.3+ · Blade · Vite · MySQL
 
 </div>
 
@@ -53,7 +53,7 @@ Dự án là website thương mại điện tử gồm ba khu vực cùng chạy
 | PHP | 8.3 trở lên |
 | Composer | Phiên bản hiện hành |
 | Node.js và npm | Cần để cài và biên dịch tài nguyên Vite |
-| Cơ sở dữ liệu | SQLite theo cấu hình mẫu; PHP cần bật `pdo_sqlite` |
+| Cơ sở dữ liệu | MySQL; PHP cần bật extension `pdo_mysql` |
 | Trình duyệt | Chrome, Edge hoặc trình duyệt hiện đại tương đương |
 
 Kiểm tra công cụ đã sẵn sàng:
@@ -96,21 +96,28 @@ Tạo khóa ứng dụng:
 php artisan key:generate
 ```
 
-### 3. Cấu hình SQLite
+### 3. Cấu hình MySQL
 
-File mẫu dùng SQLite. Kiểm tra `.env` có cấu hình phù hợp:
+Khởi động MySQL bằng công cụ bạn đang dùng (ví dụ XAMPP/Laragon) và tạo database mới trong phpMyAdmin hoặc MySQL client. Ví dụ:
+
+```sql
+CREATE DATABASE ban_hang_online
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+```
+
+Mở `.env` và điền thông tin kết nối của máy bạn. Ví dụ:
 
 ```env
-DB_CONNECTION=sqlite
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=ban_hang_online
+DB_USERNAME=root
+DB_PASSWORD=mat_khau_mysql_cua_ban
 ```
 
-Nếu `database/database.sqlite` chưa tồn tại, tạo file:
-
-```powershell
-New-Item -ItemType File -Path database/database.sqlite -Force
-```
-
-Tạo các bảng và nạp dữ liệu demo:
+Thay tên database, username và password theo cấu hình MySQL thực tế. Không commit mật khẩu thật lên GitHub. Sau khi lưu `.env`, tạo các bảng và nạp dữ liệu demo:
 
 ```bash
 php artisan migrate --seed
@@ -227,3 +234,4 @@ php artisan test
 - Không triển khai tài khoản và mật khẩu demo lên máy chủ công khai.
 - Trên môi trường production, đặt `APP_DEBUG=false`, bật HTTPS và cấu hình database, mail, session phù hợp.
 - Thay hoặc xóa dữ liệu tài khoản demo trước khi công khai hệ thống.
+
