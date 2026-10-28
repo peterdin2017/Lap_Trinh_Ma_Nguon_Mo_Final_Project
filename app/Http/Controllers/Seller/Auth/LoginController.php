@@ -73,10 +73,8 @@ class LoginController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
-        Auth::logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Seller dùng guard web; giữ nguyên session độc lập của Store và Admin.
+        Auth::guard('web')->logout();
 
         return redirect()
             ->route('seller.login.form')

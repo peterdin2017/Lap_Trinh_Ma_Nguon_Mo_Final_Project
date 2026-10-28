@@ -5,12 +5,20 @@
     $storeMenuOpen = request()->routeIs('admin.sellers.*');
     $accountMenuOpen = request()->routeIs('admin.accounts.*');
     $productMenuOpen = request()->routeIs('admin.products.*', 'admin.categories.*');
-    $reportMenuOpen = request()->routeIs('admin.reports.*');
+
+    $statisticsMenuOpen = request()->routeIs('admin.reports.statistics');
+    $violationMenuOpen = request()->routeIs(
+        'admin.reports.index',
+        'admin.reports.handle'
+    );
+    $reportMenuOpen = $statisticsMenuOpen || $violationMenuOpen;
+
     $voucherMenuOpen = request()->routeIs('admin.vouchers.*');
 
     $storeMenuId = 'adminStoreMenu' . $suffix;
     $accountMenuId = 'adminAccountMenu' . $suffix;
     $productMenuId = 'adminProductMenu' . $suffix;
+    $reportMenuId = 'adminReportMenu' . $suffix;
 @endphp
 
 <nav class="admin-sidebar__nav" aria-label="{{ $label }}">
@@ -96,10 +104,30 @@
         <span>Voucher sàn</span>
     </a>
 
-    <a href="{{ route('admin.reports.index') }}"
-       class="admin-nav-link {{ $reportMenuOpen ? 'active' : '' }}"
-       @if ($reportMenuOpen) aria-current="page" @endif>
-        <i class="bi bi-flag" aria-hidden="true"></i>
-        <span>Báo cáo vi phạm</span>
-    </a>
+    <button class="admin-nav-link admin-nav-toggle {{ $reportMenuOpen ? 'active' : '' }}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#{{ $reportMenuId }}"
+            aria-expanded="{{ $reportMenuOpen ? 'true' : 'false' }}"
+            aria-controls="{{ $reportMenuId }}">
+        <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+        <span>Báo cáo & thống kê</span>
+        <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
+    </button>
+
+    <div id="{{ $reportMenuId }}" class="collapse {{ $reportMenuOpen ? 'show' : '' }}">
+        <nav class="admin-submenu" aria-label="Báo cáo và thống kê">
+            <a href="{{ route('admin.reports.statistics') }}"
+               class="admin-subnav-link {{ $statisticsMenuOpen ? 'active' : '' }}"
+               @if ($statisticsMenuOpen) aria-current="page" @endif>
+                Thống kê toàn sàn
+            </a>
+
+            <a href="{{ route('admin.reports.index') }}"
+               class="admin-subnav-link {{ $violationMenuOpen ? 'active' : '' }}"
+               @if ($violationMenuOpen) aria-current="page" @endif>
+                Báo cáo vi phạm
+            </a>
+        </nav>
+    </div>
 </nav>

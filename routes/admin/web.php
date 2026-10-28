@@ -2,11 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Route đăng nhập/đăng xuất Admin không yêu cầu middleware admin.
+// Route đăng nhập không yêu cầu guard admin.
 require __DIR__ . '/auth/login.php';
 
-// Các route bên dưới chỉ dành cho Admin đã đăng nhập.
-Route::middleware(['auth', 'admin'])->group(function (): void {
+Route::middleware(['auth:admin', 'admin'])->group(function (): void {
     require __DIR__ . '/dashboard/dashboard.php';
     require __DIR__ . '/seller/seller.php';
     require __DIR__ . '/account/account.php';

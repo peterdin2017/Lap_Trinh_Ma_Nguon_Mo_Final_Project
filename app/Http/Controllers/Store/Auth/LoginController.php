@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Store\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Store\Auth\LoginRequest;
 use App\Models\Account;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
@@ -48,10 +49,15 @@ class LoginController extends Controller
         return redirect()->route('store.home');
     }
 
-    public function logout(): RedirectResponse
+    public function logout(Request $request): RedirectResponse
     {
-        session()->invalidate();
-        session()->regenerateToken();
+        $request->session()->forget([
+            'account_id',
+            'account_email',
+            'account_role',
+            'user_name',
+            'avatar',
+        ]);
 
         return redirect()->route('store.home');
     }
