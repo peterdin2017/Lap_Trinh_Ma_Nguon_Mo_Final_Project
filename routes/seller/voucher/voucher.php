@@ -24,7 +24,4 @@ Route::prefix('seller/vouchers')
             ->whereNumber('voucher')
             ->name('toggle-status');
 
-        Route::delete('/{voucher}', 'destroy')
-            ->whereNumber('voucher')
-            ->name('destroy');
     });

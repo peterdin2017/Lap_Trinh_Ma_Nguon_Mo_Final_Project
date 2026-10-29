@@ -20,8 +20,17 @@ class SellerVoucherController extends Controller
 
         $vouchers = SellerVoucher::query()
             ->where('seller_id', $seller->seller_id)
+            ->when($request->filled('keyword'), function ($query) use ($request): void {
+                $keyword = trim((string) $request->input('keyword'));
+                $query->where('code', 'like', "%{$keyword}%");
+            })
+            ->when(
+                $request->filled('status')
+                    && in_array($request->input('status'), ['active', 'paused'], true),
+                fn ($query) => $query->where('status', $request->input('status'))
+            )
             ->latest('created_at')
-            ->paginate(12)
+            ->paginate(15)
             ->withQueryString();
 
         return view('seller.vouchers.index', compact('vouchers'));

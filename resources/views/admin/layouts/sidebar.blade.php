@@ -106,6 +106,7 @@
         --sidebar-border: var(--app-border, #E2E8F0);
 
         width: 260px;
+        font-family: Inter, Roboto, "Segoe UI", sans-serif;
         color: var(--app-text, #0F172A);
         background: var(--sidebar-bg);
         border-right: 1px solid var(--sidebar-border);
@@ -125,7 +126,8 @@
         display: flex;
         align-items: center;
         gap: .85rem;
-        padding: 1.1rem 1.25rem;
+        min-height: 70px;
+        padding: 1rem 1.25rem;
         color: var(--app-text, #0F172A);
         text-decoration: none;
         border-bottom: 1px solid var(--sidebar-border);
@@ -133,7 +135,7 @@
 
     .admin-sidebar__brand > i {
         color: var(--app-primary, #1A94FF);
-        font-size: 1.6rem;
+        font-size: 1.5rem;
     }
 
     .admin-sidebar__brand strong,
@@ -141,9 +143,17 @@
         display: block;
     }
 
+    .admin-sidebar__brand strong {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+
     .admin-sidebar__brand small {
         margin-top: .15rem;
         color: var(--sidebar-text);
+        font-size: 12px;
+        line-height: 1.4;
     }
 
     .admin-sidebar__section {
@@ -151,7 +161,8 @@
         color: var(--sidebar-text);
         font-size: .73rem;
         font-weight: 700;
-        letter-spacing: .055em;
+        letter-spacing: .05em;
+        line-height: 1.35;
         text-transform: uppercase;
     }
 
@@ -179,8 +190,17 @@
         transition: color .15s ease, background-color .15s ease;
     }
 
+    .admin-sidebar .admin-nav-link {
+        min-height: 43px;
+        gap: .75rem;
+        padding: .7rem .75rem;
+        font-size: 14px;
+        line-height: 1.35;
+    }
+
     .admin-nav-link > i:first-child {
-        width: 1.2rem;
+        flex: 0 0 22px;
+        width: 22px;
         color: currentColor;
         text-align: center;
     }
@@ -217,11 +237,21 @@
         border-left: 1px solid var(--sidebar-border);
     }
 
+    .admin-sidebar .admin-submenu {
+        gap: .1rem;
+        margin: .2rem 0 .35rem 1.35rem;
+        padding-left: .7rem;
+    }
+
     .admin-subnav-link {
+        display: flex;
+        min-height: 37px;
+        align-items: center;
         padding: .5rem .65rem;
         border-radius: .45rem;
         color: var(--sidebar-text);
-        font-size: .88rem;
+        font-size: 13px;
+        line-height: 1.4;
         text-decoration: none;
     }
 
@@ -237,10 +267,19 @@
         border-top: 1px solid var(--sidebar-border);
     }
 
+    .admin-sidebar__bottom .btn {
+        min-height: 44px;
+        gap: .5rem;
+        font-size: 14px;
+        line-height: 1.35;
+    }
+
     .admin-sidebar__meta {
         padding: .35rem .1rem 0;
         color: var(--sidebar-text);
-        font-size: .78rem;
+        font-size: 12px;
+        line-height: 1.35;
+        text-align: left;
     }
 
     .admin-sidebar__mobile-header {

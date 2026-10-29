@@ -153,7 +153,7 @@
 
     <div class="seller-sidebar__footer">
         <button id="sellerThemeToggle" type="button"
-            class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 mb-2"
+            class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 mb-2"
             aria-pressed="false">
             <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
             <span data-theme-label>Giao diện tối</span>
@@ -163,7 +163,7 @@
             @csrf
             <button type="submit"
                 class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2">
-                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                <i class="bi bi-box-arrow-left" aria-hidden="true"></i>
                 Đăng xuất
             </button>
         </form>
@@ -330,7 +330,7 @@
 
         <div class="seller-sidebar__footer mt-auto">
             <button id="sellerThemeToggleMobile" type="button"
-                class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 mb-2"
+                class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 mb-2"
                 aria-pressed="false">
                 <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
                 <span data-theme-label>Giao diện tối</span>
@@ -340,7 +340,7 @@
                 @csrf
                 <button type="submit"
                     class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2">
-                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                    <i class="bi bi-box-arrow-left" aria-hidden="true"></i>
                     Đăng xuất
                 </button>
             </form>
@@ -358,13 +358,14 @@
         --seller-sidebar-line: var(--seller-border, #E2E8F0);
         width: 260px;
         min-height: 100vh;
+        font-family: Inter, Roboto, "Segoe UI", sans-serif;
         color: var(--seller-text, #0F172A);
         background: var(--seller-sidebar-bg, #fff);
         border-right: 1px solid var(--seller-sidebar-line);
     }
 
     .seller-sidebar--mobile {
-        width: min(320px, 88vw);
+        width: min(310px, 88vw);
     }
 
     .seller-brand {
@@ -390,20 +391,26 @@
 
     .seller-brand strong {
         color: var(--seller-text, #0F172A);
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.4;
     }
 
     .seller-brand small {
         margin-top: .15rem;
         color: var(--seller-text-muted, #64748B);
+        font-size: 12px;
+        line-height: 1.4;
     }
 
     .seller-sidebar__section {
-        padding: 1.2rem 1rem .5rem;
+        padding: 1.1rem 1rem .5rem;
         color: var(--seller-text-muted, #64748B);
         font-size: .73rem;
         font-weight: 700;
         letter-spacing: .05em;
         text-transform: uppercase;
+        line-height: 1.35;
     }
 
     .seller-sidebar__nav {
@@ -430,8 +437,17 @@
         transition: color .15s ease, background-color .15s ease;
     }
 
+    .seller-sidebar .seller-nav-link {
+        min-height: 43px;
+        gap: .75rem;
+        padding: .7rem .75rem;
+        font-size: 14px;
+        line-height: 1.35;
+    }
+
     .seller-nav-link>i:first-child {
-        width: 1.25rem;
+        flex: 0 0 22px;
+        width: 22px;
         color: currentColor;
         text-align: center;
     }
@@ -481,14 +497,21 @@
         border-left: 1px solid var(--seller-sidebar-line);
     }
 
+    .seller-sidebar .seller-submenu {
+        gap: .1rem;
+        margin: .2rem 0 .35rem 1.35rem;
+        padding-left: .7rem;
+    }
+
     .seller-subnav-link {
         display: flex;
         align-items: center;
         gap: .5rem;
-        padding: .55rem .7rem;
+        padding: .5rem .65rem;
         border-radius: .45rem;
         color: var(--seller-text-muted, #64748B);
-        font-size: .9rem;
+        font-size: 13px;
+        line-height: 1.4;
         text-decoration: none;
         transition: color .15s ease, background-color .15s ease;
     }
@@ -521,11 +544,18 @@
         border-top: 1px solid var(--seller-sidebar-line);
     }
 
+    .seller-sidebar__footer .btn {
+        min-height: 44px;
+        gap: .5rem;
+        font-size: 14px;
+        line-height: 1.35;
+    }
+
     .seller-sidebar__caption {
-        padding-top: .35rem;
+        padding: .35rem .1rem 0;
         color: var(--seller-text-muted, #64748B);
-        font-size: .78rem;
-        text-align: center;
+        font-size: 12px;
+        line-height: 1.35;
     }
 
     .seller-sidebar .btn-outline-secondary {

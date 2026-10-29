@@ -1,14 +1,14 @@
 <div class="card cart-card cart-select-all-card mb-3">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 px-3 px-md-4 py-3">
         <div class="d-flex flex-wrap align-items-center gap-3">
-            <div class="form-check mb-0">
+            <div class="cart-select-all">
                 <input
                     class="form-check-input"
                     type="checkbox"
                     id="select-all"
                     aria-controls="cart-stores"
                 >
-                <label class="form-check-label fw-semibold" for="select-all">
+                <label class="cart-select-all__label" for="select-all">
                     Chọn tất cả
                 </label>
             </div>

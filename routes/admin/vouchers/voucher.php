@@ -3,7 +3,7 @@
 use App\Http\Controllers\Admin\Voucher\PlatformVoucherController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'admin'])
+Route::middleware(['auth:admin', 'admin'])
     ->prefix('admin/vouchers')
     ->name('admin.vouchers.')
     ->controller(PlatformVoucherController::class)
@@ -24,7 +24,4 @@ Route::middleware(['auth', 'admin'])
             ->whereNumber('platformVoucher')
             ->name('toggle-status');
 
-        Route::delete('/{platformVoucher}', 'destroy')
-            ->whereNumber('platformVoucher')
-            ->name('destroy');
     });

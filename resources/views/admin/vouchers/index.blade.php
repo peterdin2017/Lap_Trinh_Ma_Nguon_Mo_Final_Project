@@ -49,6 +49,15 @@
             color: var(--app-text-muted, #64748b);
         }
 
+        .platform-vouchers__count {
+            padding: .45rem .7rem;
+            border: 1px solid var(--app-border, #e2e8f0);
+            border-radius: 999px;
+            background: var(--app-hover-bg, #f8fafc);
+            color: var(--app-text, #0f172a);
+            font-weight: 600;
+        }
+
         .platform-vouchers__empty {
             padding: 3.5rem 1rem !important;
             text-align: center;
@@ -77,6 +86,12 @@
         [data-bs-theme="dark"] .platform-vouchers__muted,
         [data-bs-theme="dark"] .platform-vouchers__empty-icon {
             color: #94a3b8;
+        }
+
+        [data-bs-theme="dark"] .platform-vouchers__count {
+            border-color: #334155;
+            background: #263449;
+            color: #e2e8f0;
         }
 
         [data-bs-theme="dark"] .platform-vouchers__table tbody tr:hover td {
@@ -111,6 +126,17 @@
                 Tạo voucher
             </a>
         </div>
+
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="status">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+            </div>
+        @endif
+
+        @if ($errors->has('voucher'))
+            <div class="alert alert-danger" role="alert">{{ $errors->first('voucher') }}</div>
+        @endif
 
         <div class="platform-vouchers__card mb-4">
             <div class="p-3">
@@ -164,13 +190,14 @@
         </div>
 
         <div class="platform-vouchers__card">
-            <div class="platform-vouchers__card-header d-flex justify-content-between align-items-center">
+            <div class="platform-vouchers__card-header d-flex justify-content-between align-items-center gap-3">
                 <div>
                     <h5 class="fw-bold mb-1">Danh sách voucher</h5>
                     <p class="platform-vouchers__muted small mb-0">
-                        Có {{ $vouchers->total() }} voucher
+                        Mã voucher được quản lý riêng bởi sàn.
                     </p>
                 </div>
+                <span class="platform-vouchers__count">{{ $vouchers->total() }} voucher</span>
             </div>
 
             <div class="table-responsive">
@@ -300,23 +327,6 @@
                                             </button>
                                         </form>
 
-                                        <form
-                                            method="POST"
-                                            action="{{ route('admin.vouchers.destroy', $voucher->platform_voucher_id) }}"
-                                            onsubmit="return confirm('Bạn có chắc muốn xóa voucher này?')"
-                                        >
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button
-                                                type="submit"
-                                                class="btn btn-sm btn-outline-danger"
-                                                title="Xóa voucher"
-                                                aria-label="Xóa voucher {{ $voucher->voucher_code }}"
-                                            >
-                                                <i class="bi bi-trash" aria-hidden="true"></i>
-                                            </button>
-                                        </form>
                                     </div>
                                 </td>
                             </tr>

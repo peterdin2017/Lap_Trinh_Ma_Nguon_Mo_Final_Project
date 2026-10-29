@@ -76,6 +76,19 @@
         [hidden] {
             display: none !important;
         }
+
+        @media (min-width: 768px) {
+            .voucher-form__conditional-field--reserved {
+                visibility: hidden;
+                pointer-events: none;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .voucher-form__conditional-field--reserved {
+                display: none !important;
+            }
+        }
     </style>
 @endpush
 
@@ -275,7 +288,8 @@
                         <div
                             class="col-12 col-md-4"
                             id="maxDiscountField"
-                            @if ($discountType !== 'percentage') hidden @endif
+                            @class(['voucher-form__conditional-field--reserved' => $discountType !== 'percentage'])
+                            aria-hidden="{{ $discountType !== 'percentage' ? 'true' : 'false' }}"
                         >
                             <label for="max_discount_amount" class="form-label fw-semibold">
                                 Mức giảm tối đa
@@ -290,6 +304,7 @@
                                     value="{{ old('max_discount_amount', $voucher->max_discount_amount) }}"
                                     class="form-control @error('max_discount_amount') is-invalid @enderror"
                                     placeholder="Để trống nếu không giới hạn"
+                                    @disabled($discountType !== 'percentage')
                                 >
                                 <span class="input-group-text">₫</span>
                             </div>
@@ -461,17 +476,20 @@
             const type = document.getElementById('discount_type');
             const valueInput = document.getElementById('discount_value');
             const maxField = document.getElementById('maxDiscountField');
+            const maxInput = document.getElementById('max_discount_amount');
             const unit = document.getElementById('discountSuffix');
             const help = document.getElementById('discountHelp');
 
-            if (!type || !valueInput || !maxField || !unit || !help) {
+            if (!type || !valueInput || !maxField || !maxInput || !unit || !help) {
                 return;
             }
 
             function updateDiscountFields() {
                 const isPercentage = type.value === 'percentage';
 
-                maxField.hidden = !isPercentage;
+                maxField.classList.toggle('voucher-form__conditional-field--reserved', !isPercentage);
+                maxField.setAttribute('aria-hidden', isPercentage ? 'false' : 'true');
+                maxInput.disabled = !isPercentage;
                 unit.textContent = isPercentage ? '%' : '₫';
                 valueInput.max = isPercentage ? '100' : '';
                 valueInput.step = isPercentage ? '0.01' : '1000';

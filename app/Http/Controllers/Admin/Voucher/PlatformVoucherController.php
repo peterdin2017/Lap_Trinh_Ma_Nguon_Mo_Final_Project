@@ -84,7 +84,15 @@ class PlatformVoucherController extends Controller
 
     public function destroy(int $platformVoucher): RedirectResponse
     {
-        PlatformVoucher::findOrFail($platformVoucher)->delete();
+        $voucher = PlatformVoucher::findOrFail($platformVoucher);
+
+        if ($voucher->used_count > 0) {
+            return back()->withErrors([
+                'voucher' => 'Voucher đã có lượt sử dụng nên không thể xóa. Hãy tắt voucher nếu không muốn tiếp tục áp dụng.',
+            ]);
+        }
+
+        $voucher->delete();
 
         return redirect()
             ->route('admin.vouchers.index')

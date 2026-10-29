@@ -3,10 +3,10 @@
 @section('title', 'Voucher của Shop - Seller Center')
 
 @section('content')
-    <main class="container-fluid py-4 seller-voucher-page">
+    <main class="container-fluid seller-voucher-page">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
             <div>
-                <h1 class="h3 fw-bold mb-1">Voucher của Shop</h1>
+                <h3 class="fw-bold mb-1">Voucher của Shop</h3>
                 <p class="seller-voucher-muted mb-0">
                     Tạo và quản lý mã ưu đãi dành cho khách mua hàng tại Shop.
                 </p>
@@ -36,39 +36,77 @@
             </div>
         @endif
 
-        <section class="card seller-voucher-card shadow-sm">
+        <section class="card seller-voucher-card mb-4">
+            <div class="card-body p-3">
+                <form method="GET" action="{{ route('seller.vouchers.index') }}">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-7 col-xl-8">
+                            <label for="keyword" class="form-label">Tìm voucher</label>
+                            <input
+                                type="search"
+                                id="keyword"
+                                name="keyword"
+                                class="form-control"
+                                value="{{ request('keyword') }}"
+                                placeholder="Nhập mã voucher"
+                            >
+                        </div>
+
+                        <div class="col-12 col-md-3 col-xl-2">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select id="status" name="status" class="form-select">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="active" @selected(request('status') === 'active')>
+                                    Đang bật
+                                </option>
+                                <option value="paused" @selected(request('status') === 'paused')>
+                                    Đang tạm dừng
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-2">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary flex-grow-1">
+                                    <i class="bi bi-search me-1" aria-hidden="true"></i>
+                                    Lọc
+                                </button>
+                                <a
+                                    href="{{ route('seller.vouchers.index') }}"
+                                    class="btn btn-outline-secondary"
+                                    title="Xóa bộ lọc"
+                                    aria-label="Xóa bộ lọc"
+                                >
+                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="card seller-voucher-card">
             <div class="card-header seller-voucher-card__header d-flex align-items-center justify-content-between gap-3 py-3">
                 <div>
-                    <h2 class="h5 fw-semibold mb-1">Danh sách voucher</h2>
+                    <h5 class="fw-bold mb-1">Danh sách voucher</h5>
                     <p class="seller-voucher-muted small mb-0">
                         Mã voucher được quản lý riêng theo từng Shop.
                     </p>
                 </div>
 
-                <span class="badge seller-voucher-count">
+                <span class="seller-voucher-count">
                     {{ $vouchers->total() }} voucher
                 </span>
             </div>
 
-            @if ($vouchers->isEmpty())
-                <div class="text-center py-5 px-3">
-                    <i class="bi bi-ticket-perforated fs-1 seller-voucher-muted" aria-hidden="true"></i>
-                    <h3 class="h5 mt-3">Shop chưa có voucher</h3>
-                    <p class="seller-voucher-muted">
-                        Tạo voucher đầu tiên để thiết lập chương trình ưu đãi.
-                    </p>
-                    <a href="{{ route('seller.vouchers.create') }}" class="btn btn-outline-primary">
-                        Tạo voucher
-                    </a>
-                </div>
-            @else
-                <div class="table-responsive">
+            <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 seller-voucher-table">
                         <thead>
                             <tr>
                                 <th class="ps-3">Mã voucher</th>
                                 <th>Mức giảm</th>
-                                <th>Đơn tối thiểu</th>
+                                <th>Điều kiện</th>
                                 <th>Lượt dùng</th>
                                 <th>Thời hạn</th>
                                 <th>Trạng thái</th>
@@ -77,7 +115,7 @@
                         </thead>
 
                         <tbody>
-                            @foreach ($vouchers as $voucher)
+                            @forelse ($vouchers as $voucher)
                                 @php
                                     if ($voucher->status === 'paused') {
                                         [$voucherState, $voucherBadge] = [
@@ -92,7 +130,7 @@
                                     } elseif ($voucher->expires_at->isPast()) {
                                         [$voucherState, $voucherBadge] = [
                                             'Đã hết hạn',
-                                            'text-bg-dark',
+                                            'text-bg-danger',
                                         ];
                                     } elseif (
                                         $voucher->usage_limit !== null
@@ -133,7 +171,10 @@
                                     </td>
 
                                     <td>
-                                        {{ number_format((float) $voucher->min_order_amount, 0, ',', '.') }}₫
+                                        <span class="seller-voucher-muted small">Đơn từ</span>
+                                        <div class="fw-semibold">
+                                            {{ number_format((float) $voucher->min_order_amount, 0, ',', '.') }}₫
+                                        </div>
                                     </td>
 
                                     <td>
@@ -157,7 +198,7 @@
                                     </td>
 
                                     <td class="text-end pe-3">
-                                        <div class="d-inline-flex flex-wrap justify-content-end gap-1">
+                                        <div class="d-inline-flex flex-wrap justify-content-end gap-2">
                                             <a
                                                 href="{{ route('seller.vouchers.edit', $voucher->voucher_id) }}"
                                                 class="btn btn-sm btn-outline-primary"
@@ -175,45 +216,45 @@
                                                 @method('PATCH')
 
                                                 <button
-                                                    class="btn btn-sm btn-outline-secondary"
+                                                    class="btn btn-sm {{ $voucher->status === 'active' ? 'btn-outline-warning' : 'btn-outline-success' }}"
                                                     type="submit"
                                                 >
-                                                    {{ $voucher->status === 'active' ? 'Tạm dừng' : 'Bật lại' }}
+                                                    {{ $voucher->status === 'active' ? 'Tắt' : 'Bật' }}
                                                 </button>
                                             </form>
 
-                                            @if ($voucher->used_count === 0)
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('seller.vouchers.destroy', $voucher->voucher_id) }}"
-                                                    onsubmit="return confirm('Bạn có chắc muốn xóa voucher này?')"
-                                                >
-                                                    @csrf
-                                                    @method('DELETE')
-
-                                                    <button
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        type="submit"
-                                                        aria-label="Xóa voucher {{ $voucher->code }}"
-                                                        title="Xóa voucher"
-                                                    >
-                                                        <i class="bi bi-trash" aria-hidden="true"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
                                         </div>
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="seller-voucher-empty">
+                                        <i class="bi bi-ticket-perforated seller-voucher-empty__icon" aria-hidden="true"></i>
+                                        <h3 class="h5 mt-3 mb-1">
+                                            {{ request()->hasAny(['keyword', 'status']) ? 'Không tìm thấy voucher' : 'Shop chưa có voucher' }}
+                                        </h3>
+                                        <p class="seller-voucher-muted mb-3">
+                                            {{ request()->hasAny(['keyword', 'status'])
+                                                ? 'Thử thay đổi từ khóa hoặc trạng thái lọc.'
+                                                : 'Tạo voucher để bắt đầu chương trình ưu đãi của Shop.' }}
+                                        </p>
+                                        @unless (request()->hasAny(['keyword', 'status']))
+                                            <a href="{{ route('seller.vouchers.create') }}" class="btn btn-primary">
+                                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                                                Tạo voucher
+                                            </a>
+                                        @endunless
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
-                </div>
+            </div>
 
-                @if ($vouchers->hasPages())
+            @if ($vouchers->hasPages())
                     <div class="card-footer seller-voucher-card__footer">
-                        {{ $vouchers->links('pagination::bootstrap-5') }}
+                        {{ $vouchers->links() }}
                     </div>
-                @endif
             @endif
         </section>
     </main>
@@ -228,11 +269,13 @@
             color: var(--seller-text, #0F172A);
             background: var(--seller-card-bg, #fff);
             border: 1px solid var(--seller-border, #E2E8F0);
-            border-radius: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, .05);
         }
 
         .seller-voucher-card__header,
         .seller-voucher-card__footer {
+            padding: 1rem 1.25rem;
             color: var(--seller-text, #0F172A);
             background: var(--seller-card-bg, #fff);
             border-color: var(--seller-border, #E2E8F0);
@@ -242,10 +285,25 @@
             color: var(--seller-text-muted, #64748B);
         }
 
+        .seller-voucher-empty {
+            padding: 3.5rem 1rem !important;
+            text-align: center;
+        }
+
+        .seller-voucher-empty__icon {
+            color: var(--seller-text-muted, #94a3b8);
+            font-size: 2.5rem;
+        }
+
         .seller-voucher-count {
+            display: inline-flex;
+            align-items: center;
+            padding: .45rem .7rem;
+            border-radius: 999px;
             color: var(--seller-text, #0F172A);
             background: var(--seller-hover-bg, #F8FAFC);
             border: 1px solid var(--seller-border, #E2E8F0);
+            font-weight: 600;
         }
 
         .seller-voucher-table {
@@ -266,11 +324,16 @@
         }
 
         .seller-voucher-table thead th {
+            padding: .9rem .75rem;
             color: var(--seller-text, #0F172A);
             background: var(--seller-hover-bg, #F8FAFC);
             font-size: .82rem;
             font-weight: 700;
             white-space: nowrap;
+        }
+
+        .seller-voucher-table tbody td {
+            padding: .9rem .75rem;
         }
 
         [data-theme="dark"] .seller-voucher-page {
@@ -309,6 +372,17 @@
             border-color: var(--seller-border);
         }
 
+        [data-theme="dark"] .seller-voucher-page .form-control,
+        [data-theme="dark"] .seller-voucher-page .form-select {
+            border-color: #334155;
+            background-color: #1e293b;
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .seller-voucher-page .form-control::placeholder {
+            color: #94a3b8;
+        }
+
         [data-theme="dark"] .seller-voucher-page .text-bg-dark {
             color: #F8FAFC !important;
             background-color: #475569 !important;
@@ -328,7 +402,7 @@
             }
 
             .seller-voucher-table {
-                min-width: 850px;
+                min-width: 900px;
             }
         }
     </style>

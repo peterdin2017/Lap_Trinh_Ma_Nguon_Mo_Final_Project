@@ -4,7 +4,10 @@
 
 @php
     $discountType = old('discount_type', $voucher->discount_type ?? 'percent');
-    $startsAt = old('starts_at', $voucher->starts_at?->format('Y-m-d\TH:i'));
+    $startsAt = old(
+        'starts_at',
+        $voucher->starts_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i')
+    );
     $expiresAt = old('expires_at', $voucher->expires_at?->format('Y-m-d\TH:i'));
     $voucherStatus = old('status', $voucher->status ?? 'active');
 @endphp
@@ -12,13 +15,13 @@
 @push('styles')
     <style>
         .voucher-form {
-            color: var(--app-text, #0f172a);
+            color: var(--seller-text, #0f172a);
         }
 
         .voucher-form__card {
-            border: 1px solid var(--app-border, #e2e8f0);
+            border: 1px solid var(--seller-border, #e2e8f0);
             border-radius: 14px;
-            background: var(--app-card-bg, #fff);
+            background: var(--seller-card-bg, #fff);
             box-shadow: 0 2px 10px rgba(15, 23, 42, .04);
         }
 
@@ -30,17 +33,44 @@
             width: 42px;
             height: 42px;
             border-radius: 12px;
-            color: var(--app-primary, #1a94ff);
-            background: var(--app-primary-light, #ebf5ff);
+            color: var(--seller-primary, #1a94ff);
+            background: var(--seller-primary-light, #ebf5ff);
             font-size: 1.2rem;
         }
 
         .voucher-form__muted {
-            color: var(--app-text-muted, #64748b);
+            color: var(--seller-text-muted, #64748b);
         }
 
+        .voucher-form__scope-note {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            border: 1px solid var(--seller-border, #e2e8f0);
+            border-radius: 12px;
+            color: var(--seller-text, #0f172a);
+            background: var(--seller-primary-light, #ebf5ff);
+        }
+
+        .voucher-form__scope-icon {
+            display: inline-flex;
+            flex: 0 0 40px;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            color: var(--seller-primary, #1a94ff);
+            background: var(--seller-card-bg, #fff);
+            font-size: 1.1rem;
+        }
+
+        .voucher-form__scope-note strong { font-weight: 700; }
+        .voucher-form__scope-note p { color: var(--seller-text-muted, #64748b); font-size: .875rem; }
+
         .voucher-form .form-text {
-            color: var(--app-text-muted, #64748b);
+            color: var(--seller-text-muted, #64748b);
         }
 
         [data-theme="dark"] .voucher-form__card {
@@ -80,11 +110,24 @@
         [hidden] {
             display: none !important;
         }
+
+        @media (min-width: 768px) {
+            .voucher-form__conditional-field--reserved {
+                visibility: hidden;
+                pointer-events: none;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .voucher-form__conditional-field--reserved {
+                display: none !important;
+            }
+        }
     </style>
 @endpush
 
 @section('content')
-    <main class="container-fluid py-4 voucher-form">
+    <div class="container-fluid voucher-form">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -140,7 +183,7 @@
                         <div>
                             <h2 class="h5 fw-bold mb-1">Thông tin voucher</h2>
                             <p class="voucher-form__muted small mb-0">
-                                Đặt mã và chọn hình thức giảm giá.
+                                Nhập mã voucher và xác nhận phạm vi áp dụng cho cửa hàng.
                             </p>
                         </div>
                     </div>
@@ -162,6 +205,36 @@
                         </div>
 
                         <div class="col-12 col-lg-6">
+                            <div class="voucher-form__scope-note h-100">
+                                <span class="voucher-form__scope-icon">
+                                    <i class="bi bi-shop" aria-hidden="true"></i>
+                                </span>
+                                <div>
+                                    <strong>Phạm vi áp dụng</strong>
+                                    <p class="mb-0 mt-1">Voucher dành cho sản phẩm của cửa hàng bạn và được áp dụng ở bước thanh toán.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="voucher-form__card mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start gap-3 mb-4">
+                        <span class="voucher-form__icon">
+                            <i class="bi bi-cart-check" aria-hidden="true"></i>
+                        </span>
+                        <div>
+                            <h2 class="h5 fw-bold mb-1">Mức giảm và điều kiện</h2>
+                            <p class="voucher-form__muted small mb-0">
+                                Chọn cách giảm, giá trị đơn tối thiểu và giới hạn lượt sử dụng.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
                             <label for="discount_type" class="form-label fw-semibold">
                                 Hình thức giảm <span class="text-danger">*</span>
                             </label>
@@ -179,7 +252,7 @@
                             @enderror
                         </div>
 
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
                             <label for="discount_value" class="form-label fw-semibold">
                                 Mức giảm <span class="text-danger">*</span>
                             </label>
@@ -200,7 +273,9 @@
                             @enderror
                         </div>
 
-                        <div class="col-12 col-md-6" id="maxDiscountField" @if ($discountType !== 'percent') hidden @endif>
+                        <div class="col-12 col-md-4 @if ($discountType !== 'percent') voucher-form__conditional-field--reserved @endif"
+                            id="maxDiscountField"
+                            aria-hidden="{{ $discountType !== 'percent' ? 'true' : 'false' }}">
                             <label for="max_discount" class="form-label fw-semibold">
                                 Số tiền giảm tối đa
                                 <span class="text-danger" id="maxDiscountRequiredMark">*</span>
@@ -209,7 +284,8 @@
                                 <input id="max_discount" name="max_discount" type="number" min="1" step="1"
                                     value="{{ old('max_discount', $voucher->max_discount) }}"
                                     class="form-control @error('max_discount') is-invalid @enderror"
-                                    placeholder="Ví dụ: 100000" @required($discountType === 'percent')>
+                                    placeholder="Ví dụ: 100000" @required($discountType === 'percent')
+                                    @disabled($discountType !== 'percent')>
                                 <span class="input-group-text">₫</span>
                             </div>
                             <div class="form-text">
@@ -219,26 +295,8 @@
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
-                </div>
-            </section>
 
-            <section class="voucher-form__card mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start gap-3 mb-4">
-                        <span class="voucher-form__icon">
-                            <i class="bi bi-cart-check" aria-hidden="true"></i>
-                        </span>
-                        <div>
-                            <h2 class="h5 fw-bold mb-1">Điều kiện sử dụng</h2>
-                            <p class="voucher-form__muted small mb-0">
-                                Đặt giá trị đơn tối thiểu và tổng lượt sử dụng.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
                             <label for="min_order_amount" class="form-label fw-semibold">
                                 Giá trị đơn hàng tối thiểu <span class="text-danger">*</span>
                             </label>
@@ -257,7 +315,7 @@
                             @enderror
                         </div>
 
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
                             <label for="usage_limit" class="form-label fw-semibold">
                                 Tổng lượt sử dụng
                             </label>
@@ -293,7 +351,7 @@
                     </div>
 
                     <div class="row g-3">
-                        <div class="col-12 col-lg-4">
+                        <div class="col-12 col-md-4">
                             <label for="starts_at" class="form-label fw-semibold">
                                 Thời gian bắt đầu <span class="text-danger">*</span>
                             </label>
@@ -308,7 +366,7 @@
                             @enderror
                         </div>
 
-                        <div class="col-12 col-lg-4">
+                        <div class="col-12 col-md-4">
                             <label for="expires_at" class="form-label fw-semibold">
                                 Thời gian kết thúc <span class="text-danger">*</span>
                             </label>
@@ -323,7 +381,7 @@
                             @enderror
                         </div>
 
-                        <div class="col-12 col-lg-4">
+                        <div class="col-12 col-md-4">
                             <label for="status" class="form-label fw-semibold">
                                 Trạng thái <span class="text-danger">*</span>
                             </label>
@@ -348,7 +406,7 @@
                 </div>
             </section>
 
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
                 <a href="{{ route('seller.vouchers.index') }}" class="btn btn-outline-secondary">
                     Hủy
                 </a>
@@ -359,7 +417,7 @@
                 </button>
             </div>
         </form>
-    </main>
+    </div>
 @endsection
 
 @push('scripts')
@@ -380,7 +438,9 @@
             function updateDiscountFields() {
                 const isPercent = type.value === 'percent';
 
-                maxField.hidden = !isPercent;
+                maxField.classList.toggle('voucher-form__conditional-field--reserved', !isPercent);
+                maxField.setAttribute('aria-hidden', isPercent ? 'false' : 'true');
+                maxInput.disabled = !isPercent;
                 maxInput.required = isPercent;
                 requiredMark.hidden = !isPercent;
                 unit.textContent = isPercent ? '%' : '₫';
