@@ -54,7 +54,7 @@
             --seller-hover-bg: #172A46;
             --seller-text: #F8FAFC;
             --seller-text-muted: #94A3B8;
-            --seller-border: #26364D;
+            --seller-border: #334155;
             --seller-price: #FB7185;
             --seller-shadow: 0 2px 8px rgba(0, 0, 0, .2);
         }
@@ -214,32 +214,31 @@
         }
     </style>
 
-    @stack('styles')
     <link rel="stylesheet" href="{{ asset('assets/css/dashboard-layout.css') }}">
     <style>
 /* Seller Center visual system aligned with Admin Center. */
 :root,[data-theme="light"] {
-  --seller-primary:#1688ff;
-  --seller-primary-hover:#0874e2;
-  --seller-primary-light:#eaf4ff;
+  --seller-primary:#1A94FF;
+  --seller-primary-hover:#0077E6;
+  --seller-primary-light:#EBF5FF;
   --seller-sidebar-bg:#ffffff;
   --seller-card-bg:#ffffff;
-  --seller-page-bg:#f4f7fb;
-  --seller-text:#101f37;
-  --seller-text-muted:#62758f;
-  --seller-border:#e2e9f2;
+  --seller-page-bg:#F4F7FA;
+  --seller-text:#0F172A;
+  --seller-text-muted:#64748B;
+  --seller-border:#E2E8F0;
   --seller-shadow:0 2px 12px rgba(22,52,93,.045);
 }
 [data-theme="dark"] {
-  --seller-primary:#67aaff;
-  --seller-primary-hover:#3d91f5;
-  --seller-primary-light:#173354;
+  --seller-primary:#0D6EFD;
+  --seller-primary-hover:#0B5ED7;
+  --seller-primary-light:#172A46;
   --seller-sidebar-bg:#0b192c;
-  --seller-card-bg:#16263d;
-  --seller-page-bg:#101b2e;
-  --seller-text:#eef4ff;
-  --seller-text-muted:#9bafcb;
-  --seller-border:#2d405c;
+  --seller-card-bg:#1E293B;
+  --seller-page-bg:#0F172A;
+  --seller-text:#F8FAFC;
+  --seller-text-muted:#94A3B8;
+  --seller-border:#334155;
 }
 /* Prevent CSS from the old Seller Center affecting Admin. */
 .seller-sidebar {
@@ -249,8 +248,8 @@
   border-right:1px solid var(--seller-border)!important;
 }
 .seller-sidebar .seller-brand {
-  display:flex;align-items:center;gap:13px;
-  min-height:83px;padding:17px 20px;
+  display:flex;align-items:center;gap:.85rem;
+  min-height:70px;padding:1.1rem 1.25rem;
   background:var(--seller-sidebar-bg);
   border-bottom:1px solid var(--seller-border);
   color:var(--seller-text);
@@ -269,12 +268,12 @@
 .seller-sidebar .seller-sidebar__nav {gap:3px;padding:0 12px 15px}
 .seller-sidebar .seller-nav-link {
   position:relative;display:flex;align-items:center;gap:12px;
-  width:100%;min-height:47px;padding:11px 13px;
-  border:0;border-radius:10px;background:transparent;
+  width:100%;min-height:43px;padding:.7rem .75rem;
+  border:0;border-radius:.6rem;background:transparent;
   color:var(--seller-text-muted)!important;
-  font-size:14px;font-weight:450;line-height:1.35;
+  font-size:14px;font-weight:400;line-height:1.35;
   text-align:left;text-decoration:none;cursor:pointer;
-  transition:background-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease;
+  transition:color .15s ease,background-color .15s ease;
 }
 .seller-sidebar .seller-nav-link>i:first-child {
   display:inline-flex;align-items:center;justify-content:center;
@@ -287,7 +286,7 @@
   color:var(--seller-primary)!important;
   background:var(--seller-primary-light)!important;
 }
-.seller-sidebar .seller-nav-link:hover:not(.active) {transform:translateX(2px)}
+.seller-sidebar .seller-nav-link:hover:not(.active) {transform:none}
 .seller-sidebar .seller-nav-link.active {font-weight:650}
 .seller-sidebar .seller-nav-link.active::before {display:none}
 .seller-sidebar .seller-nav-link:focus-visible,
@@ -343,7 +342,7 @@
 .seller-topbar .seller-account-button:hover {background:var(--seller-primary-light)}
 .seller-content .card,.seller-content .dashboard-card,
 .seller-content .welcome-card,.seller-content .products-table-card {
-  border-radius:10px;box-shadow:var(--seller-shadow);
+  border-radius:9px;box-shadow:var(--seller-shadow);
 }
 .seller-content .btn,.seller-content .form-control,.seller-content .form-select {border-radius:7px}
 .seller-content .table thead th {background:var(--seller-primary-light);color:var(--seller-text);font-size:12px}
@@ -360,6 +359,7 @@
 }
 
 </style>
+    @stack('styles')
 </head>
 
 <body>

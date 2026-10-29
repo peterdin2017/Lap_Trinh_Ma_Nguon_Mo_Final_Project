@@ -563,23 +563,22 @@
 </style>
 
 <style>
-/* Menu icons: filled on hover and focus, consistent with Admin */
-.seller-sidebar .seller-nav-link>i:first-child,.seller-sidebar--mobile .seller-nav-link>i:first-child {display:inline-flex;flex:0 0 31px;width:31px;height:31px;align-items:center;justify-content:center;border-radius:9px;color:#667e9d;background:transparent;font-size:1.05rem;transition:background .2s,color .2s,transform .2s,box-shadow .2s;}
-.seller-sidebar .seller-nav-link:hover>i:first-child,.seller-sidebar .seller-nav-link:focus-visible>i:first-child,.seller-sidebar .seller-nav-link.active>i:first-child,.seller-sidebar--mobile .seller-nav-link:hover>i:first-child,.seller-sidebar--mobile .seller-nav-link.active>i:first-child {color:#fff!important;background:#1689ec!important;box-shadow:0 4px 10px rgba(22,137,236,.22);transform:scale(1.07);}
-.seller-sidebar .seller-nav-link,.seller-sidebar--mobile .seller-nav-link {gap:10px;border-radius:10px;transition:background .2s,color .2s;}
-.seller-sidebar .seller-nav-link:hover,.seller-sidebar--mobile .seller-nav-link:hover {background:#eaf4ff;color:#0879d9;}
-.seller-sidebar .seller-subnav-link:hover,.seller-sidebar--mobile .seller-subnav-link:hover {background:#eaf4ff;color:#0879d9;}
-[data-theme="dark"] .seller-sidebar .seller-nav-link:hover,[data-theme="dark"] .seller-sidebar--mobile .seller-nav-link:hover,[data-theme="dark"] .seller-sidebar .seller-subnav-link:hover {background:#1c3a58;color:#8ac7ff;}
+/* Match Admin icon alignment and state: glyph color follows the menu item. */
+.seller-sidebar .seller-nav-link > i:first-child,
+.seller-sidebar--mobile .seller-nav-link > i:first-child {
+    display: inline-flex;
+    flex: 0 0 1.2rem;
+    width: 1.2rem;
+    height: auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    color: currentColor;
+    background: transparent;
+    box-shadow: none;
+    font-size: 1rem;
+    transform: none;
+    transition: color .15s ease;
+}
 </style>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
- const map={'bi-chat-dots':'bi-chat-dots-fill','bi-box-seam':'bi-box-seam-fill','bi-receipt':'bi-receipt-cutoff','bi-ticket-perforated':'bi-ticket-perforated-fill','bi-bar-chart':'bi-bar-chart-fill','bi-graph-up':'bi-graph-up-arrow','bi-shop-window':'bi-shop','bi-grid-1x2':'bi-grid-1x2-fill','bi-people':'bi-people-fill','bi-gear':'bi-gear-fill'};
- document.querySelectorAll('.seller-sidebar .seller-nav-link, .seller-sidebar--mobile .seller-nav-link').forEach(function (item) {
-   const icon=item.querySelector('i.bi'); if(!icon)return;
-   const original=Array.from(icon.classList).find(function(c){return map[c];}); if(!original)return;
-   const filled=map[original];
-   function update(){const active=item.matches(':hover,:focus-visible')||item.classList.contains('active'); icon.classList.toggle(original,!active);icon.classList.toggle(filled,active);}
-   item.addEventListener('mouseenter',update);item.addEventListener('mouseleave',update);item.addEventListener('focusin',update);item.addEventListener('focusout',update);update();
- });
-});
-</script>
+
