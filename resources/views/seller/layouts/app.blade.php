@@ -367,7 +367,7 @@
         @include('seller.layouts.sidebar')
 
         <div class="app-main seller-main">
-           
+            @include('seller.layouts.header')
 
             <main class="content-body seller-content container-fluid px-3 px-lg-4 py-4">
                 @if (session('success'))

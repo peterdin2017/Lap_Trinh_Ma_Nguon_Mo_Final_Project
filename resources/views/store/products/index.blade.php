@@ -339,24 +339,105 @@
 
         .product-list-page__pagination {
             display: flex;
-            justify-content: center;
-            margin-top: 24px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-top: 26px;
+            padding: 15px 18px;
+            border: 1px solid var(--pl-border);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(25, 55, 95, .045);
         }
 
-        .product-list-page .pagination {
-            gap: 4px;
+        .product-pagination__summary {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--pl-muted);
+            font-size: .875rem;
         }
 
-        .product-list-page .page-link {
+        .product-pagination__summary i {
+            margin-right: 3px;
             color: var(--pl-primary);
-            border-color: var(--pl-border);
-            border-radius: 7px !important;
+            font-size: 1rem;
         }
 
-        .product-list-page .page-item.active .page-link {
+        .product-pagination__summary strong {
+            color: var(--pl-text);
+            font-weight: 700;
+        }
+
+        .product-pagination__links {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .product-pagination__link {
+            display: inline-flex;
+            min-width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
+            border: 1px solid var(--pl-border);
+            border-radius: 9px;
+            color: var(--pl-primary);
+            background: #fff;
+            font-size: .9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color .16s ease, background-color .16s ease,
+                border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+        }
+
+        .product-pagination__link:hover,
+        .product-pagination__link:focus-visible {
+            color: var(--pl-primary);
+            border-color: var(--pl-primary);
+            background: #f3f8ff;
+            box-shadow: 0 3px 9px rgba(8, 120, 217, .10);
+            transform: translateY(-1px);
+        }
+
+        .product-pagination__link.is-current {
+            color: #fff;
+            border-color: var(--pl-primary);
+            background: var(--pl-primary);
+            box-shadow: 0 4px 10px rgba(8, 120, 217, .22);
+        }
+
+        .product-pagination__link.is-current:hover,
+        .product-pagination__link.is-current:focus-visible {
             color: #fff;
             background: var(--pl-primary);
-            border-color: var(--pl-primary);
+        }
+
+        .product-pagination__link.is-disabled {
+            color: #a3afbf;
+            border-color: #e8edf4;
+            background: #f5f7fa;
+            pointer-events: none;
+        }
+
+        .product-pagination__ellipsis {
+            padding: 0 3px;
+            color: var(--pl-muted);
+        }
+
+        @media (max-width: 575.98px) {
+            .product-list-page__pagination {
+                align-items: stretch;
+                flex-direction: column;
+                gap: 12px;
+                padding: 14px;
+            }
+
+            .product-pagination__summary { justify-content: center; }
+            .product-pagination__links { justify-content: center; gap: 6px; }
+            .product-pagination__link { min-width: 37px; height: 37px; padding: 0 9px; }
         }
 
         @media (max-width: 991.98px) {
@@ -405,31 +486,6 @@
                 transition-duration: .01ms !important;
             }
         }
-    
-/* Filter interactions shared with Store design */
-.product-list-page .product-list-page__panel {border-radius:14px;box-shadow:0 10px 32px rgba(27,59,105,.065);}
-.product-list-page .product-list-page__label i {color:#1688ef;font-size:1rem;}
-.product-list-page__category-list a, .product-list-page .store-category-link {display:flex;align-items:center;gap:9px;min-height:39px;padding:9px 10px;border-radius:9px;transition:background .18s ease,color .18s ease,transform .18s ease;}
-.product-list-page__category-list a:hover,.product-list-page .store-category-link:hover {color:#0878e8!important;background:#eaf4ff!important;transform:translateX(3px);}
-.product-list-page__category-list a.is-active,.product-list-page .store-category-link.is-active {background:#eaf4ff!important;color:#0878e8!important;font-weight:700;}
-.product-list-page .store-category-link__icon {flex:0 0 20px;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;color:#7794b2;transition:color .18s ease,transform .18s ease;}
-.product-list-page a:hover .store-category-link__icon,.product-list-page a.is-active .store-category-link__icon {color:#0878e8;transform:scale(1.13);}
-.product-list-page .store-category-toggle {border-radius:8px;transition:background .18s ease,color .18s ease;}
-.product-list-page .store-category-toggle:hover {background:#eaf4ff;color:#0878e8;}
-.product-list-page__price-tag {display:inline-flex;align-items:center;gap:2px;}
-.product-list-page__price-tag:hover {transform:translateY(-2px);box-shadow:0 5px 12px rgba(28,121,219,.12);}
-.product-list-page__apply {transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;}
-.product-list-page__apply:hover {transform:translateY(-2px);box-shadow:0 7px 16px rgba(26,148,255,.2);}
-html[data-store-theme="dark"] .product-list-page {--pl-primary:#69b7ff;--pl-primary-light:#153a60;--pl-text:#ecf3ff;--pl-muted:#a8bbd2;--pl-border:#33465f;--pl-bg:#0d1522;color:#ecf3ff;}
-html[data-store-theme="dark"] .product-list-page__panel,html[data-store-theme="dark"] .product-list-page__topbar {background:#19283a!important;border-color:#35485e!important;color:#ecf3ff!important;}
-html[data-store-theme="dark"] .product-list-page .form-control {background:#101e2e;color:#f1f6ff;border-color:#38526e;}
-html[data-store-theme="dark"] .product-list-page__label,html[data-store-theme="dark"] .product-list-page__panel-title {color:#e8f1ff;}
-html[data-store-theme="dark"] .product-list-page__category-list a,html[data-store-theme="dark"] .product-list-page .store-category-link {color:#cbd9ea;}
-html[data-store-theme="dark"] .product-list-page__category-list a:hover,html[data-store-theme="dark"] .product-list-page .store-category-link:hover,html[data-store-theme="dark"] .product-list-page .store-category-link.is-active {background:#203d60!important;color:#96caff!important;}
-html[data-store-theme="dark"] .product-list-page__price-tag {color:#d3e3f8;background:#26374d;border-color:#405977;}
-html[data-store-theme="dark"] .product-list-page .btn-light {color:#dae9fa;background:#2b3e55;border-color:#3c5673;}
-html[data-store-theme="dark"] .product-list-page__divider {border-color:#40516a;}
-
     </style>
 @endpush
 
@@ -468,7 +524,7 @@ html[data-store-theme="dark"] .product-list-page__divider {border-color:#40516a;
                         <form method="GET" action="{{ route('store.products.index') }}">
                             <div class="mb-3">
                                 <label for="product-filter-q" class="product-list-page__label">
-                                    <i class="bi bi-search me-1" aria-hidden="true"></i> Từ khóa
+                                    Từ khóa
                                 </label>
                                 <input
                                     id="product-filter-q"
@@ -482,7 +538,7 @@ html[data-store-theme="dark"] .product-list-page__divider {border-color:#40516a;
                             </div>
 
                             <div class="mb-2">
-                                <span class="product-list-page__label"><i class="bi bi-cash-stack me-1" aria-hidden="true"></i> Khoảng giá</span>
+                                <span class="product-list-page__label">Khoảng giá</span>
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <label for="product-filter-min" class="visually-hidden">Giá từ</label>
@@ -526,7 +582,7 @@ html[data-store-theme="dark"] .product-list-page__divider {border-color:#40516a;
                                         class="product-list-page__price-tag"
                                         href="{{ route('store.products.index', $rangeQuery) }}"
                                     >
-                                        <i class="bi bi-tag me-1" aria-hidden="true"></i>{{ $range['label'] }}
+                                        {{ $range['label'] }}
                                     </a>
                                 @endforeach
                             </div>
@@ -538,7 +594,7 @@ html[data-store-theme="dark"] .product-list-page__divider {border-color:#40516a;
                             <hr class="product-list-page__divider">
 
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h3 class="product-list-page__label mb-0"><i class="bi bi-grid-fill me-1" aria-hidden="true"></i> Danh mục</h3>
+                                <h3 class="product-list-page__label mb-0">Danh mục</h3>
                                 <button
                                     class="btn btn-sm btn-light"
                                     type="button"
@@ -558,7 +614,7 @@ html[data-store-theme="dark"] .product-list-page__divider {border-color:#40516a;
                                         href="{{ route('store.products.index', request()->except(['category', 'page'])) }}"
                                         class="{{ empty($filters['category']) ? 'is-active fw-semibold' : '' }}"
                                     >
-                                        <i class="bi bi-grid-3x3-gap store-category-link__icon me-2" aria-hidden="true"></i>Tất cả sản phẩm
+                                        Tất cả sản phẩm
                                     </a>
 
                                     @include('store.products._category-tree', [
@@ -708,9 +764,70 @@ html[data-store-theme="dark"] .product-list-page__divider {border-color:#40516a;
                             @endforeach
                         </div>
 
-                        <nav class="product-list-page__pagination" aria-label="Phân trang sản phẩm">
-                            {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
-                        </nav>
+                        @php
+                            $products->withQueryString();
+                            $paginationCurrent = $products->currentPage();
+                            $paginationLast = $products->lastPage();
+                            $paginationStart = max(1, min($paginationCurrent - 1, $paginationLast - 2));
+                            $paginationEnd = min($paginationLast, $paginationStart + 2);
+                        @endphp
+
+                        <div class="product-list-page__pagination">
+                            <div class="product-pagination__summary" aria-live="polite">
+                                <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+                                <span>Hiển thị</span>
+                                <strong>{{ number_format($products->firstItem() ?? 0) }}–{{ number_format($products->lastItem() ?? 0) }}</strong>
+                                <span>trên {{ number_format($products->total()) }} sản phẩm</span>
+                            </div>
+
+                            @if ($paginationLast > 1)
+                                <nav aria-label="Phân trang sản phẩm">
+                                    <div class="product-pagination__links">
+                                        @if ($products->onFirstPage())
+                                            <span class="product-pagination__link is-disabled" aria-disabled="true" aria-label="Trang trước">
+                                                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                                            </span>
+                                        @else
+                                            <a class="product-pagination__link" href="{{ $products->previousPageUrl() }}" rel="prev" aria-label="Trang trước">
+                                                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                                            </a>
+                                        @endif
+
+                                        @if ($paginationStart > 1)
+                                            <a class="product-pagination__link" href="{{ $products->url(1) }}">1</a>
+                                            @if ($paginationStart > 2)
+                                                <span class="product-pagination__ellipsis" aria-hidden="true">…</span>
+                                            @endif
+                                        @endif
+
+                                        @for ($page = $paginationStart; $page <= $paginationEnd; $page++)
+                                            @if ($page === $paginationCurrent)
+                                                <span class="product-pagination__link is-current" aria-current="page">{{ $page }}</span>
+                                            @else
+                                                <a class="product-pagination__link" href="{{ $products->url($page) }}" aria-label="Đến trang {{ $page }}">{{ $page }}</a>
+                                            @endif
+                                        @endfor
+
+                                        @if ($paginationEnd < $paginationLast)
+                                            @if ($paginationEnd < $paginationLast - 1)
+                                                <span class="product-pagination__ellipsis" aria-hidden="true">…</span>
+                                            @endif
+                                            <a class="product-pagination__link" href="{{ $products->url($paginationLast) }}">{{ $paginationLast }}</a>
+                                        @endif
+
+                                        @if ($products->hasMorePages())
+                                            <a class="product-pagination__link" href="{{ $products->nextPageUrl() }}" rel="next" aria-label="Trang sau">
+                                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                            </a>
+                                        @else
+                                            <span class="product-pagination__link is-disabled" aria-disabled="true" aria-label="Trang sau">
+                                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                            </span>
+                                        @endif
+                                    </div>
+                                </nav>
+                            @endif
+                        </div>
                     @endif
                 </section>
             </div>
