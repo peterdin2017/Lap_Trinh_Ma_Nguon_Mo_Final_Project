@@ -114,11 +114,11 @@
     [data-bs-theme="dark"] .admin-sidebar {
         --sidebar-bg: #0B192C;
         --sidebar-text: #94A3B8;
-        --sidebar-border: #26364D;
+        --sidebar-border: #334155;
     }
 
     .admin-sidebar--mobile {
-        width: min(300px, 88vw);
+        width: min(310px, 88vw);
     }
 
     .admin-sidebar__brand {
