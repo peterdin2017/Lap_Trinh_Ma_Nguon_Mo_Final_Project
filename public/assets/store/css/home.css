@@ -625,3 +625,21 @@
         transform: none;
     }
 }
+
+/* Unified Admin-inspired home dashboard aesthetic */
+.home-page {background:#f3f7fb!important;}
+.home-hero {border-radius:12px!important;border:1px solid #2f729d!important;background:linear-gradient(110deg,#163e64 0%,#17638f 55%,#198bb8 100%)!important;box-shadow:0 10px 32px rgba(18,63,100,.14)!important;min-height:330px!important;}
+.home-hero::after {border-color:rgba(255,255,255,.09)!important;}
+.home-hero__eyebrow {color:#ffb35f!important;letter-spacing:.18em!important;font-weight:800!important;}
+.home-hero__title {font-weight:800!important;letter-spacing:-.045em!important;}
+.home-hero__button {background:#ff963c!important;color:#14243c!important;border:1px solid #ffad67!important;border-radius:8px!important;box-shadow:0 8px 20px rgba(12,40,73,.16)!important;transition:transform .2s,background .2s,box-shadow .2s!important;}
+.home-hero__button:hover {background:#ffb15e!important;transform:translateY(-3px)!important;box-shadow:0 12px 26px rgba(12,40,73,.22)!important;}
+.home-hero__art {border-radius:22px!important;background:rgba(255,255,255,.09)!important;color:#ffc68c!important;transform:rotate(-5deg);transition:transform .3s!important;}
+.home-hero:hover .home-hero__art {transform:rotate(0deg) translateY(-4px);}
+.home-policy-bar {border-radius:11px!important;border-color:#dfe8f2!important;box-shadow:0 6px 18px rgba(16,59,99,.06)!important;}
+.home-policy-item>i {color:#f68d38!important;background:#fff6ee;width:44px;height:44px;display:inline-grid;place-items:center;border-radius:9px;font-size:1.3rem!important;}
+.home-section__eyebrow {color:#0f7be8!important;}
+.home-section h2 {color:#142b49!important;}
+.home-page .category-card,.home-page .product-card {border-radius:11px!important;border:1px solid #e0e9f4!important;transition:transform .2s,box-shadow .2s,border-color .2s!important;}
+.home-page .category-card:hover,.home-page .product-card:hover {transform:translateY(-4px)!important;border-color:#aad3f9!important;box-shadow:0 12px 26px rgba(18,74,125,.13)!important;}
+@media(max-width:767px){.home-hero{min-height:260px!important;padding:25px!important;}.home-hero__art{display:none!important;}}

@@ -1,125 +1,150 @@
-<header class="seller-topbar d-flex align-items-center justify-content-between px-3 px-lg-4">
-    <div class="d-flex align-items-center gap-3">
-        <button class="btn btn-outline-primary d-lg-none"
-                type="button"
-                data-bs-toggle="offcanvas"
-                data-bs-target="#sellerMobileMenu"
-                aria-controls="sellerMobileMenu"
-                aria-label="Mở menu">
-            <i class="bi bi-list fs-5" aria-hidden="true"></i>
-        </button>
 
-        <div>
-            <h1 class="h5 fw-bold mb-0">Kênh Người Bán</h1>
-            <small class="text-secondary">Quản lý hoạt động cửa hàng</small>
-        </div>
-    </div>
+@php
+    $navCategories = \App\Models\Category::whereNull('parent_id')
+        ->orderBy('category_name')
+        ->limit(8)
+        ->get(['category_id', 'category_name']);
+@endphp
 
-    <div class="dropdown">
-        <button class="seller-account-button btn dropdown-toggle"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-            <i class="bi bi-person-circle me-1" aria-hidden="true"></i>
-            <span class="d-none d-sm-inline">Tài khoản</span>
-        </button>
-
-        <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-                <span class="dropdown-item-text seller-account-email small text-truncate d-block">
-                    {{ auth()->user()?->email ?? 'Tài khoản Seller' }}
-                </span>
-            </li>
-
-            <li><hr class="dropdown-divider"></li>
-
-            <li>
-                <button id="sellerThemeToggle"
-                        type="button"
-                        class="dropdown-item d-flex align-items-center gap-2">
-                    <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
-                    <span data-theme-label>Giao diện tối</span>
-                </button>
-            </li>
-
-            <li><hr class="dropdown-divider"></li>
-
-            <li>
-                <a class="dropdown-item" href="{{ route('seller.shop-information.edit') }}">
-                    <i class="bi bi-shop me-2" aria-hidden="true"></i>
-                    Thông tin Shop
+<header class="shop-header text-white">
+    <div class="container py-3">
+        <div class="row align-items-center g-3">
+            <div class="col-12 col-lg-3">
+                <a href="{{ route('store.home') }}"
+                    class="shop-header__logo d-inline-flex align-items-center gap-2 text-white text-decoration-none fw-bold">
+                    <i class="bi bi-shop-window fs-3" aria-hidden="true"></i>
+                    <span class="fs-5">Website Bán hàng Online</span>
                 </a>
-            </li>
+            </div>
 
-            <li>
-                <form action="{{ route('seller.logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="dropdown-item text-danger">
-                        <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>
-                        Đăng xuất
-                    </button>
+            <div class="col-12 col-lg-5 order-3 order-lg-2">
+                <form action="{{ route('store.products.index') }}" method="GET" role="search">
+                    <label for="store-search" class="visually-hidden">
+                        Tìm kiếm sản phẩm
+                    </label>
+
+                    <div class="input-group shop-header__search">
+                        <input id="store-search" name="q" type="search"
+                            value="{{ request()->routeIs('store.products.index') ? request('q') : '' }}"
+                            maxlength="100"
+                            class="form-control"
+                            placeholder="Tìm kiếm sản phẩm...">
+
+                        <button class="btn shop-header__search-button"
+                            type="submit" aria-label="Tìm kiếm">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </form>
-            </li>
-        </ul>
+            </div>
+
+            <div class="col-12 col-lg-4 order-2 order-lg-3">
+                <div class="store-header-actions d-flex align-items-center justify-content-end gap-2">
+
+                    <button type="button"
+                        id="store-theme-toggle"
+                        class="shop-header__action store-theme-toggle btn"
+                        aria-label="Đổi giao diện sáng tối"
+                        aria-pressed="false">
+                        <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+                        <span class="store-theme-label">Tối</span>
+                    </button>
+
+                    <a href="{{ route('store.cart.index') }}"
+                        class="shop-header__action btn"
+                        aria-label="Giỏ hàng">
+                        <i class="bi bi-cart3" aria-hidden="true"></i>
+                        <span>Giỏ hàng</span>
+                    </a>
+
+                    @if (session('account_id'))
+                        <div class="dropdown">
+                            <button class="shop-header__action btn dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                <i class="bi bi-person" aria-hidden="true"></i>
+                                <span>Tài khoản</span>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item"
+                                        href="{{ route('store.account.profile') }}">
+                                        <i class="bi bi-person me-2"></i>
+                                        Hồ sơ của tôi
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                        href="{{ route('store.account.addresses.index') }}">
+                                        <i class="bi bi-geo-alt me-2"></i>
+                                        Địa chỉ nhận hàng
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                        href="{{ route('store.account.password') }}">
+                                        <i class="bi bi-shield-lock me-2"></i>
+                                        Đổi mật khẩu
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                        href="{{ route('store.account.vouchers.index') }}">
+                                        <i class="bi bi-ticket-perforated me-2"></i>
+                                        Voucher của tôi
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                        href="{{ route('store.account.orders.index') }}">
+                                        <i class="bi bi-receipt me-2"></i>
+                                        Đơn hàng của tôi
+                                    </a>
+                                </li>
+
+                                <li><hr class="dropdown-divider"></li>
+
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit"
+                                            class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i>
+                                            Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    @else
+                        <a href="{{ route('login.form') }}"
+                            class="shop-header__action btn"
+                            aria-label="Đăng nhập">
+                            <i class="bi bi-person" aria-hidden="true"></i>
+                            <span>Tài khoản</span>
+                        </a>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+
+        <nav class="shop-header__nav d-flex gap-4 gap-lg-5 mt-3 pt-2 overflow-x-auto"
+            aria-label="Danh mục sản phẩm">
+
+            @foreach ($navCategories as $navCategory)
+                <a href="{{ route('store.products.index', ['category' => $navCategory->category_id]) }}"
+                    class="shop-header__nav-link text-nowrap">
+                    {{ $navCategory->category_name }}
+                </a>
+            @endforeach
+
+        </nav>
     </div>
 </header>
-
-<style>
-    .seller-account-button {
-        color: var(--seller-text);
-        background-color: var(--seller-card-bg);
-        border: 1px solid var(--seller-border);
-        white-space: nowrap;
-    }
-
-    .seller-account-button:hover,
-    .seller-account-button:focus,
-    .seller-account-button[aria-expanded="true"] {
-        color: var(--seller-primary);
-        background-color: var(--seller-primary-light);
-        border-color: var(--seller-border);
-    }
-
-    .seller-account-button .bi {
-        color: var(--seller-primary);
-    }
-
-    .seller-topbar .dropdown-menu {
-        min-width: 240px;
-        color: var(--seller-text);
-        background-color: var(--seller-card-bg);
-        border: 1px solid var(--seller-border);
-        box-shadow: var(--seller-shadow);
-    }
-
-    .seller-topbar .dropdown-item {
-        color: var(--seller-text);
-    }
-
-    .seller-topbar .dropdown-item:hover,
-    .seller-topbar .dropdown-item:focus {
-        color: var(--seller-primary);
-        background-color: var(--seller-primary-light);
-    }
-
-    .seller-topbar .dropdown-item.text-danger {
-        color: #DC3545 !important;
-    }
-
-    .seller-topbar .dropdown-divider {
-        border-color: var(--seller-border);
-    }
-
-    .seller-topbar .dropdown-item-text {
-        max-width: 240px;
-        color: var(--seller-text-muted);
-    }
-
-    .seller-topbar [data-theme-icon] {
-        color: var(--seller-primary);
-    }
-
-    [data-theme="dark"] .seller-topbar [data-theme-icon] {
-        color: #FBBF24;
-    }
-</style>

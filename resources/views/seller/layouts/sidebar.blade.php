@@ -26,7 +26,7 @@
     <nav class="seller-sidebar__nav" aria-label="Menu người bán">
         <a href="{{ route('seller.home') }}"
             class="seller-nav-link {{ request()->routeIs('seller.home') ? 'active' : '' }}">
-            <i class="bi bi-grid-1x2" aria-hidden="true"></i>
+            <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
             <span>Tổng quan</span>
         </a>
 
@@ -41,7 +41,7 @@
             data-bs-toggle="collapse" data-bs-target="#sellerProductMenu"
             aria-expanded="{{ $productsOpen ? 'true' : 'false' }}" aria-controls="sellerProductMenu">
             <i class="bi bi-box-seam" aria-hidden="true"></i>
-            <span>Quản lý Sản phẩm</span>
+            <span>Quản lý sản phẩm</span>
             <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
         </button>
 
@@ -64,7 +64,7 @@
             data-bs-toggle="collapse" data-bs-target="#sellerOrderMenu"
             aria-expanded="{{ $ordersOpen ? 'true' : 'false' }}" aria-controls="sellerOrderMenu">
             <i class="bi bi-receipt" aria-hidden="true"></i>
-            <span>Quản lý Đơn hàng</span>
+            <span>Quản lý đơn hàng</span>
             <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
         </button>
 
@@ -127,17 +127,17 @@
             </nav>
         </div>
 
-        {{-- Thiết lập Shop --}}
+        {{-- Thiết lập shop --}}
         <button class="seller-nav-link seller-nav-toggle {{ $shopSettingsOpen ? 'active' : '' }}" type="button"
             data-bs-toggle="collapse" data-bs-target="#sellerSettingsMenu"
             aria-expanded="{{ $shopSettingsOpen ? 'true' : 'false' }}" aria-controls="sellerSettingsMenu">
             <i class="bi bi-gear" aria-hidden="true"></i>
-            <span>Thiết lập Shop</span>
+            <span>Thiết lập shop</span>
             <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
         </button>
 
         <div id="sellerSettingsMenu" class="collapse {{ $shopSettingsOpen ? 'show' : '' }}">
-            <nav class="seller-submenu" aria-label="Thiết lập Shop">
+            <nav class="seller-submenu" aria-label="Thiết lập shop">
                 <a href="{{ route('seller.shop-information.edit') }}"
                     class="seller-subnav-link {{ request()->routeIs('seller.shop-information.*') ? 'active' : '' }}">
                     Hồ sơ cửa hàng
@@ -197,7 +197,7 @@
         <nav class="seller-sidebar__nav" aria-label="Menu người bán trên điện thoại">
             <a href="{{ route('seller.home') }}"
                 class="seller-nav-link {{ request()->routeIs('seller.home') ? 'active' : '' }}">
-                <i class="bi bi-grid-1x2" aria-hidden="true"></i>
+                <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
                 <span>Tổng quan</span>
             </a>
 
@@ -212,7 +212,7 @@
                 data-bs-toggle="collapse" data-bs-target="#sellerProductMenuMobile"
                 aria-expanded="{{ $productsOpen ? 'true' : 'false' }}" aria-controls="sellerProductMenuMobile">
                 <i class="bi bi-box-seam" aria-hidden="true"></i>
-                <span>Quản lý Sản phẩm</span>
+                <span>Quản lý sản phẩm</span>
                 <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
             </button>
 
@@ -240,7 +240,7 @@
                 data-bs-toggle="collapse" data-bs-target="#sellerOrderMenuMobile"
                 aria-expanded="{{ $ordersOpen ? 'true' : 'false' }}" aria-controls="sellerOrderMenuMobile">
                 <i class="bi bi-receipt" aria-hidden="true"></i>
-                <span>Quản lý Đơn hàng</span>
+                <span>Quản lý đơn hàng</span>
                 <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
             </button>
 
@@ -304,17 +304,17 @@
                 </nav>
             </div>
 
-            {{-- Thiết lập Shop --}}
+            {{-- Thiết lập shop --}}
             <button class="seller-nav-link seller-nav-toggle {{ $shopSettingsOpen ? 'active' : '' }}" type="button"
                 data-bs-toggle="collapse" data-bs-target="#sellerSettingsMenuMobile"
                 aria-expanded="{{ $shopSettingsOpen ? 'true' : 'false' }}" aria-controls="sellerSettingsMenuMobile">
                 <i class="bi bi-gear" aria-hidden="true"></i>
-                <span>Thiết lập Shop</span>
+                <span>Thiết lập shop</span>
                 <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
             </button>
 
             <div id="sellerSettingsMenuMobile" class="collapse {{ $shopSettingsOpen ? 'show' : '' }}">
-                <nav class="seller-submenu" aria-label="Thiết lập Shop">
+                <nav class="seller-submenu" aria-label="Thiết lập shop">
                     <a href="{{ route('seller.shop-information.edit') }}"
                         class="seller-subnav-link {{ request()->routeIs('seller.shop-information.*') ? 'active' : '' }}">
                         Hồ sơ cửa hàng
@@ -561,3 +561,25 @@
         }
     }
 </style>
+
+<style>
+/* Menu icons: filled on hover and focus, consistent with Admin */
+.seller-sidebar .seller-nav-link>i:first-child,.seller-sidebar--mobile .seller-nav-link>i:first-child {display:inline-flex;flex:0 0 31px;width:31px;height:31px;align-items:center;justify-content:center;border-radius:9px;color:#667e9d;background:transparent;font-size:1.05rem;transition:background .2s,color .2s,transform .2s,box-shadow .2s;}
+.seller-sidebar .seller-nav-link:hover>i:first-child,.seller-sidebar .seller-nav-link:focus-visible>i:first-child,.seller-sidebar .seller-nav-link.active>i:first-child,.seller-sidebar--mobile .seller-nav-link:hover>i:first-child,.seller-sidebar--mobile .seller-nav-link.active>i:first-child {color:#fff!important;background:#1689ec!important;box-shadow:0 4px 10px rgba(22,137,236,.22);transform:scale(1.07);}
+.seller-sidebar .seller-nav-link,.seller-sidebar--mobile .seller-nav-link {gap:10px;border-radius:10px;transition:background .2s,color .2s;}
+.seller-sidebar .seller-nav-link:hover,.seller-sidebar--mobile .seller-nav-link:hover {background:#eaf4ff;color:#0879d9;}
+.seller-sidebar .seller-subnav-link:hover,.seller-sidebar--mobile .seller-subnav-link:hover {background:#eaf4ff;color:#0879d9;}
+[data-theme="dark"] .seller-sidebar .seller-nav-link:hover,[data-theme="dark"] .seller-sidebar--mobile .seller-nav-link:hover,[data-theme="dark"] .seller-sidebar .seller-subnav-link:hover {background:#1c3a58;color:#8ac7ff;}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+ const map={'bi-chat-dots':'bi-chat-dots-fill','bi-box-seam':'bi-box-seam-fill','bi-receipt':'bi-receipt-cutoff','bi-ticket-perforated':'bi-ticket-perforated-fill','bi-bar-chart':'bi-bar-chart-fill','bi-graph-up':'bi-graph-up-arrow','bi-shop-window':'bi-shop','bi-grid-1x2':'bi-grid-1x2-fill','bi-people':'bi-people-fill','bi-gear':'bi-gear-fill'};
+ document.querySelectorAll('.seller-sidebar .seller-nav-link, .seller-sidebar--mobile .seller-nav-link').forEach(function (item) {
+   const icon=item.querySelector('i.bi'); if(!icon)return;
+   const original=Array.from(icon.classList).find(function(c){return map[c];}); if(!original)return;
+   const filled=map[original];
+   function update(){const active=item.matches(':hover,:focus-visible')||item.classList.contains('active'); icon.classList.toggle(original,!active);icon.classList.toggle(filled,active);}
+   item.addEventListener('mouseenter',update);item.addEventListener('mouseleave',update);item.addEventListener('focusin',update);item.addEventListener('focusout',update);update();
+ });
+});
+</script>

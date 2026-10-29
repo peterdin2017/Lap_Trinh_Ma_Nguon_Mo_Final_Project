@@ -34,6 +34,14 @@
                     class="store-category-link {{ $isActive || $containsActive ? 'is-active' : '' }}"
                     @if ($isActive) aria-current="page" @endif
                 >
+                    @php
+                        $categoryLabel = mb_strtolower($node->category_name);
+                        $categoryIcon = str_contains($categoryLabel, 'điện thoại') ? 'bi-phone'
+                            : (str_contains($categoryLabel, 'máy tính') || str_contains($categoryLabel, 'laptop') ? 'bi-laptop'
+                            : (str_contains($categoryLabel, 'thời trang') || str_contains($categoryLabel, 'áo') ? 'bi-bag'
+                            : (str_contains($categoryLabel, 'đồng hồ') ? 'bi-watch' : 'bi-grid')));
+                    @endphp
+                    <i class="bi {{ $categoryIcon }} store-category-link__icon" aria-hidden="true"></i>
                     <span class="store-category-link__name">
                         {{ $node->category_name }}
                     </span>

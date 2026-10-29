@@ -405,6 +405,31 @@
                 transition-duration: .01ms !important;
             }
         }
+    
+/* Filter interactions shared with Store design */
+.product-list-page .product-list-page__panel {border-radius:14px;box-shadow:0 10px 32px rgba(27,59,105,.065);}
+.product-list-page .product-list-page__label i {color:#1688ef;font-size:1rem;}
+.product-list-page__category-list a, .product-list-page .store-category-link {display:flex;align-items:center;gap:9px;min-height:39px;padding:9px 10px;border-radius:9px;transition:background .18s ease,color .18s ease,transform .18s ease;}
+.product-list-page__category-list a:hover,.product-list-page .store-category-link:hover {color:#0878e8!important;background:#eaf4ff!important;transform:translateX(3px);}
+.product-list-page__category-list a.is-active,.product-list-page .store-category-link.is-active {background:#eaf4ff!important;color:#0878e8!important;font-weight:700;}
+.product-list-page .store-category-link__icon {flex:0 0 20px;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;color:#7794b2;transition:color .18s ease,transform .18s ease;}
+.product-list-page a:hover .store-category-link__icon,.product-list-page a.is-active .store-category-link__icon {color:#0878e8;transform:scale(1.13);}
+.product-list-page .store-category-toggle {border-radius:8px;transition:background .18s ease,color .18s ease;}
+.product-list-page .store-category-toggle:hover {background:#eaf4ff;color:#0878e8;}
+.product-list-page__price-tag {display:inline-flex;align-items:center;gap:2px;}
+.product-list-page__price-tag:hover {transform:translateY(-2px);box-shadow:0 5px 12px rgba(28,121,219,.12);}
+.product-list-page__apply {transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;}
+.product-list-page__apply:hover {transform:translateY(-2px);box-shadow:0 7px 16px rgba(26,148,255,.2);}
+html[data-store-theme="dark"] .product-list-page {--pl-primary:#69b7ff;--pl-primary-light:#153a60;--pl-text:#ecf3ff;--pl-muted:#a8bbd2;--pl-border:#33465f;--pl-bg:#0d1522;color:#ecf3ff;}
+html[data-store-theme="dark"] .product-list-page__panel,html[data-store-theme="dark"] .product-list-page__topbar {background:#19283a!important;border-color:#35485e!important;color:#ecf3ff!important;}
+html[data-store-theme="dark"] .product-list-page .form-control {background:#101e2e;color:#f1f6ff;border-color:#38526e;}
+html[data-store-theme="dark"] .product-list-page__label,html[data-store-theme="dark"] .product-list-page__panel-title {color:#e8f1ff;}
+html[data-store-theme="dark"] .product-list-page__category-list a,html[data-store-theme="dark"] .product-list-page .store-category-link {color:#cbd9ea;}
+html[data-store-theme="dark"] .product-list-page__category-list a:hover,html[data-store-theme="dark"] .product-list-page .store-category-link:hover,html[data-store-theme="dark"] .product-list-page .store-category-link.is-active {background:#203d60!important;color:#96caff!important;}
+html[data-store-theme="dark"] .product-list-page__price-tag {color:#d3e3f8;background:#26374d;border-color:#405977;}
+html[data-store-theme="dark"] .product-list-page .btn-light {color:#dae9fa;background:#2b3e55;border-color:#3c5673;}
+html[data-store-theme="dark"] .product-list-page__divider {border-color:#40516a;}
+
     </style>
 @endpush
 
@@ -443,7 +468,7 @@
                         <form method="GET" action="{{ route('store.products.index') }}">
                             <div class="mb-3">
                                 <label for="product-filter-q" class="product-list-page__label">
-                                    Từ khóa
+                                    <i class="bi bi-search me-1" aria-hidden="true"></i> Từ khóa
                                 </label>
                                 <input
                                     id="product-filter-q"
@@ -457,7 +482,7 @@
                             </div>
 
                             <div class="mb-2">
-                                <span class="product-list-page__label">Khoảng giá</span>
+                                <span class="product-list-page__label"><i class="bi bi-cash-stack me-1" aria-hidden="true"></i> Khoảng giá</span>
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <label for="product-filter-min" class="visually-hidden">Giá từ</label>
@@ -501,7 +526,7 @@
                                         class="product-list-page__price-tag"
                                         href="{{ route('store.products.index', $rangeQuery) }}"
                                     >
-                                        {{ $range['label'] }}
+                                        <i class="bi bi-tag me-1" aria-hidden="true"></i>{{ $range['label'] }}
                                     </a>
                                 @endforeach
                             </div>
@@ -513,7 +538,7 @@
                             <hr class="product-list-page__divider">
 
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h3 class="product-list-page__label mb-0">Danh mục</h3>
+                                <h3 class="product-list-page__label mb-0"><i class="bi bi-grid-fill me-1" aria-hidden="true"></i> Danh mục</h3>
                                 <button
                                     class="btn btn-sm btn-light"
                                     type="button"
@@ -533,7 +558,7 @@
                                         href="{{ route('store.products.index', request()->except(['category', 'page'])) }}"
                                         class="{{ empty($filters['category']) ? 'is-active fw-semibold' : '' }}"
                                     >
-                                        Tất cả sản phẩm
+                                        <i class="bi bi-grid-3x3-gap store-category-link__icon me-2" aria-hidden="true"></i>Tất cả sản phẩm
                                     </a>
 
                                     @include('store.products._category-tree', [

@@ -208,14 +208,158 @@
 
         @media (min-width: 992px) {
             .seller-main {
-                width: calc(100% - var(--seller-sidebar-width));
-                margin-left: var(--seller-sidebar-width);
+                width: auto;
+                margin-left: 0;
             }
         }
     </style>
 
     @stack('styles')
     <link rel="stylesheet" href="{{ asset('assets/css/dashboard-layout.css') }}">
+    <style>
+/* Seller Center visual system aligned with Admin Center. */
+:root,[data-theme="light"] {
+  --seller-primary:#1688ff;
+  --seller-primary-hover:#0874e2;
+  --seller-primary-light:#eaf4ff;
+  --seller-sidebar-bg:#ffffff;
+  --seller-card-bg:#ffffff;
+  --seller-page-bg:#f4f7fb;
+  --seller-text:#101f37;
+  --seller-text-muted:#62758f;
+  --seller-border:#e2e9f2;
+  --seller-shadow:0 2px 12px rgba(22,52,93,.045);
+}
+[data-theme="dark"] {
+  --seller-primary:#67aaff;
+  --seller-primary-hover:#3d91f5;
+  --seller-primary-light:#173354;
+  --seller-sidebar-bg:#0b192c;
+  --seller-card-bg:#16263d;
+  --seller-page-bg:#101b2e;
+  --seller-text:#eef4ff;
+  --seller-text-muted:#9bafcb;
+  --seller-border:#2d405c;
+}
+/* Prevent CSS from the old Seller Center affecting Admin. */
+.seller-sidebar {
+  --seller-sidebar-line:var(--seller-border);
+  color:var(--seller-text)!important;
+  background:var(--seller-sidebar-bg)!important;
+  border-right:1px solid var(--seller-border)!important;
+}
+.seller-sidebar .seller-brand {
+  display:flex;align-items:center;gap:13px;
+  min-height:83px;padding:17px 20px;
+  background:var(--seller-sidebar-bg);
+  border-bottom:1px solid var(--seller-border);
+  color:var(--seller-text);
+  text-decoration:none;
+}
+.seller-sidebar .seller-brand>i {
+  display:inline-grid;place-items:center;flex:0 0 25px;
+  width:25px;font-size:23px;color:var(--seller-primary);
+}
+.seller-sidebar .seller-brand strong {font-size:15px;font-weight:750;line-height:1.4;color:var(--seller-text)}
+.seller-sidebar .seller-brand small {font-size:12px;color:var(--seller-text-muted)}
+.seller-sidebar .seller-sidebar__section {
+  padding:19px 16px 9px;font-size:11px;letter-spacing:.06em;
+  color:var(--seller-text-muted);font-weight:750;text-transform:uppercase;
+}
+.seller-sidebar .seller-sidebar__nav {gap:3px;padding:0 12px 15px}
+.seller-sidebar .seller-nav-link {
+  position:relative;display:flex;align-items:center;gap:12px;
+  width:100%;min-height:47px;padding:11px 13px;
+  border:0;border-radius:10px;background:transparent;
+  color:var(--seller-text-muted)!important;
+  font-size:14px;font-weight:450;line-height:1.35;
+  text-align:left;text-decoration:none;cursor:pointer;
+  transition:background-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.seller-sidebar .seller-nav-link>i:first-child {
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 21px;width:21px;height:22px;font-size:17px;line-height:1;
+}
+.seller-sidebar .seller-nav-link>span:first-of-type {min-width:0;flex:1 1 auto}
+.seller-sidebar .seller-nav-link:hover,
+.seller-sidebar .seller-nav-link:focus-visible,
+.seller-sidebar .seller-nav-link.active {
+  color:var(--seller-primary)!important;
+  background:var(--seller-primary-light)!important;
+}
+.seller-sidebar .seller-nav-link:hover:not(.active) {transform:translateX(2px)}
+.seller-sidebar .seller-nav-link.active {font-weight:650}
+.seller-sidebar .seller-nav-link.active::before {display:none}
+.seller-sidebar .seller-nav-link:focus-visible,
+.seller-sidebar .seller-subnav-link:focus-visible {outline:2px solid var(--seller-primary);outline-offset:2px}
+.seller-sidebar .seller-nav-chevron {
+  flex:0 0 15px;width:15px;margin-left:auto;font-size:12px;
+  transition:transform .2s ease;
+}
+.seller-sidebar .seller-nav-toggle[aria-expanded="true"] .seller-nav-chevron {transform:rotate(180deg)}
+.seller-sidebar .seller-submenu {
+  display:flex;flex-direction:column;gap:3px;
+  margin:3px 0 9px 21px;padding-left:9px;
+  border-left:1px solid var(--seller-border);
+}
+.seller-sidebar .seller-subnav-link {
+  display:flex;min-height:37px;align-items:center;gap:8px;
+  border-radius:7px;padding:8px 10px;font-size:13px;line-height:1.4;
+  color:var(--seller-text-muted);text-decoration:none;
+  transition:color .16s ease,background-color .16s ease;
+}
+.seller-sidebar .seller-subnav-link:hover,
+.seller-sidebar .seller-subnav-link:focus-visible,
+.seller-sidebar .seller-subnav-link.active {
+  color:var(--seller-primary)!important;background:var(--seller-primary-light)!important;
+}
+.seller-sidebar .seller-menu-badge {
+  flex-shrink:0;margin-left:auto;border-radius:6px;padding:3px 7px;
+  color:var(--seller-primary);background:var(--seller-primary-light);
+}
+.seller-sidebar .seller-sidebar__footer {
+  padding:15px 16px;border-top:1px solid var(--seller-border);background:var(--seller-sidebar-bg);
+}
+.seller-sidebar .seller-sidebar__footer .btn {
+  min-height:39px;border-radius:6px;font-size:12px;
+  transition:background-color .18s ease,color .18s ease,border-color .18s ease;
+}
+.seller-sidebar .seller-sidebar__footer .btn[id^="sellerThemeToggle"] {
+  color:var(--seller-primary);border-color:var(--seller-primary);
+}
+.seller-sidebar .seller-sidebar__footer .btn[id^="sellerThemeToggle"]:hover {
+  background:var(--seller-primary-light);color:var(--seller-primary);
+}
+.seller-sidebar .seller-sidebar__caption {
+  font-size:11px;text-align:left;color:var(--seller-text-muted);
+}
+.app-main.seller-main {background:var(--seller-page-bg);color:var(--seller-text)}
+.app-main.seller-main>.seller-topbar {
+  min-height:60px;height:60px;border-bottom:1px solid var(--seller-border);
+  background:var(--seller-card-bg);
+}
+.seller-topbar h1 {font-size:17px!important;letter-spacing:-.01em}
+.seller-topbar .seller-account-button {border-radius:7px;border-color:var(--seller-primary);color:var(--seller-primary)}
+.seller-topbar .seller-account-button:hover {background:var(--seller-primary-light)}
+.seller-content .card,.seller-content .dashboard-card,
+.seller-content .welcome-card,.seller-content .products-table-card {
+  border-radius:10px;box-shadow:var(--seller-shadow);
+}
+.seller-content .btn,.seller-content .form-control,.seller-content .form-select {border-radius:7px}
+.seller-content .table thead th {background:var(--seller-primary-light);color:var(--seller-text);font-size:12px}
+/* Keep mobile offcanvas fluid, prevent desktop fixed sidebar overlap. */
+@media (max-width:991.98px) {
+  .seller-sidebar--mobile {width:min(310px,88vw)!important}
+  .seller-sidebar--mobile .seller-sidebar__nav {overflow-y:visible}
+  .app-main.seller-main {margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce) {
+  .seller-sidebar .seller-nav-link,
+  .seller-sidebar .seller-subnav-link,
+  .seller-sidebar .seller-nav-chevron {transition:none!important;transform:none!important}
+}
+
+</style>
 </head>
 
 <body>
@@ -262,7 +406,7 @@
         (() => {
             const root = document.documentElement;
             const themeSelector =
-                '#sellerThemeToggle, #sellerThemeToggleMobile';
+                '#sellerThemeToggle, #sellerThemeToggleMobile, #sellerThemeToggleHeader';
 
             function syncThemeButtons() {
                 const isDark = root.dataset.theme === 'dark';
