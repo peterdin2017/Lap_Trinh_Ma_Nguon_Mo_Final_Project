@@ -467,12 +467,14 @@ class CheckoutController extends Controller
                      * trên từng dòng theo platform_voucher_discount.
                      */
                     $platformCodeForUsage = null;
+                    $platformVoucherIdForUsage = null;
 
                     if (
                         $platformVoucher
                         && ! $platformVoucherCodeRecorded
                     ) {
                         $platformCodeForUsage = $platformVoucher->voucher_code;
+                        $platformVoucherIdForUsage = $platformVoucher->platform_voucher_id;
                         $platformVoucherCodeRecorded = true;
                     }
 
@@ -487,6 +489,7 @@ class CheckoutController extends Controller
                         'seller_voucher_code' => $line['seller_voucher_code'],
                         'seller_voucher_discount' => $line['seller_voucher_discount'],
                         'platform_voucher_code' => $platformCodeForUsage,
+                        'platform_voucher_id' => $platformVoucherIdForUsage,
                         'platform_voucher_discount' => $line['platform_voucher_discount'],
                     ]);
 
@@ -816,12 +819,20 @@ class CheckoutController extends Controller
             ]);
         }
 
-        $usedByAccount = DB::table('order_items')
+        $usedByAccountQuery = DB::table('order_items')
             ->join('orders', 'orders.order_id', '=', 'order_items.order_id')
             ->where('orders.account_id', $accountId)
-            ->where('order_items.platform_voucher_code', $voucher->voucher_code)
-            ->distinct()
-            ->count('order_items.platform_voucher_code');
+            ->where('order_items.platform_voucher_id', $voucher->platform_voucher_id);
+
+        if ($lockForUpdate) {
+            // A locking read sees uses committed while this transaction waited
+            // for the voucher row lock above, even under repeatable-read isolation.
+            $usedByAccountQuery->lockForUpdate();
+        }
+
+        $usedByAccount = $usedByAccountQuery
+            ->get(['order_items.order_item_id'])
+            ->count();
 
         if (
             $voucher->per_user_limit !== null
@@ -914,7 +925,7 @@ class CheckoutController extends Controller
 
         $accountId = Account::query()
             ->whereKey((int) $accountId)
-            ->whereIn('role', ['user', 'seller'])
+            ->where('role', 'user')
             ->where('status', 'active')
             ->value('account_id');
 

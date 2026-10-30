@@ -4,8 +4,6 @@
 @section('page-title', 'Hỗ trợ khách hàng')
 
 @section('content')
-    @include('admin.partials.flash')
-
     @php
         $topicLabels = [
             'account' => 'Tài khoản',
@@ -19,306 +17,468 @@
 
         $statusLabels = [
             'pending' => 'Chờ tiếp nhận',
-            'in_progress' => 'Đang xử lý',
+            'in_progress' => 'Chờ tiếp nhận',
             'resolved' => 'Đã xử lý',
         ];
 
         $statusClasses = [
             'pending' => 'warning',
-            'in_progress' => 'muted',
+            'in_progress' => 'warning',
             'resolved' => 'success',
         ];
     @endphp
 
-    <div class="admin-section-head">
-        <div>
-            <h2>Yêu cầu hỗ trợ</h2>
-            <p>Xem nội dung, phản hồi khách hàng và cập nhật trạng thái xử lý.</p>
-        </div>
-    </div>
-
-    <form method="GET" action="{{ route('admin.support.index') }}" class="admin-filter mb-3">
-        <input
-            type="search"
-            name="q"
-            value="{{ request('q') }}"
-            class="form-control"
-            placeholder="Tìm theo mã yêu cầu, email hoặc nội dung"
-            aria-label="Tìm yêu cầu hỗ trợ"
-        >
-
-        <select name="status" class="form-select" aria-label="Lọc trạng thái">
-            <option value="">Tất cả trạng thái</option>
-            @foreach ($statuses as $value => $label)
-                <option value="{{ $value }}" @selected(request('status') === $value)>
-                    {{ $label }}
-                </option>
-            @endforeach
-        </select>
-
-        <button type="submit" class="btn btn-primary">Lọc</button>
-        <a href="{{ route('admin.support.index') }}" class="btn btn-outline-secondary">Xóa lọc</a>
-    </form>
-
-    <div class="support-request-list">
-        @forelse ($requests as $supportRequest)
-            <article class="admin-panel support-request-card">
-                <header class="support-request-card__header">
-                    <div>
-                        <div class="support-request-card__id">
-                            Yêu cầu #{{ $supportRequest->request_id }}
-                        </div>
-
-                        <div class="small text-secondary">
-                            Gửi lúc {{ $supportRequest->created_at?->format('d/m/Y H:i') }}
-                        </div>
-                    </div>
-
-                    <span class="admin-pill {{ $statusClasses[$supportRequest->status] ?? 'muted' }}">
-                        {{ $statusLabels[$supportRequest->status] ?? $supportRequest->status }}
-                    </span>
-                </header>
-
-                <div class="support-request-card__body">
-                    <div class="support-request-meta">
-                        <div>
-                            <span class="support-request-label">Người gửi</span>
-                            <strong>
-                                {{ $supportRequest->account?->email ?? 'Tài khoản không còn tồn tại' }}
-                            </strong>
-                            <span class="small text-secondary">
-                                {{ $supportRequest->requester_role === 'seller' ? 'Người bán' : 'Người mua' }}
-                            </span>
-                        </div>
-
-                        <div>
-                            <span class="support-request-label">Chủ đề</span>
-                            <strong>
-                                {{ $topicLabels[$supportRequest->topic] ?? $supportRequest->topic }}
-                            </strong>
-                        </div>
-                    </div>
-
-                    <div class="support-request-message">
-                        <span class="support-request-label">Nội dung yêu cầu</span>
-                        <p>{{ $supportRequest->message }}</p>
-                    </div>
-
-                    @if ($supportRequest->attachments)
-                        <div class="support-attachments">
-                            <span class="support-request-label">Tệp đính kèm</span>
-
-                            <div class="support-attachments__list">
-                                @foreach ($supportRequest->attachments as $index => $path)
-                                    @php
-                                        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-                                        $previewUrl = route('admin.support.attachments.preview', [
-                                            $supportRequest->request_id,
-                                            $index,
-                                        ]);
-                                    @endphp
-
-                                    <details class="support-attachment">
-                                        <summary>
-                                            <i class="bi bi-paperclip" aria-hidden="true"></i>
-                                            <span>{{ basename($path) }}</span>
-                                            <i
-                                                class="bi bi-chevron-down support-attachment__chevron"
-                                                aria-hidden="true"
-                                            ></i>
-                                        </summary>
-
-                                        <div class="support-attachment__preview">
-                                            @if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true))
-                                                <img
-                                                    src="{{ $previewUrl }}"
-                                                    alt="Ảnh khách đính kèm"
-                                                    loading="lazy"
-                                                >
-                                            @elseif ($extension === 'pdf')
-                                                <iframe
-                                                    src="{{ $previewUrl }}"
-                                                    title="Xem trước PDF đính kèm"
-                                                    loading="lazy"
-                                                ></iframe>
-                                            @elseif ($extension === 'mp4')
-                                                <video controls preload="metadata">
-                                                    <source src="{{ $previewUrl }}" type="video/mp4">
-                                                    Trình duyệt không hỗ trợ phát video.
-                                                </video>
-                                            @else
-                                                <div class="support-attachment__unsupported">
-                                                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-                                                    <span>
-                                                        Trình duyệt không hỗ trợ xem trước định dạng
-                                                        {{ strtoupper($extension) }}.
-                                                    </span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </details>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    <form
-                        method="POST"
-                        action="{{ route('admin.support.update', $supportRequest->request_id) }}"
-                        class="support-process-form"
-                    >
-                        @csrf
-                        @method('PATCH')
-
-                        <label
-                            class="form-label fw-semibold"
-                            for="reply-{{ $supportRequest->request_id }}"
-                        >
-                            Phản hồi khách hàng
-                        </label>
-
-                        <textarea
-                            id="reply-{{ $supportRequest->request_id }}"
-                            name="admin_reply"
-                            rows="3"
-                            maxlength="5000"
-                            class="form-control @error('admin_reply') is-invalid @enderror"
-                            placeholder="Nhập nội dung phản hồi..."
-                        >{{ old('admin_reply', $supportRequest->admin_reply) }}</textarea>
-
-                        @error('admin_reply')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-
-                        <div class="support-process-form__actions">
-                            <select name="status" class="form-select" required>
-                                @foreach ($statuses as $value => $label)
-                                    <option
-                                        value="{{ $value }}"
-                                        @selected(old('status', $supportRequest->status) === $value)
-                                    >
-                                        {{ $label }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <button
-                                type="submit"
-                                class="btn btn-outline-primary"
-                                name="notify_customer"
-                                value="0"
-                            >
-                                <i class="bi bi-save me-1" aria-hidden="true"></i>
-                                Lưu xử lý
-                            </button>
-
-                            <button
-                                type="submit"
-                                class="btn btn-primary"
-                                name="notify_customer"
-                                value="1"
-                            >
-                                <i class="bi bi-bell me-1" aria-hidden="true"></i>
-                                Lưu và thông báo khách hàng
-                            </button>
-                        </div>
-
-                        @if ($supportRequest->handler)
-                            <div class="small text-secondary mt-2">
-                                Cập nhật bởi {{ $supportRequest->handler->email }}
-                            </div>
-                        @endif
-                    </form>
-                </div>
-            </article>
-        @empty
-            <div class="admin-panel p-5 text-center text-secondary">
-                Chưa có yêu cầu hỗ trợ phù hợp.
+    <main class="admin-support">
+        <header class="admin-section-head">
+            <div>
+                <h2>Yêu cầu hỗ trợ</h2>
+                <p>Đọc yêu cầu, nhập phản hồi và gửi cho khách hàng để hoàn tất xử lý.</p>
             </div>
-        @endforelse
-    </div>
+        </header>
 
-    <div class="mt-3">
-        {{ $requests->links() }}
-    </div>
+        <section class="admin-panel support-filter-panel">
+            <form method="GET" action="{{ route('admin.support.index') }}" class="support-filter">
+                <div class="support-filter__keyword">
+                    <label for="support-search" class="form-label">Tìm yêu cầu</label>
+                    <input
+                        id="support-search"
+                        type="search"
+                        name="q"
+                        value="{{ request('q') }}"
+                        class="form-control"
+                        placeholder="Mã yêu cầu, email hoặc nội dung"
+                    >
+                </div>
+
+                <div class="support-filter__status">
+                    <label for="support-status" class="form-label">Trạng thái</label>
+                    <select id="support-status" name="status" class="form-select">
+                        <option value="">Tất cả trạng thái</option>
+                        @foreach ($statuses as $value => $label)
+                            <option value="{{ $value }}" @selected(request('status') === $value)>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="support-filter__actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1" aria-hidden="true"></i>
+                        Lọc
+                    </button>
+
+                    <a href="{{ route('admin.support.index') }}" class="btn btn-outline-secondary">
+                        Xóa lọc
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <div class="support-results-heading">
+            <div>
+                <h3>Danh sách yêu cầu</h3>
+                <p>{{ number_format($requests->total()) }} yêu cầu phù hợp</p>
+            </div>
+        </div>
+
+        <div class="support-request-list">
+            @forelse ($requests as $supportRequest)
+                @php
+                    $requestId = $supportRequest->request_id;
+                    $isThisRequestOldInput =
+                        (string) old('support_request_id') === (string) $requestId;
+
+                    $replyValue = $isThisRequestOldInput
+                        ? old('admin_reply', $supportRequest->admin_reply)
+                        : $supportRequest->admin_reply;
+
+                    $displayStatus = $supportRequest->status === 'resolved'
+                        ? 'resolved'
+                        : 'pending';
+                @endphp
+
+                <article class="admin-panel support-card">
+                    <header class="support-card__header">
+                        <div class="support-card__heading">
+                            <div class="support-card__id">Yêu cầu #{{ $requestId }}</div>
+                            <div class="support-card__submitted">
+                                <i class="bi bi-calendar3" aria-hidden="true"></i>
+                                Gửi lúc {{ $supportRequest->created_at?->format('d/m/Y H:i') ?? '—' }}
+                            </div>
+                        </div>
+
+                        <span class="admin-pill {{ $statusClasses[$displayStatus] }}">
+                            {{ $statusLabels[$displayStatus] }}
+                        </span>
+                    </header>
+
+                    <div class="support-card__body">
+                        <div class="support-card__meta">
+                            <div class="support-card__meta-item">
+                                <span class="support-label">Người gửi</span>
+                                <strong class="support-card__email">
+                                    {{ $supportRequest->account?->email ?? 'Tài khoản không còn tồn tại' }}
+                                </strong>
+                                <span class="support-muted">
+                                    {{ $supportRequest->requester_role === 'seller' ? 'Người bán' : 'Người mua' }}
+                                </span>
+                            </div>
+
+                            <div class="support-card__meta-item">
+                                <span class="support-label">Chủ đề</span>
+                                <strong>
+                                    {{ $topicLabels[$supportRequest->topic] ?? $supportRequest->topic }}
+                                </strong>
+                            </div>
+
+                            @if ($supportRequest->handler)
+                                <div class="support-card__meta-item">
+                                    <span class="support-label">Người xử lý gần nhất</span>
+                                    <strong>{{ $supportRequest->handler->email }}</strong>
+                                    @if ($supportRequest->handled_at)
+                                        <span class="support-muted">
+                                            Cập nhật {{ $supportRequest->handled_at->format('d/m/Y H:i') }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+
+                        <section class="support-message">
+                            <h4 class="support-label">Nội dung khách gửi</h4>
+                            <p>{{ $supportRequest->message }}</p>
+                        </section>
+
+                        @if (!empty($supportRequest->attachments))
+                            <section class="support-attachments">
+                                <h4 class="support-label">
+                                    Tệp đính kèm
+                                    <span class="support-muted">
+                                        ({{ count($supportRequest->attachments) }})
+                                    </span>
+                                </h4>
+
+                                <div class="support-attachments__list">
+                                    @foreach ($supportRequest->attachments as $index => $path)
+                                        @php
+                                            $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                                            $previewUrl = route('admin.support.attachments.preview', [
+                                                $requestId,
+                                                $index,
+                                            ]);
+                                            $fileName = basename($path);
+                                        @endphp
+
+                                        <details class="support-attachment">
+                                            <summary class="support-attachment__summary">
+                                                <i class="bi bi-paperclip" aria-hidden="true"></i>
+                                                <span class="support-attachment__name">{{ $fileName }}</span>
+                                                <span class="support-attachment__action">Xem</span>
+                                                <i
+                                                    class="bi bi-chevron-down support-attachment__chevron"
+                                                    aria-hidden="true"
+                                                ></i>
+                                            </summary>
+
+                                            <div class="support-attachment__preview">
+                                                @if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true))
+                                                    <img
+                                                        src="{{ $previewUrl }}"
+                                                        alt="Ảnh khách đính kèm"
+                                                        loading="lazy"
+                                                    >
+                                                @elseif ($extension === 'pdf')
+                                                    <iframe
+                                                        src="{{ $previewUrl }}"
+                                                        title="Xem trước tệp PDF"
+                                                        loading="lazy"
+                                                    ></iframe>
+                                                @elseif ($extension === 'mp4')
+                                                    <video controls preload="metadata">
+                                                        <source src="{{ $previewUrl }}" type="video/mp4">
+                                                        Trình duyệt không hỗ trợ phát video.
+                                                    </video>
+                                                @else
+                                                    <div class="support-attachment__unsupported">
+                                                        <i
+                                                            class="bi bi-file-earmark-text"
+                                                            aria-hidden="true"
+                                                        ></i>
+                                                        <span>
+                                                            Không thể xem trước tệp
+                                                            {{ strtoupper($extension ?: 'không rõ định dạng') }}
+                                                            trên trang này.
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </details>
+                                    @endforeach
+                                </div>
+                            </section>
+                        @endif
+
+                        @if (filled($supportRequest->admin_reply))
+                            <section class="support-previous-reply">
+                                <div>
+                                    <h4 class="support-label mb-1">Phản hồi đã gửi</h4>
+                                    @if ($supportRequest->handled_at)
+                                        <span class="support-muted">
+                                            Gửi lúc {{ $supportRequest->handled_at->format('d/m/Y H:i') }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <p>{{ $supportRequest->admin_reply }}</p>
+                            </section>
+                        @endif
+
+                        @if ($displayStatus === 'resolved')
+                            <div class="support-completed">
+                                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                                Yêu cầu này đã được phản hồi và hoàn tất.
+                            </div>
+                        @else
+                            <form
+                                method="POST"
+                                action="{{ route('admin.support.update', $requestId) }}"
+                                class="support-process"
+                            >
+                                @csrf
+                                @method('PATCH')
+
+                                <input
+                                    type="hidden"
+                                    name="support_request_id"
+                                    value="{{ $requestId }}"
+                                >
+
+                                <div class="support-process__title">
+                                    <div>
+                                        <h4>Phản hồi khách hàng</h4>
+                                        <p>
+                                            Gửi phản hồi sẽ tạo thông báo cho khách và chuyển yêu cầu sang
+                                            “Đã xử lý”.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="support-process__reply">
+                                    <label for="reply-{{ $requestId }}" class="form-label">
+                                        Nội dung phản hồi
+                                    </label>
+                                    <textarea
+                                        id="reply-{{ $requestId }}"
+                                        name="admin_reply"
+                                        rows="4"
+                                        maxlength="5000"
+                                        required
+                                        class="form-control @error('admin_reply') is-invalid @enderror"
+                                        placeholder="Nhập câu trả lời hoặc hướng xử lý cho khách..."
+                                    >{{ $replyValue }}</textarea>
+
+                                    @error('admin_reply')
+                                        @if ($isThisRequestOldInput)
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @endif
+                                    @enderror
+                                </div>
+
+                                <div class="support-process__actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-send me-1" aria-hidden="true"></i>
+                                        Gửi phản hồi và hoàn tất
+                                    </button>
+                                </div>
+                            </form>
+                        @endif
+                    </div>
+                </article>
+            @empty
+                <section class="admin-panel support-empty">
+                    <span class="support-empty__icon">
+                        <i class="bi bi-inbox" aria-hidden="true"></i>
+                    </span>
+                    <h3>Không tìm thấy yêu cầu hỗ trợ</h3>
+                    <p>Thử đổi từ khóa hoặc trạng thái lọc.</p>
+                    <a href="{{ route('admin.support.index') }}" class="btn btn-outline-secondary">
+                        Xóa bộ lọc
+                    </a>
+                </section>
+            @endforelse
+        </div>
+
+        @if ($requests->hasPages())
+            <div class="support-pagination">
+                {{ $requests->links() }}
+            </div>
+        @endif
+    </main>
 
     <style>
-        .support-request-list {
+        .admin-support {
             display: grid;
-            gap: 18px;
+            gap: 1rem;
         }
 
-        .support-request-card {
+        .support-filter-panel {
+            padding: 1rem;
+            border-radius: 14px;
+        }
+
+        .support-filter {
+            display: grid;
+            grid-template-columns: minmax(260px, 1fr) minmax(190px, 260px) auto;
+            align-items: end;
+            gap: .85rem;
+        }
+
+        .support-filter .form-label,
+        .support-process .form-label {
+            margin-bottom: .45rem;
+            font-weight: 650;
+        }
+
+        .support-filter .form-control,
+        .support-filter .form-select,
+        .support-process .form-control {
+            min-height: 42px;
+        }
+
+        .support-filter__actions {
+            display: flex;
+            gap: .5rem;
+        }
+
+        .support-filter__actions .btn {
+            min-height: 42px;
+            white-space: nowrap;
+        }
+
+        .support-results-heading h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 750;
+        }
+
+        .support-results-heading p {
+            margin: .25rem 0 0;
+            color: var(--app-text-muted, #64748b);
+            font-size: .88rem;
+        }
+
+        .support-request-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .support-card {
             overflow: hidden;
             border: 1px solid var(--app-border, #e2e8f0);
             border-radius: 14px;
         }
 
-        .support-request-card__header {
+        .support-card__header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
-            padding: 18px 20px;
+            gap: 1rem;
+            padding: 1rem 1.2rem;
             border-bottom: 1px solid var(--app-border, #e2e8f0);
+            background: color-mix(
+                in srgb,
+                var(--app-card-bg, #fff) 94%,
+                var(--app-primary, #1687f8)
+            );
         }
 
-        .support-request-card__id {
-            font-size: 1.05rem;
-            font-weight: 800;
-        }
-
-        .support-request-card__body {
-            padding: 20px;
-        }
-
-        .support-request-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 28px;
-            margin-bottom: 20px;
-        }
-
-        .support-request-meta > div {
+        .support-card__heading,
+        .support-card__meta-item {
             display: grid;
-            gap: 4px;
+            gap: .3rem;
         }
 
-        .support-request-label {
-            display: block;
-            margin-bottom: 6px;
+        .support-card__id {
+            font-size: 1rem;
+            font-weight: 750;
+        }
+
+        .support-card__submitted {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
             color: var(--app-text-muted, #64748b);
-            font-size: .82rem;
+            font-size: .84rem;
+        }
+
+        .support-card__body {
+            display: grid;
+            gap: 1rem;
+            padding: 1.2rem;
+        }
+
+        .support-card__meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .support-card__meta-item {
+            align-content: start;
+            min-width: 0;
+        }
+
+        .support-card__email {
+            overflow-wrap: anywhere;
+        }
+
+        .support-label {
+            display: block;
+            margin: 0;
+            color: var(--app-text-muted, #64748b);
+            font-size: .8rem;
             font-weight: 700;
         }
 
-        .support-request-message {
-            padding: 14px;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            background: #f5f8fc;
-            color: #24364b;
+        .support-muted {
+            color: var(--app-text-muted, #64748b);
+            font-size: .84rem;
         }
 
-        .support-request-message .support-request-label {
-            color: #64748b;
+        .support-message,
+        .support-previous-reply {
+            padding: 1rem;
+            border: 1px solid var(--app-border, #e2e8f0);
+            border-radius: 12px;
+            background: var(--app-page-bg, #f4f7fa);
+            color: var(--app-text, #0f172a);
         }
 
-        .support-request-message p {
-            margin: 0;
-            color: #24364b;
+        .support-previous-reply {
+            border-left: 3px solid var(--app-primary, #1687f8);
+        }
+
+        .support-message .support-label,
+        .support-previous-reply .support-label {
+            color: var(--app-text-muted, #64748b);
+        }
+
+        .support-message p,
+        .support-previous-reply p {
+            margin: .45rem 0 0;
+            color: var(--app-text, #0f172a);
             white-space: pre-line;
             overflow-wrap: anywhere;
         }
 
         .support-attachments {
-            margin-top: 18px;
+            display: grid;
+            gap: .55rem;
         }
 
         .support-attachments__list {
             display: grid;
-            gap: 10px;
+            gap: .5rem;
         }
 
         .support-attachment {
@@ -326,34 +486,43 @@
             border: 1px solid var(--app-border, #e2e8f0);
             border-radius: 10px;
             background: var(--app-card-bg, #fff);
+            color: var(--app-text, #0f172a);
         }
 
-        .support-attachment summary {
+        .support-attachment__summary {
             display: flex;
             align-items: center;
-            gap: 9px;
-            padding: 11px 14px;
-            color: var(--app-text, #183153);
+            gap: .65rem;
+            min-height: 46px;
+            padding: .65rem .85rem;
+            color: var(--app-text, #0f172a);
             cursor: pointer;
-            font-weight: 600;
             list-style: none;
         }
 
-        .support-attachment summary::-webkit-details-marker {
+        .support-attachment__summary::-webkit-details-marker {
             display: none;
         }
 
-        .support-attachment summary > span {
-            flex: 1;
-            overflow-wrap: anywhere;
-        }
-
-        .support-attachment summary > i:first-child {
+        .support-attachment__summary > i:first-child {
             color: var(--app-primary, #1687f8);
         }
 
+        .support-attachment__name {
+            flex: 1;
+            overflow-wrap: anywhere;
+            font-weight: 600;
+        }
+
+        .support-attachment__action {
+            color: var(--app-primary, #1687f8);
+            font-size: .82rem;
+            font-weight: 650;
+        }
+
         .support-attachment__chevron {
-            transition: transform .2s ease;
+            color: var(--app-text-muted, #64748b);
+            transition: transform .15s ease;
         }
 
         .support-attachment[open] .support-attachment__chevron {
@@ -361,9 +530,10 @@
         }
 
         .support-attachment__preview {
-            padding: 14px;
+            padding: .85rem;
             border-top: 1px solid var(--app-border, #e2e8f0);
-            background: #f5f8fc;
+            background: var(--app-page-bg, #f4f7fa);
+            color: var(--app-text, #0f172a);
             text-align: center;
         }
 
@@ -371,14 +541,14 @@
         .support-attachment__preview video {
             display: block;
             max-width: 100%;
-            max-height: 620px;
+            max-height: 560px;
             margin: 0 auto;
             border-radius: 8px;
         }
 
         .support-attachment__preview iframe {
             width: 100%;
-            height: 620px;
+            height: 560px;
             border: 0;
             border-radius: 8px;
             background: #fff;
@@ -388,84 +558,165 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            padding: 24px;
-            color: #64748b;
+            gap: .6rem;
+            padding: 1.5rem;
+            color: var(--app-text-muted, #64748b);
         }
 
         .support-attachment__unsupported i {
             color: var(--app-primary, #1687f8);
-            font-size: 1.4rem;
+            font-size: 1.25rem;
         }
 
-        .support-process-form {
-            margin-top: 22px;
-            padding-top: 20px;
+        .support-process {
+            display: grid;
+            gap: 1rem;
+            padding-top: 1rem;
             border-top: 1px solid var(--app-border, #e2e8f0);
         }
 
-        .support-process-form__actions {
+        .support-process__title h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 750;
+        }
+
+        .support-process__title p {
+            margin: .25rem 0 0;
+            color: var(--app-text-muted, #64748b);
+            font-size: .86rem;
+        }
+
+        .support-process__reply textarea {
+            min-height: 112px;
+            resize: vertical;
+        }
+
+        .support-process__actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: .6rem;
+        }
+
+        .support-process__actions .btn {
+            min-height: 42px;
+        }
+
+        .support-completed {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 12px;
+            gap: .55rem;
+            padding: .9rem 1rem;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            background: #f0fdf4;
+            color: #166534;
+            font-weight: 650;
         }
 
-        .support-process-form__actions select {
-            max-width: 220px;
+        .support-completed i {
+            color: #16a34a;
         }
 
-        [data-bs-theme="dark"] .support-request-message {
-            border-color: #34445b;
-            background: #111d30;
-            color: #e2eaf4;
+        .support-empty {
+            padding: 3rem 1.25rem;
+            text-align: center;
         }
 
-        [data-bs-theme="dark"] .support-request-message .support-request-label {
-            color: #a9bdd4;
+        .support-empty__icon {
+            display: inline-grid;
+            width: 54px;
+            height: 54px;
+            margin-bottom: .9rem;
+            place-items: center;
+            border-radius: 16px;
+            color: var(--app-primary, #1687f8);
+            background: var(--app-primary-light, #ebf5ff);
+            font-size: 1.4rem;
         }
 
-        [data-bs-theme="dark"] .support-request-message p {
-            color: #e2eaf4;
+        .support-empty h3 {
+            font-size: 1.05rem;
+            font-weight: 750;
+        }
+
+        .support-empty p {
+            color: var(--app-text-muted, #64748b);
+        }
+
+        .support-pagination {
+            margin-top: .25rem;
+        }
+
+        [data-bs-theme="dark"] .support-message,
+        [data-bs-theme="dark"] .support-previous-reply,
+        [data-bs-theme="dark"] .support-attachment__preview {
+            border-color: #334155 !important;
+            background: #172338 !important;
+            color: #e2e8f0 !important;
+        }
+
+        [data-bs-theme="dark"] .support-message .support-label,
+        [data-bs-theme="dark"] .support-previous-reply .support-label {
+            color: #a9bdd4 !important;
+        }
+
+        [data-bs-theme="dark"] .support-message p,
+        [data-bs-theme="dark"] .support-previous-reply p,
+        [data-bs-theme="dark"] .support-attachment__unsupported {
+            color: #e2e8f0 !important;
         }
 
         [data-bs-theme="dark"] .support-attachment {
-            border-color: #34445b;
+            border-color: #334155;
             background: #1e293b;
+            color: #e2e8f0;
         }
 
-        [data-bs-theme="dark"] .support-attachment summary {
-            color: #e2eaf4;
+        [data-bs-theme="dark"] .support-attachment__summary {
+            color: #e2e8f0;
         }
 
-        [data-bs-theme="dark"] .support-attachment__preview {
-            border-color: #34445b;
-            background: #111d30;
+        [data-bs-theme="dark"] .support-completed {
+            border-color: #166534;
+            background: #132b22;
+            color: #bbf7d0;
         }
 
-        [data-bs-theme="dark"] .support-attachment__unsupported {
-            color: #c4d1e0;
+        @media (max-width: 767.98px) {
+            .support-filter {
+                grid-template-columns: 1fr;
+            }
+
+            .support-filter__actions .btn {
+                flex: 1;
+            }
+
+            .support-card__meta {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         @media (max-width: 575.98px) {
-            .support-request-card__header,
-            .support-request-card__body {
-                padding: 14px;
+            .support-card__header,
+            .support-card__body {
+                padding: .9rem;
             }
 
-            .support-process-form__actions {
-                align-items: stretch;
-                flex-direction: column;
+            .support-card__meta {
+                grid-template-columns: 1fr;
             }
 
-            .support-process-form__actions select {
-                max-width: none;
+            .support-process__actions {
+                justify-content: stretch;
+            }
+
+            .support-process__actions .btn {
+                width: 100%;
             }
 
             .support-attachment__preview iframe {
-                height: 420px;
+                height: 400px;
             }
         }
     </style>

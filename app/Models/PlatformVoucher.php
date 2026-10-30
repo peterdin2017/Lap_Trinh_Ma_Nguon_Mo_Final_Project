@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PlatformVoucher extends Model
 {
@@ -84,5 +85,14 @@ class PlatformVoucher extends Model
         }
 
         return min(max($discount, 0), $orderAmount);
+    }
+
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(
+            OrderItem::class,
+            'platform_voucher_id',
+            'platform_voucher_id'
+        );
     }
 }

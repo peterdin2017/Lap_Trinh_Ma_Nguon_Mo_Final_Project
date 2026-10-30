@@ -26,7 +26,6 @@ class BuyerVoucherController extends Controller
         $savedVouchers = AccountSavedVoucher::query()
             ->where('account_id', $account->account_id)
             ->latest('created_at')
-            ->limit(100)
             ->get()
             ->map(function (AccountSavedVoucher $saved): AccountSavedVoucher {
                 $modelClass = $this->voucherModelClass($saved->voucher_type);
@@ -41,6 +40,85 @@ class BuyerVoucherController extends Controller
 
                 return $saved;
             });
+
+        // Xóa bản lưu bị mồ côi khi voucher gốc đã bị xóa.
+        $staleSavedVoucherIds = $savedVouchers
+            ->filter(fn (AccountSavedVoucher $saved) => ! $saved->voucher)
+            ->pluck('saved_voucher_id')
+            ->all();
+
+        // Kiểm tra hạn và lượt dùng trực tiếp trong DB để tránh sai lệch
+        // do parse/timezone của giá trị datetime trên từng máy.
+        foreach (self::VOUCHER_MODELS as $type => $modelClass) {
+            if (! class_exists($modelClass)) {
+                continue;
+            }
+
+            $model = new $modelClass();
+
+            if (! Schema::hasTable($model->getTable())) {
+                continue;
+            }
+
+            $savedIdsForType = $savedVouchers
+                ->where('voucher_type', $type)
+                ->pluck('voucher_id')
+                ->all();
+
+            if ($savedIdsForType === []) {
+                continue;
+            }
+
+            $expiredOrExhaustedVoucherIds = $modelClass::query()
+                ->whereIn($model->getKeyName(), $savedIdsForType)
+                ->where(function ($query) use ($now): void {
+                    $query->where('expires_at', '<', $now)
+                        ->orWhere(function ($usageQuery): void {
+                            $usageQuery->whereNotNull('usage_limit')
+                                ->whereColumn('used_count', '>=', 'usage_limit');
+                        });
+                })
+                ->pluck($model->getKeyName())
+                ->map(fn ($id) => (string) $id)
+                ->all();
+
+            if ($expiredOrExhaustedVoucherIds === []) {
+                continue;
+            }
+
+            $expiredOrExhaustedLookup = array_fill_keys(
+                $expiredOrExhaustedVoucherIds,
+                true
+            );
+
+            $staleSavedVoucherIds = array_merge(
+                $staleSavedVoucherIds,
+                $savedVouchers
+                    ->filter(fn (AccountSavedVoucher $saved) =>
+                        $saved->voucher_type === $type
+                        && isset($expiredOrExhaustedLookup[(string) $saved->voucher_id])
+                    )
+                    ->pluck('saved_voucher_id')
+                    ->all()
+            );
+        }
+
+        $staleSavedVoucherIds = array_values(array_unique($staleSavedVoucherIds));
+
+        if ($staleSavedVoucherIds !== []) {
+            AccountSavedVoucher::query()
+                ->where('account_id', $account->account_id)
+                ->whereIn('saved_voucher_id', $staleSavedVoucherIds)
+                ->delete();
+
+            $savedVouchers = $savedVouchers
+                ->reject(fn (AccountSavedVoucher $saved) => in_array(
+                    $saved->saved_voucher_id,
+                    $staleSavedVoucherIds,
+                    true
+                ))
+                ->values();
+        }
 
         $savedKeys = $savedVouchers
             ->map(fn (AccountSavedVoucher $saved) => (
@@ -186,7 +264,7 @@ class BuyerVoucherController extends Controller
 
         $account = Account::query()
             ->where('account_id', (int) $accountId)
-            ->whereIn('role', ['user', 'seller'])
+            ->where('role', 'user')
             ->where('status', 'active')
             ->first();
 

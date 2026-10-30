@@ -1,9 +1,68 @@
 @extends('admin.layouts.app')
-@section('title','Báo cáo vi phạm')
-@section('page-title','Xử lý báo cáo')
+@section('title', 'Báo cáo vi phạm')
+@section('page-title', 'Xử lý báo cáo')
 @section('content')
-@include('admin.partials.flash')
-<div class="admin-section-head"><div><h2>Trung tâm xử lý báo cáo</h2><p>Kiểm tra phản ánh và quyết định xử lý hoặc bác bỏ báo cáo.</p></div></div>
-<form class="admin-filter" method="GET"><select name="status" class="form-select"><option value="">Tất cả báo cáo</option>@foreach(['pending'=>'Chờ xử lý','resolved'=>'Đã xử lý','dismissed'=>'Đã bỏ qua'] as $v=>$label)<option value="{{ $v }}" @selected(request('status')===$v)>{{ $label }}</option>@endforeach</select><button class="btn btn-primary">Lọc báo cáo</button></form>
-<div class="admin-panel"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Mã / Sản phẩm</th><th>Người báo cáo</th><th>Nội dung</th><th>Trạng thái</th><th>Giải quyết</th></tr></thead><tbody>@forelse($reports as $report)<tr><td><strong>#{{ $report->report_id }}</strong><div>{{ $report->product_name??'Sản phẩm không còn' }}</div></td><td>{{ $report->email??'Không xác định' }}</td><td><strong>{{ ['fake'=>'Hàng giả','prohibited'=>'Hàng cấm','wrong_info'=>'Sai thông tin','copyright'=>'Bản quyền','other'=>'Khác'][$report->reason]??$report->reason }}</strong><div class="small text-secondary">{{ $report->description }}</div></td><td><span class="admin-pill {{ $report->status==='pending'?'warning':($report->status==='resolved'?'success':'muted') }}">{{ ['pending'=>'Chờ xử lý','resolved'=>'Đã xử lý','dismissed'=>'Bỏ qua'][$report->status]??$report->status }}</span></td><td>@if($report->status==='pending')<form method="POST" action="{{ route('admin.reports.handle',$report->report_id) }}">@csrf @method('PATCH')<input name="admin_note" class="form-control form-control-sm mb-2" maxlength="255" required placeholder="Ghi chú / lý do"><div class="d-flex gap-2"><button class="btn btn-sm btn-outline-danger" name="decision" value="resolved" onclick="return confirm('Xử lý báo cáo và khóa sản phẩm?')">Xử lý + khóa</button><button class="btn btn-sm btn-outline-secondary" name="decision" value="dismissed">Bỏ qua</button></div></form>@else<span class="text-secondary small">{{ $report->admin_note }}<br>{{ $report->handled_at }}</span>@endif</td></tr>@empty<tr><td colspan="5" class="py-5 text-center">Chưa có báo cáo phù hợp.</td></tr>@endforelse</tbody></table></div><div class="p-3">{{ $reports->links() }}</div></div>
+    <div class="admin-section-head">
+        <div>
+            <h2>Trung tâm xử lý báo cáo</h2>
+            <p>Kiểm tra phản ánh và quyết định xử lý hoặc bác bỏ báo cáo.</p>
+        </div>
+    </div>
+    <form class="admin-filter" method="GET"><select name="status" class="form-select">
+            <option value="">Tất cả báo cáo</option>
+            @foreach (['pending' => 'Chờ xử lý', 'resolved' => 'Đã xử lý', 'dismissed' => 'Đã bỏ qua'] as $v => $label)
+                <option value="{{ $v }}" @selected(request('status') === $v)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <button class="btn btn-primary">Lọc báo cáo</button>
+    </form>
+    <div class="admin-panel">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Mã / Sản phẩm</th>
+                        <th>Người báo cáo</th>
+                        <th>Nội dung</th>
+                        <th>Trạng thái</th>
+                        <th>Giải quyết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($reports as $report)
+                        <tr>
+                            <td><strong>#{{ $report->report_id }}</strong>
+                                <div>{{ $report->product_name ?? 'Sản phẩm không còn' }}</div>
+                            </td>
+                            <td>{{ $report->email ?? 'Không xác định' }}</td>
+                            <td><strong>{{ ['fake' => 'Hàng giả', 'prohibited' => 'Hàng cấm', 'wrong_info' => 'Sai thông tin', 'copyright' => 'Bản quyền', 'other' => 'Khác'][$report->reason] ?? $report->reason }}</strong>
+                                <div class="small text-secondary">{{ $report->description }}</div>
+                            </td>
+                            <td><span
+                                    class="admin-pill {{ $report->status === 'pending' ? 'warning' : ($report->status === 'resolved' ? 'success' : 'muted') }}">{{ ['pending' => 'Chờ xử lý', 'resolved' => 'Đã xử lý', 'dismissed' => 'Bỏ qua'][$report->status] ?? $report->status }}</span>
+                            </td>
+                            <td>
+                                @if ($report->status === 'pending')
+                                    <form method="POST" action="{{ route('admin.reports.handle', $report->report_id) }}">
+                                        @csrf @method('PATCH')<input name="admin_note"
+                                            class="form-control form-control-sm mb-2" maxlength="255" required
+                                            placeholder="Ghi chú / lý do">
+                                        <div class="d-flex gap-2"><button class="btn btn-sm btn-outline-danger"
+                                                name="decision" value="resolved"
+                                                onclick="return confirm('Xử lý báo cáo và khóa sản phẩm?')">Xử lý +
+                                                khóa</button><button class="btn btn-sm btn-outline-secondary"
+                                                name="decision" value="dismissed">Bỏ qua</button></div>
+                                </form>@else<span
+                                        class="text-secondary small">{{ $report->admin_note }}<br>{{ $report->handled_at }}</span>
+                                @endif
+                            </td>
+                    </tr>@empty<tr>
+                            <td colspan="5" class="py-5 text-center">Chưa có báo cáo phù hợp.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="p-3">{{ $reports->links() }}</div>
+    </div>
 @endsection

@@ -47,22 +47,38 @@ class ProfileController extends Controller
         $profile->gender = $data['gender'] ?? null;
         $profile->birthdate = $data['birthdate'] ?? null;
 
-        // Chỉ thay avatar khi người dùng chọn ảnh mới.
+        // Lưu trước để tạo hồ sơ nếu đây là lần cập nhật đầu tiên.
+        $profile->save();
+
+        $oldAvatar = $profile->avatar;
+
         if ($request->hasFile('avatar')) {
-            $oldAvatar = $profile->avatar;
-            $newAvatar = $request->file('avatar')->store('avatars', 'public');
+            $file = $request->file('avatar');
+            $fileName = $profile->account_id
+                . '-'
+                . now()->format('YmdHis')
+                . '.'
+                . $file->extension();
+
+            $newAvatar = $file->storeAs('avatars/users', $fileName, 'public');
+
+            if ($newAvatar === false) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['avatar' => 'Không thể lưu ảnh đại diện.']);
+            }
 
             $profile->avatar = $newAvatar;
 
-            // Xóa ảnh cũ sau khi đã lưu ảnh mới.
-            if ($oldAvatar) {
+            // Lưu đường dẫn avatar mới vào database.
+            $profile->save();
+
+            // Chỉ xóa ảnh cũ sau khi avatar mới đã được lưu thành công.
+            if ($oldAvatar && $oldAvatar !== $newAvatar) {
                 Storage::disk('public')->delete($oldAvatar);
             }
         }
 
-        $profile->save();
-
-        // Header dùng session nên cập nhật tên và avatar ngay sau khi lưu.
         $request->session()->put('user_name', $profile->full_name);
         $request->session()->put('avatar', $profile->avatar);
 

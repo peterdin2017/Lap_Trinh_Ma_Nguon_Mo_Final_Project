@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\Voucher\PlatformVoucherRequest;
 use App\Models\PlatformVoucher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class PlatformVoucherController extends Controller
@@ -63,8 +64,38 @@ class PlatformVoucherController extends Controller
         PlatformVoucherRequest $request,
         int $platformVoucher
     ): RedirectResponse {
-        $voucher = PlatformVoucher::findOrFail($platformVoucher);
-        $voucher->update($request->validated());
+        $data = $request->validated();
+
+        $limitRejected = DB::transaction(function () use ($platformVoucher, $data): bool {
+            $voucher = PlatformVoucher::query()
+                ->whereKey($platformVoucher)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (
+                $data['usage_limit'] !== null
+                && (int) $data['usage_limit'] < (int) $voucher->used_count
+            ) {
+                return true;
+            }
+
+            $voucher->update($data);
+
+            return false;
+        });
+
+        if ($limitRejected) {
+            $usedCount = PlatformVoucher::query()
+                ->whereKey($platformVoucher)
+                ->value('used_count');
+
+            return back()
+                ->withErrors([
+                    'usage_limit' => 'Tổng lượt sử dụng không thể thấp hơn số lượt voucher đã dùng ('
+                        . (int) $usedCount . ').',
+                ])
+                ->withInput();
+        }
 
         return redirect()
             ->route('admin.vouchers.index')
@@ -82,20 +113,4 @@ class PlatformVoucherController extends Controller
         return back()->with('success', 'Đã cập nhật trạng thái voucher.');
     }
 
-    public function destroy(int $platformVoucher): RedirectResponse
-    {
-        $voucher = PlatformVoucher::findOrFail($platformVoucher);
-
-        if ($voucher->used_count > 0) {
-            return back()->withErrors([
-                'voucher' => 'Voucher đã có lượt sử dụng nên không thể xóa. Hãy tắt voucher nếu không muốn tiếp tục áp dụng.',
-            ]);
-        }
-
-        $voucher->delete();
-
-        return redirect()
-            ->route('admin.vouchers.index')
-            ->with('success', 'Đã xóa voucher sàn.');
-    }
 }

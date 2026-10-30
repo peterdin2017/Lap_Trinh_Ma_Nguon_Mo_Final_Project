@@ -7,18 +7,13 @@
         $variantRows = old('variants', []);
         $variantRows = is_array($variantRows) ? $variantRows : [];
 
-        $variantsEnabled = old('variants_present') == '1'
-            || count($variantRows) > 0;
+        $variantsEnabled = old('variants_present') == '1' || count($variantRows) > 0;
 
         if ($variantsEnabled && $variantRows === []) {
-            $variantRows = [
-                ['variant_name' => '', 'price' => '', 'stock_quantity' => ''],
-            ];
+            $variantRows = [['variant_name' => '', 'price' => '', 'stock_quantity' => '']];
         }
 
-        $nextVariantIndex = $variantRows === []
-            ? 0
-            : max(array_map('intval', array_keys($variantRows))) + 1;
+        $nextVariantIndex = $variantRows === [] ? 0 : max(array_map('intval', array_keys($variantRows))) + 1;
     @endphp
 
     <style>
@@ -213,23 +208,44 @@
             background: var(--surface);
         }
 
-        .product-create-page .variant-image-preview {
+        .product-create-page .variant-image-control {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 6px;
+        }
+
+        .product-create-page .variant-image-input {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .product-create-page .variant-image-preview {
+            display: flex;
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--surface);
         }
 
         .product-create-page .variant-image-preview img {
-            width: 40px;
-            height: 40px;
+            display: block;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            border: 1px solid var(--line);
-            border-radius: 6px;
         }
 
         .product-create-page .variant-image-preview.d-none {
             display: none !important;
+        }
+
+        .product-create-page .variant-row>.variant-remove-column {
+            align-self: end;
         }
 
         .product-create-page [hidden] {
@@ -262,6 +278,7 @@
         }
 
         @media (max-width: 767.98px) {
+
             .product-create-page .form-card .card-body,
             .product-create-page .create-heading {
                 padding: 16px;
@@ -282,7 +299,8 @@
     </style>
 
     <div class="product-create-page">
-        <header class="create-heading d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
+        <header
+            class="create-heading d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span class="section-icon">
@@ -305,32 +323,21 @@
             </a>
         </header>
 
-        @if ($errors->any())
-            <div class="alert alert-danger" role="alert">
-                <strong>Vui lòng kiểm tra lại thông tin.</strong>
-                <ul class="mb-0 mt-1">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <form
-            method="POST"
-            action="{{ route('seller.products.store') }}"
-            enctype="multipart/form-data"
-            id="createProductForm"
-        >
+        <form method="POST" action="{{ route('seller.products.store') }}" enctype="multipart/form-data"
+            id="createProductForm">
             @csrf
 
-            <input
-                type="hidden"
-                name="variants_present"
-                id="variantsPresent"
-                value="1"
-                @disabled(!$variantsEnabled)
-            >
+            @if ($errors->any())
+                <div class="alert alert-danger" role="alert">
+                    <strong>Vui lòng kiểm tra lại thông tin.</strong>
+                    <ul class="mb-0 mt-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <input type="hidden" name="variants_present" id="variantsPresent" value="1" @disabled(!$variantsEnabled)>
 
             <section class="card form-card">
                 <div class="card-body">
@@ -358,17 +365,10 @@
                             </span>
                         </div>
 
-                        <input
-                            id="product_name"
-                            name="product_name"
-                            type="text"
-                            maxlength="120"
-                            required
-                            autofocus
+                        <input id="product_name" name="product_name" type="text" maxlength="120" required autofocus
                             value="{{ old('product_name') }}"
                             class="form-control @error('product_name') is-invalid @enderror"
-                            placeholder="Ví dụ: Điện thoại ..."
-                        >
+                            placeholder="Ví dụ: Điện thoại ...">
 
                         @error('product_name')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -381,29 +381,19 @@
                                 Danh mục <span class="text-danger">*</span>
                             </label>
 
-                            <select
-                                id="category_id"
-                                name="category_id"
-                                required
-                                class="form-select @error('category_id') is-invalid @enderror"
-                            >
+                            <select id="category_id" name="category_id" required
+                                class="form-select @error('category_id') is-invalid @enderror">
                                 <option value="">-- Chọn danh mục --</option>
 
                                 @foreach ($categories as $parent)
                                     @if ($parent->children->isNotEmpty())
                                         @foreach ($parent->children as $child)
-                                            <option
-                                                value="{{ $child->category_id }}"
-                                                @selected((string) old('category_id') === (string) $child->category_id)
-                                            >
+                                            <option value="{{ $child->category_id }}" @selected((string) old('category_id') === (string) $child->category_id)>
                                                 {{ $parent->category_name }} › {{ $child->category_name }}
                                             </option>
                                         @endforeach
                                     @else
-                                        <option
-                                            value="{{ $parent->category_id }}"
-                                            @selected((string) old('category_id') === (string) $parent->category_id)
-                                        >
+                                        <option value="{{ $parent->category_id }}" @selected((string) old('category_id') === (string) $parent->category_id)>
                                             {{ $parent->category_name }}
                                         </option>
                                     @endif
@@ -420,14 +410,9 @@
                                 Thương hiệu
                             </label>
 
-                            <input
-                                id="brand"
-                                name="brand"
-                                maxlength="100"
-                                value="{{ old('brand') }}"
+                            <input id="brand" name="brand" maxlength="100" value="{{ old('brand') }}"
                                 class="form-control @error('brand') is-invalid @enderror"
-                                placeholder="Tên thương hiệu (nếu có)"
-                            >
+                                placeholder="Tên thương hiệu (nếu có)">
 
                             @error('brand')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -456,35 +441,21 @@
                     </div>
 
                     <div class="upload-grid mb-4">
-                        <div
-                            class="upload-tile upload-tile--cover"
-                            id="coverDropZone"
-                            role="button"
-                            tabindex="0"
-                            aria-label="Chọn ảnh đại diện"
-                        >
+                        <div class="upload-tile upload-tile--cover" id="coverDropZone" role="button" tabindex="0"
+                            aria-label="Chọn ảnh đại diện">
                             <span class="upload-badge">Ảnh đại diện</span>
                             <span class="upload-tile__prompt" id="coverPrompt">
                                 <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
                                 <span>Chọn hoặc kéo ảnh vào đây</span>
                             </span>
                             <img id="coverPreview" class="d-none" alt="Xem trước ảnh đại diện">
-                            <button
-                                type="button"
-                                class="preview-remove d-none"
-                                id="removeCover"
-                                aria-label="Xóa ảnh đại diện"
-                            >
+                            <button type="button" class="preview-remove d-none" id="removeCover"
+                                aria-label="Xóa ảnh đại diện">
                                 <i class="bi bi-trash3" aria-hidden="true"></i>
                             </button>
-                            <input
-                                id="image"
-                                name="image"
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
-                                class="visually-hidden"
-                                aria-label="Tệp ảnh đại diện"
-                            >
+                            <input id="image" name="image" type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" class="visually-hidden"
+                                aria-label="Tệp ảnh đại diện">
                         </div>
                     </div>
 
@@ -503,15 +474,9 @@
                                 <span>Thêm ảnh</span>
                             </span>
                         </label>
-                        <input
-                            id="galleryInput"
-                            name="images[]"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
-                            multiple
-                            class="visually-hidden"
-                            aria-label="Chọn ảnh phụ"
-                        >
+                        <input id="galleryInput" name="images[]" type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" multiple class="visually-hidden"
+                            aria-label="Chọn ảnh phụ">
                     </div>
 
                     <div class="form-text mt-2">
@@ -545,14 +510,8 @@
                     <label for="description" class="visually-hidden">
                         Mô tả sản phẩm
                     </label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows="7"
-                        maxlength="5000"
-                        class="form-control @error('description') is-invalid @enderror"
-                        placeholder="Nhập mô tả chi tiết..."
-                    >{{ old('description') }}</textarea>
+                    <textarea id="description" name="description" rows="7" maxlength="5000"
+                        class="form-control @error('description') is-invalid @enderror" placeholder="Nhập mô tả chi tiết...">{{ old('description') }}</textarea>
 
                     <div class="form-text">
                         Tối đa 5.000 ký tự. Nhập văn bản thường, không cần dán mã HTML.
@@ -576,22 +535,14 @@
                             </h2>
                         </div>
 
-                        <button
-                            type="button"
-                            class="btn btn-outline-primary"
-                            id="enableVariantsButton"
-                            @if ($variantsEnabled) hidden @endif
-                        >
+                        <button type="button" class="btn btn-outline-primary" id="enableVariantsButton"
+                            @if ($variantsEnabled) hidden @endif>
                             <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
                             Thêm mẫu mã sản phẩm
                         </button>
 
-                        <button
-                            type="button"
-                            class="btn btn-outline-secondary"
-                            id="disableVariantsButton"
-                            @unless ($variantsEnabled) hidden @endunless
-                        >
+                        <button type="button" class="btn btn-outline-secondary" id="disableVariantsButton"
+                            @unless ($variantsEnabled) hidden @endunless>
                             Chuyển về sản phẩm đơn lẻ
                         </button>
                     </div>
@@ -602,18 +553,9 @@
                                 <label for="price" class="form-label fw-semibold">
                                     Giá bán (đ) <span class="text-danger">*</span>
                                 </label>
-                                <input
-                                    id="price"
-                                    name="price"
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    value="{{ old('price', 0) }}"
-                                    required
-                                    @disabled($variantsEnabled)
-                                    class="form-control @error('price') is-invalid @enderror"
-                                    placeholder="0"
-                                >
+                                <input id="price" name="price" type="number" min="0" step="1"
+                                    value="{{ old('price', 0) }}" required @disabled($variantsEnabled)
+                                    class="form-control @error('price') is-invalid @enderror" placeholder="0">
                                 @error('price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -623,17 +565,9 @@
                                 <label for="stock_quantity" class="form-label fw-semibold">
                                     Số lượng tồn kho <span class="text-danger">*</span>
                                 </label>
-                                <input
-                                    id="stock_quantity"
-                                    name="stock_quantity"
-                                    type="number"
-                                    min="0"
-                                    value="{{ old('stock_quantity', 0) }}"
-                                    required
-                                    @disabled($variantsEnabled)
-                                    class="form-control @error('stock_quantity') is-invalid @enderror"
-                                    placeholder="0"
-                                >
+                                <input id="stock_quantity" name="stock_quantity" type="number" min="0"
+                                    value="{{ old('stock_quantity', 0) }}" required @disabled($variantsEnabled)
+                                    class="form-control @error('stock_quantity') is-invalid @enderror" placeholder="0">
                                 @error('stock_quantity')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -641,100 +575,63 @@
                         </div>
                     </div>
 
-                    <div
-                        id="variantEditor"
-                        class="variant-panel"
-                        @unless ($variantsEnabled) hidden @endunless
-                    >
+                    <div id="variantEditor" class="variant-panel" @unless ($variantsEnabled) hidden @endunless>
                         <div id="variantRows" class="d-flex flex-column gap-2">
                             @foreach ($variantRows as $index => $variant)
                                 @if (is_array($variant))
                                     <div class="variant-row row g-2 align-items-end">
                                         <div class="col-12 col-lg-4">
-                                            <label
-                                                for="variant-name-{{ $index }}"
-                                                class="form-label small fw-semibold"
-                                            >
+                                            <label for="variant-name-{{ $index }}"
+                                                class="form-label small fw-semibold">
                                                 Tên mẫu mã
                                             </label>
-                                            <input
-                                                id="variant-name-{{ $index }}"
-                                                name="variants[{{ $index }}][variant_name]"
-                                                maxlength="100"
-                                                required
-                                                @disabled(!$variantsEnabled)
-                                                class="form-control"
+                                            <input id="variant-name-{{ $index }}"
+                                                name="variants[{{ $index }}][variant_name]" maxlength="100"
+                                                required @disabled(!$variantsEnabled) class="form-control"
                                                 value="{{ $variant['variant_name'] ?? '' }}"
-                                                placeholder="Ví dụ: Màu Đen - 128GB"
-                                            >
+                                                placeholder="Ví dụ: Màu Đen - 128GB">
                                         </div>
 
                                         <div class="col-6 col-lg-2">
-                                            <label
-                                                for="variant-price-{{ $index }}"
-                                                class="form-label small fw-semibold"
-                                            >
+                                            <label for="variant-price-{{ $index }}"
+                                                class="form-label small fw-semibold">
                                                 Giá (đ)
                                             </label>
-                                            <input
-                                                id="variant-price-{{ $index }}"
-                                                name="variants[{{ $index }}][price]"
-                                                type="number"
-                                                min="0"
-                                                step="1"
-                                                required
-                                                @disabled(!$variantsEnabled)
-                                                class="form-control"
-                                                value="{{ $variant['price'] ?? '' }}"
-                                                placeholder="0"
-                                            >
+                                            <input id="variant-price-{{ $index }}"
+                                                name="variants[{{ $index }}][price]" type="number"
+                                                min="0" step="1" required @disabled(!$variantsEnabled)
+                                                class="form-control" value="{{ $variant['price'] ?? '' }}"
+                                                placeholder="0">
                                         </div>
 
                                         <div class="col-6 col-lg-2">
-                                            <label
-                                                for="variant-stock-{{ $index }}"
-                                                class="form-label small fw-semibold"
-                                            >
+                                            <label for="variant-stock-{{ $index }}"
+                                                class="form-label small fw-semibold">
                                                 Tồn kho
                                             </label>
-                                            <input
-                                                id="variant-stock-{{ $index }}"
-                                                name="variants[{{ $index }}][stock_quantity]"
-                                                type="number"
-                                                min="0"
-                                                required
-                                                @disabled(!$variantsEnabled)
-                                                class="form-control"
-                                                value="{{ $variant['stock_quantity'] ?? '' }}"
-                                                placeholder="0"
-                                            >
+                                            <input id="variant-stock-{{ $index }}"
+                                                name="variants[{{ $index }}][stock_quantity]" type="number"
+                                                min="0" required @disabled(!$variantsEnabled) class="form-control"
+                                                value="{{ $variant['stock_quantity'] ?? '' }}" placeholder="0">
                                         </div>
 
                                         <div class="col-10 col-lg-3">
-                                            <label
-                                                for="variant-image-{{ $index }}"
-                                                class="form-label small fw-semibold"
-                                            >
+                                            <label for="variant-image-{{ $index }}"
+                                                class="form-label small fw-semibold">
                                                 Ảnh mẫu (nếu có)
                                             </label>
-                                            <input
-                                                id="variant-image-{{ $index }}"
-                                                name="variants[{{ $index }}][image]"
-                                                type="file"
-                                                accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
-                                                @disabled(!$variantsEnabled)
-                                                class="form-control variant-image-input"
-                                            >
-                                            <div class="variant-image-preview d-none"></div>
+                                            <div class="variant-image-control">
+                                                <input id="variant-image-{{ $index }}"
+                                                    name="variants[{{ $index }}][image]" type="file"
+                                                    accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
+                                                    @disabled(!$variantsEnabled) class="form-control variant-image-input">
+                                                <div class="variant-image-preview d-none"></div>
+                                            </div>
                                         </div>
 
-                                        <div class="col-2 col-lg-1 d-grid">
-                                            <button
-                                                type="button"
-                                                class="btn btn-outline-danger remove-variant"
-                                                aria-label="Xóa mẫu mã"
-                                                title="Xóa mẫu mã"
-                                            >
+                                        <div class="col-2 col-lg-1 d-grid variant-remove-column">
+                                            <button type="button" class="btn btn-outline-danger remove-variant"
+                                                aria-label="Xóa mẫu mã" title="Xóa mẫu mã">
                                                 <i class="bi bi-trash3" aria-hidden="true"></i>
                                             </button>
                                         </div>
@@ -743,11 +640,7 @@
                             @endforeach
                         </div>
 
-                        <button
-                            type="button"
-                            class="btn btn-outline-primary btn-sm mt-3"
-                            id="addVariant"
-                        >
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="addVariant">
                             <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
                             Thêm dòng mẫu mã
                         </button>
@@ -789,15 +682,9 @@
                         <label for="weight_gram" class="form-label fw-semibold">
                             Cân nặng (gram)
                         </label>
-                        <input
-                            id="weight_gram"
-                            name="weight_gram"
-                            type="number"
-                            min="1"
+                        <input id="weight_gram" name="weight_gram" type="number" min="1"
                             value="{{ old('weight_gram') }}"
-                            class="form-control @error('weight_gram') is-invalid @enderror"
-                            placeholder="Ví dụ: 500"
-                        >
+                            class="form-control @error('weight_gram') is-invalid @enderror" placeholder="Ví dụ: 500">
                         @error('weight_gram')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -806,10 +693,7 @@
             </section>
 
             <div class="form-actions d-flex align-items-center gap-2">
-                <a
-                    href="{{ route('seller.products.index') }}"
-                    class="btn btn-outline-secondary"
-                >
+                <a href="{{ route('seller.products.index') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
                     Quay lại
                 </a>
@@ -1062,17 +946,19 @@
                         <label for="variant-image-${index}" class="form-label small fw-semibold">
                             Ảnh mẫu (nếu có)
                         </label>
-                        <input
-                            id="variant-image-${index}"
-                            name="variants[${index}][image]"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
-                            class="form-control variant-image-input"
-                        >
-                        <div class="variant-image-preview d-none"></div>
+                        <div class="variant-image-control">
+                            <input
+                                id="variant-image-${index}"
+                                name="variants[${index}][image]"
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
+                                class="form-control variant-image-input"
+                            >
+                            <div class="variant-image-preview d-none"></div>
+                        </div>
                     </div>
 
-                    <div class="col-2 col-lg-1 d-grid">
+                    <div class="col-2 col-lg-1 d-grid variant-remove-column">
                         <button
                             type="button"
                             class="btn btn-outline-danger remove-variant"
@@ -1100,9 +986,9 @@
                 enableVariantsButton.hidden = enabled;
                 disableVariantsButton.hidden = !enabled;
 
-                pricingTitle.textContent = enabled
-                    ? 'Danh sách mẫu mã sản phẩm'
-                    : 'Giá bán & Tồn kho';
+                pricingTitle.textContent = enabled ?
+                    'Danh sách mẫu mã sản phẩm' :
+                    'Giá bán & Tồn kho';
 
                 variantsFlag.disabled = !enabled;
 
@@ -1156,13 +1042,9 @@
 
                 const image = document.createElement('img');
                 image.src = URL.createObjectURL(file);
-                image.alt = 'Xem trước ảnh mẫu mã';
+                image.alt = 'Ảnh xem trước mẫu mã';
 
-                const fileName = document.createElement('span');
-                fileName.className = 'small text-secondary';
-                fileName.textContent = file.name;
-
-                preview.append(image, fileName);
+                preview.append(image);
                 preview.classList.remove('d-none');
             });
 
@@ -1194,7 +1076,3 @@
         })();
     </script>
 @endsection
-
-
-
-

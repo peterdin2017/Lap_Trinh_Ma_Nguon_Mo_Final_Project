@@ -400,6 +400,25 @@
         });
     </script>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.store-main .alert').forEach(function (alert) {
+                window.setTimeout(function () {
+                    if (!alert.isConnected) {
+                        return;
+                    }
+
+                    if (window.bootstrap && window.bootstrap.Alert) {
+                        window.bootstrap.Alert.getOrCreateInstance(alert).close();
+                    } else {
+                        alert.remove();
+                    }
+                }, 3000);
+            });
+        });
+    </script>
+
     @stack('scripts')
 </body>
 </html>
+

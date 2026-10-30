@@ -146,8 +146,8 @@
             border-radius: 7px;
         }
 
-        .product-edit-page .variant-image-thumb img,
-        .product-edit-page .variant-image-preview img {
+        .product-edit-page .variant-image-thumb img {
+            display: block;
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -159,21 +159,6 @@
             font-size: .8rem;
         }
 
-        .product-edit-page .variant-image-preview {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 6px;
-        }
-
-        .product-edit-page .variant-image-preview img {
-            width: 40px;
-            height: 40px;
-            border: 1px solid var(--edit-border);
-            border-radius: 6px;
-        }
-
-        .product-edit-page .variant-image-preview.d-none,
         .product-edit-page [hidden] {
             display: none !important;
         }
@@ -742,7 +727,6 @@
                                             <div class="form-text">
                                                 Để trống để giữ ảnh hiện tại.
                                             </div>
-                                            <div class="variant-image-preview d-none"></div>
 
                                             @error("variants.$index.image")
                                                 <div class="text-danger small mt-1">
@@ -986,7 +970,6 @@
                             >
                         </div>
                         <div class="form-text">Chọn ảnh cho mẫu mã.</div>
-                        <div class="variant-image-preview d-none"></div>
                     </div>
 
                     <div class="col-12 col-lg-1 d-flex justify-content-end">
@@ -1053,32 +1036,20 @@
                 }
 
                 const row = event.target.closest('.variant-row');
-                const preview = row?.querySelector('.variant-image-preview');
                 const thumb = row?.querySelector('.variant-image-thumb');
                 const file = event.target.files?.[0];
 
-                if (!preview || !thumb) {
+                // Nếu người dùng chưa chọn ảnh mới, giữ nguyên thumbnail hiện tại.
+                if (!thumb || !file) {
                     return;
                 }
 
-                preview.replaceChildren();
-
-                if (!file) {
-                    preview.classList.add('d-none');
-                    return;
+                if (thumb.dataset.previewUrl) {
+                    URL.revokeObjectURL(thumb.dataset.previewUrl);
                 }
 
                 const imageUrl = URL.createObjectURL(file);
-                const image = document.createElement('img');
-                image.src = imageUrl;
-                image.alt = 'Xem trước ảnh mẫu mã';
-
-                const fileName = document.createElement('span');
-                fileName.className = 'small text-secondary';
-                fileName.textContent = file.name;
-
-                preview.append(image, fileName);
-                preview.classList.remove('d-none');
+                thumb.dataset.previewUrl = imageUrl;
 
                 const thumbImage = document.createElement('img');
                 thumbImage.src = imageUrl;
@@ -1109,3 +1080,4 @@
         })();
     </script>
 @endsection
+

@@ -21,6 +21,7 @@ class OrderItem extends Model
         'seller_voucher_code',
         'seller_voucher_discount',
         'platform_voucher_code',
+        'platform_voucher_id',
         'platform_voucher_discount',
     ];
 
@@ -51,6 +52,15 @@ class OrderItem extends Model
             ProductVariant::class,
             'product_variant_id',
             'variant_id'
+        );
+    }
+
+    public function platformVoucher(): BelongsTo
+    {
+        return $this->belongsTo(
+            PlatformVoucher::class,
+            'platform_voucher_id',
+            'platform_voucher_id'
         );
     }
 }

@@ -14,6 +14,7 @@ class Seller extends Model
 
     protected $fillable = [
         'account_id',
+        'avatar',
         'shop_name',
         'shop_address',
         'shop_province',
@@ -39,8 +40,13 @@ class Seller extends Model
             'account_id'
         );
     }
+
     public function products(): HasMany
     {
-        return $this->hasMany(Product::class, 'seller_id', 'seller_id');
+        return $this->hasMany(
+            Product::class,
+            'seller_id',
+            'seller_id'
+        );
     }
 }

@@ -8,14 +8,20 @@ return new class extends Migration
 {
     /**
      * Bảng sellers: thông tin cửa hàng của người bán.
-     * status: pending = chờ duyệt, active = đang hoạt động,
-     * suspended = bị khoá, rejected = bị từ chối.
+     * status:
+     * pending   = chờ duyệt
+     * active    = đang hoạt động
+     * suspended = bị khóa
+     * rejected  = bị từ chối
      */
     public function up(): void
     {
-        Schema::create('sellers', function (Blueprint $table) {
+        Schema::create('sellers', function (Blueprint $table): void {
             $table->bigIncrements('seller_id');
             $table->unsignedBigInteger('account_id')->unique();
+
+            // Đường dẫn ảnh đại diện Shop, lưu trên public disk.
+            $table->string('avatar')->nullable();
 
             $table->string('shop_name', 100);
             $table->string('shop_address')->nullable();
@@ -41,9 +47,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('sellers');

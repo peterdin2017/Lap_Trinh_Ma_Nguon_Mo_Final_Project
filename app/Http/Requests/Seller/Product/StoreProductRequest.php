@@ -13,31 +13,38 @@ class StoreProductRequest extends FormRequest
 
     public function rules(): array
     {
+        $variantMode = $this->boolean('variants_present');
+
         return [
             'category_id' => ['required', 'exists:categories,category_id'],
             'product_name' => ['required', 'string', 'max:200'],
             'brand' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string', 'max:5000'],
-            'price' => ['required', 'numeric', 'min:0', 'max:9999999999'],
-            'stock_quantity' => ['required', 'integer', 'min:0', 'max:1000000'],
+
+            // Chế độ mẫu mã lấy giá và tồn kho từ từng mẫu.
+            'price' => [
+                $variantMode ? 'nullable' : 'required',
+                'numeric',
+                'min:0',
+                'max:9999999999',
+            ],
+            'stock_quantity' => [
+                $variantMode ? 'nullable' : 'required',
+                'integer',
+                'min:0',
+                'max:1000000',
+            ],
+
             'weight_gram' => ['nullable', 'integer', 'min:1', 'max:100000'],
-
-            // Ảnh chính bắt buộc, tối đa 10 MB.
-            'image' => [
-                'required',
-                'image',
-                'max:10240',
-            ],
-
-            // Tối đa 8 ảnh phụ, mỗi ảnh tối đa 10 MB.
+            'image' => ['required', 'image', 'max:10240'],
             'images' => ['nullable', 'array', 'max:8'],
-            'images.*' => [
-                'image',
-                'max:10240',
-            ],
+            'images.*' => ['image', 'max:10240'],
 
             'variants_present' => ['nullable', 'boolean'],
-            'variants' => ['nullable', 'array', 'max:20'],
+            'variants' => $variantMode
+                ? ['required', 'array', 'min:1', 'max:20']
+                : ['nullable', 'array', 'max:20'],
+
             'variants.*.variant_name' => ['required', 'string', 'max:100'],
             'variants.*.price' => [
                 'required',
@@ -53,7 +60,6 @@ class StoreProductRequest extends FormRequest
             ],
         ];
     }
-
     public function messages(): array
     {
         return [

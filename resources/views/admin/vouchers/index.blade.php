@@ -127,12 +127,7 @@
             </a>
         </div>
 
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="status">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-            </div>
-        @endif
+        
 
         @if ($errors->has('voucher'))
             <div class="alert alert-danger" role="alert">{{ $errors->first('voucher') }}</div>

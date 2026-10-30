@@ -52,8 +52,27 @@
             $availablePlatformVouchers ?? []
         );
 
+        $now = now();
+
         $validSavedVouchers = collect($savedVouchers ?? [])
-            ->filter(fn ($savedVoucher) => $savedVoucher->voucher !== null)
+            ->filter(function ($savedVoucher) use ($now): bool {
+                $voucher = $savedVoucher->voucher;
+
+                if (! $voucher || ($voucher->status ?? null) !== 'active') {
+                    return false;
+                }
+
+                $expiresAt = $voucher->expires_at ?? null;
+                if ($expiresAt !== null
+                    && \Illuminate\Support\Carbon::parse($expiresAt)->lessThan($now)) {
+                    return false;
+                }
+
+                $usageLimit = $voucher->usage_limit ?? null;
+
+                return $usageLimit === null
+                    || (int) $voucher->used_count < (int) $usageLimit;
+            })
             ->values();
     @endphp
 

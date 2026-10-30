@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Seller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class ConversationController extends Controller
@@ -31,6 +32,10 @@ class ConversationController extends Controller
             ->map(fn (Conversation $conversation) => [
                 'id' => $conversation->conversation_id,
                 'shop_name' => $conversation->seller?->shop_name ?? 'Cửa hàng',
+                'shop_avatar_url' => $this->avatarUrl($conversation->seller?->avatar),
+                'shop_url' => $conversation->seller
+                    ? route('store.shops.show', $conversation->seller->seller_id)
+                    : null,
                 'product_name' => $conversation->product?->product_name,
                 'last_message' => $conversation->latestMessage?->body
                     ?? 'Bắt đầu cuộc trò chuyện',
@@ -87,26 +92,46 @@ class ConversationController extends Controller
         );
 
         if (! $conversation->product_id && ! empty($data['product_id'])) {
-            $conversation->update(['product_id' => $data['product_id']]);
+            $conversation->update([
+                'product_id' => $data['product_id'],
+            ]);
         }
 
         return response()->json([
             'conversation_id' => $conversation->conversation_id,
             'shop_name' => $seller->shop_name,
+            'shop_avatar_url' => $this->avatarUrl($seller->avatar),
+            'shop_url' => route('store.shops.show', $seller->seller_id),
             'messages_url' => route('store.chat.messages.index', $conversation),
             'send_url' => route('store.chat.messages.store', $conversation),
         ]);
     }
 
+    private function avatarUrl(?string $avatar): ?string
+    {
+        if (! $avatar) {
+            return null;
+        }
+
+        if (filter_var($avatar, FILTER_VALIDATE_URL)) {
+            return $avatar;
+        }
+
+        return asset('storage/' . ltrim($avatar, '/'));
+    }
+
     private function customer(Request $request): Account
     {
         $accountId = $request->session()->get('account_id');
+
         $account = is_numeric($accountId)
             ? Account::query()->whereKey((int) $accountId)->first()
             : null;
 
         abort_unless(
-            $account && $account->role === 'user' && $account->status === 'active',
+            $account
+                && $account->role === 'user'
+                && $account->status === 'active',
             401,
             'Vui lòng đăng nhập tài khoản khách hàng để chat.'
         );

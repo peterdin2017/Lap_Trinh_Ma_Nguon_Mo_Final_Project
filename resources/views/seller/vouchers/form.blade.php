@@ -155,17 +155,6 @@
             </a>
         </div>
 
-        @if ($errors->any())
-            <div class="alert alert-danger" role="alert">
-                <div class="fw-semibold">Thông tin chưa hợp lệ</div>
-                <ul class="mb-0 mt-1 ps-3">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <form method="POST"
             action="{{ $isEditing ? route('seller.vouchers.update', $voucher->voucher_id) : route('seller.vouchers.store') }}">
             @csrf

@@ -352,12 +352,6 @@
             </div>
         @endif
 
-        @if (session('success'))
-            <div class="alert alert-success" role="status">
-                {{ session('success') }}
-            </div>
-        @endif
-
         @if ($errors->has('order') || $errors->has('review') || $errors->has('return'))
             <div class="alert alert-danger" role="alert">
                 {{ $errors->first('order') ?: ($errors->first('review') ?: $errors->first('return')) }}

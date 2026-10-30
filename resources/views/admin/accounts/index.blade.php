@@ -2,7 +2,6 @@
 @section('title', 'Quản lý tài khoản')
 @section('page-title', 'Quản lý tài khoản')
 @section('content')
-    @include('admin.partials.flash')
     <div class="admin-section-head">
         <div>
             <h2>Danh sách tài khoản</h2>

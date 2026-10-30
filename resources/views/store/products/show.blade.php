@@ -20,6 +20,20 @@
             ? \Illuminate\Support\Facades\Storage::disk('public')->url($selectedVariant->image_url)
             : null;
 
+        $galleryImageUrls = $images->map(
+            fn ($image) => \Illuminate\Support\Facades\Storage::disk('public')->url($image)
+        )->all();
+
+        $variantGalleryImages = $variants
+            ->filter(fn ($variant) => filled($variant->image_url))
+            ->map(fn ($variant) => [
+                'variant_id' => (string) $variant->variant_id,
+                'variant_name' => $variant->variant_name,
+                'url' => \Illuminate\Support\Facades\Storage::disk('public')->url($variant->image_url),
+            ])
+            ->reject(fn ($image) => in_array($image['url'], $galleryImageUrls, true))
+            ->values();
+
         $initialImageUrl = $selectedVariantImageUrl ?? $galleryImageUrl;
         $initialStock = $selectedVariant?->stock_quantity ?? $product->stock_quantity;
 
@@ -77,6 +91,10 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const variantButtons = document.querySelectorAll('.variant-option');
+            const mainImage = document.getElementById('productMainImage');
+            const imagePlaceholder = document.getElementById('productImagePlaceholder');
+            const galleryThumbnails = document.querySelectorAll('.product-gallery-thumbnail');
+            const defaultGalleryImage = mainImage?.dataset.galleryImage || '';
             const selectedVariantInput = document.getElementById('selectedVariantId');
             const priceElement = document.getElementById('productPrice');
             const statusElement = document.getElementById('productStatus');
@@ -89,6 +107,30 @@
                 document.getElementById('addToCartButton'),
                 document.getElementById('buyNowButton'),
             ].filter(Boolean);
+
+            const setMainImage = (imageUrl) => {
+                if (!mainImage || !imageUrl) {
+                    return;
+                }
+
+                mainImage.src = imageUrl;
+                mainImage.classList.remove('d-none');
+                imagePlaceholder?.classList.add('d-none');
+
+                galleryThumbnails.forEach((thumbnail) => {
+                    const isActive = thumbnail.dataset.image === imageUrl;
+                    thumbnail.classList.toggle('active', isActive);
+                    thumbnail.setAttribute('aria-pressed', String(isActive));
+                });
+            };
+
+            galleryThumbnails.forEach((thumbnail) => {
+                thumbnail.addEventListener('click', () => {
+                    setMainImage(thumbnail.dataset.image);
+                });
+            });
+
+            setMainImage(mainImage?.getAttribute('src'));
 
             if (!variantButtons.length) {
                 return;
@@ -115,6 +157,9 @@
                 const variantId = selectedButton.dataset.variantId;
                 const price = Number(selectedButton.dataset.price || 0);
                 const stock = Number(selectedButton.dataset.stock || 0);
+
+                // Mẫu có ảnh riêng thì chuyển sang ảnh đó; nếu không, quay về ảnh sản phẩm.
+                setMainImage(selectedButton.dataset.image || defaultGalleryImage);
 
                 if (selectedVariantInput) {
                     selectedVariantInput.value = variantId;
@@ -196,3 +241,4 @@
         });
     </script>
 @endsection
+

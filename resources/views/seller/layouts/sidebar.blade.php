@@ -56,6 +56,7 @@
                     class="seller-subnav-link {{ request()->routeIs('seller.products.create') ? 'active' : '' }}">
                     Thêm sản phẩm mới
                 </a>
+
                 <a href="{{ route('seller.reviews.index') }}"
                     class="seller-subnav-link {{ request()->routeIs('seller.reviews.*') ? 'active' : '' }}">
                     Đánh giá sản phẩm
@@ -108,24 +109,23 @@
             <span>Voucher</span>
         </a>
 
-        {{-- Doanh thu và thống kê --}}
+        {{-- Báo cáo và phân tích --}}
         <button class="seller-nav-link seller-nav-toggle {{ $reportsOpen ? 'active' : '' }}" type="button"
             data-bs-toggle="collapse" data-bs-target="#sellerReportsMenu"
             aria-expanded="{{ $reportsOpen ? 'true' : 'false' }}" aria-controls="sellerReportsMenu">
             <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
-            <span>Doanh thu &amp; Thống kê</span>
+            <span>Báo cáo &amp; Phân tích</span>
             <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
         </button>
 
         <div id="sellerReportsMenu" class="collapse {{ $reportsOpen ? 'show' : '' }}">
-            <nav class="seller-submenu" aria-label="Doanh thu và thống kê">
+            <nav class="seller-submenu" aria-label="Báo cáo và phân tích">
                 <a href="{{ route('seller.reports.revenue') }}"
                     class="seller-subnav-link {{ request()->routeIs('seller.reports.revenue') ? 'active' : '' }}">
                     Báo cáo doanh thu
                 </a>
-
-                <a href="{{ \Illuminate\Support\Facades\Route::has('seller.analytics.index') ? route('seller.analytics.index') : '#' }}"
-                    class="seller-subnav-link {{ request()->routeIs('seller.analytics.*') ? 'active' : '' }}">
+                <a href="{{ route('seller.reports.analytics') }}"
+                    class="seller-subnav-link {{ request()->routeIs('seller.reports.analytics') ? 'active' : '' }}">
                     Phân tích bán hàng
                 </a>
             </nav>
@@ -231,10 +231,12 @@
                         class="seller-subnav-link {{ request()->routeIs('seller.products.create') ? 'active' : '' }}">
                         Thêm sản phẩm mới
                     </a>
+
                     <a href="{{ route('seller.reviews.index') }}"
                         class="seller-subnav-link {{ request()->routeIs('seller.reviews.*') ? 'active' : '' }}">
                         Đánh giá sản phẩm
                     </a>
+
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.products.hidden') ? route('seller.products.hidden') : '#' }}"
                         class="seller-subnav-link {{ request()->routeIs('seller.products.hidden') ? 'active' : '' }}">
                         Sản phẩm hết hàng / ẩn
@@ -288,24 +290,24 @@
                 <span>Voucher</span>
             </a>
 
-            {{-- Doanh thu và thống kê --}}
+            {{-- Báo cáo và phân tích --}}
             <button class="seller-nav-link seller-nav-toggle {{ $reportsOpen ? 'active' : '' }}" type="button"
                 data-bs-toggle="collapse" data-bs-target="#sellerReportsMenuMobile"
                 aria-expanded="{{ $reportsOpen ? 'true' : 'false' }}" aria-controls="sellerReportsMenuMobile">
                 <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
-                <span>Doanh thu &amp; Thống kê</span>
+                <span>Báo cáo &amp; Phân tích</span>
                 <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
             </button>
 
             <div id="sellerReportsMenuMobile" class="collapse {{ $reportsOpen ? 'show' : '' }}">
-                <nav class="seller-submenu" aria-label="Báo cáo">
+                <nav class="seller-submenu" aria-label="Báo cáo và phân tích">
                     <a href="{{ route('seller.reports.revenue') }}"
                         class="seller-subnav-link {{ request()->routeIs('seller.reports.revenue') ? 'active' : '' }}">
                         Báo cáo doanh thu
                     </a>
 
-                    <a href="{{ \Illuminate\Support\Facades\Route::has('seller.analytics.index') ? route('seller.analytics.index') : '#' }}"
-                        class="seller-subnav-link {{ request()->routeIs('seller.analytics.*') ? 'active' : '' }}">
+                    <a href="{{ route('seller.reports.analytics') }}"
+                        class="seller-subnav-link {{ request()->routeIs('seller.reports.analytics') ? 'active' : '' }}">
                         Phân tích bán hàng
                     </a>
                 </nav>
@@ -600,7 +602,7 @@
 </style>
 
 <style>
-    /* Match Admin icon alignment and state: glyph color follows the menu item. */
+    /* Đồng bộ căn icon và trạng thái với menu Admin. */
     .seller-sidebar .seller-nav-link>i:first-child,
     .seller-sidebar--mobile .seller-nav-link>i:first-child {
         display: inline-flex;

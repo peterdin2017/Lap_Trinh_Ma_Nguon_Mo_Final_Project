@@ -30,6 +30,7 @@ return new class extends Migration
             $table->decimal('seller_voucher_discount', 14, 2)->default(0);
 
             $table->string('platform_voucher_code', 50)->nullable();
+            $table->unsignedBigInteger('platform_voucher_id')->nullable();
             $table->decimal('platform_voucher_discount', 14, 2)->default(0);
 
             $table->timestamps();
@@ -49,9 +50,13 @@ return new class extends Migration
                 ->on('product_variants')
                 ->nullOnDelete();
 
+            $table->foreign('platform_voucher_id')
+                ->references('platform_voucher_id')
+                ->on('platform_vouchers')
+                ->nullOnDelete();
+
             $table->index('order_id');
         });
-
     }
 
     /**

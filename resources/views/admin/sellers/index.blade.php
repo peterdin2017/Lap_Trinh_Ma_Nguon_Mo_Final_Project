@@ -53,12 +53,8 @@
                             </td>
 
                             <td class="admin-sellers-table__address">
-                                {{ collect([
-                                    $seller->shop_address,
-                                    $seller->shop_ward,
-                                    $seller->shop_district,
-                                    $seller->shop_province,
-                                ])->filter()->implode(', ') ?: 'Chưa cung cấp' }}
+                                {{ collect([$seller->shop_address, $seller->shop_ward, $seller->shop_district, $seller->shop_province])->filter()->implode(', ') ?:
+                                    'Chưa cung cấp' }}
                             </td>
 
                             <td class="text-nowrap">
@@ -67,9 +63,8 @@
 
                             <td class="pe-3 pe-lg-4">
                                 <div class="d-flex flex-column align-items-end gap-2">
-                                    <form method="POST"
-                                          action="{{ route('admin.sellers.approve', $seller) }}"
-                                          onsubmit="return confirm('Duyệt cửa hàng {{ addslashes($seller->shop_name) }}?')">
+                                    <form method="POST" action="{{ route('admin.sellers.approve', $seller) }}"
+                                        onsubmit="return confirm('Duyệt cửa hàng {{ addslashes($seller->shop_name) }}?')">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-success text-nowrap">
                                             <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
@@ -83,21 +78,16 @@
                                             Từ chối hồ sơ
                                         </summary>
 
-                                        <form method="POST"
-                                              action="{{ route('admin.sellers.reject', $seller) }}"
-                                              class="admin-reject__form">
+                                        <form method="POST" action="{{ route('admin.sellers.reject', $seller) }}"
+                                            class="admin-reject__form">
                                             @csrf
                                             <label for="reject_reason_{{ $seller->seller_id }}"
-                                                   class="form-label small fw-semibold">
+                                                class="form-label small fw-semibold">
                                                 Lý do từ chối
                                             </label>
-                                            <input id="reject_reason_{{ $seller->seller_id }}"
-                                                   name="reject_reason"
-                                                   type="text"
-                                                   maxlength="255"
-                                                   class="form-control form-control-sm mb-2"
-                                                   placeholder="Nhập lý do"
-                                                   required>
+                                            <input id="reject_reason_{{ $seller->seller_id }}" name="reject_reason"
+                                                type="text" maxlength="255" class="form-control form-control-sm mb-2"
+                                                placeholder="Nhập lý do" required>
                                             <button type="submit" class="btn btn-sm btn-outline-danger w-100">
                                                 Xác nhận từ chối
                                             </button>

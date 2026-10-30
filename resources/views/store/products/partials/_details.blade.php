@@ -1,13 +1,13 @@
 <h1 class="h3 fw-semibold mb-3">{{ $product->product_name }}</h1>
 
-<div class="d-flex flex-wrap align-items-center gap-3 small mb-4">
-    <span>
+<div class="product-meta d-flex flex-wrap align-items-center gap-3 small mb-4">
+    <span class="product-meta__item">
         Đánh giá:
         <strong>{{ number_format((float) $product->rating_avg, 1) }}</strong>
         ({{ number_format((int) $product->rating_count) }})
     </span>
 
-    <span class="text-secondary">
+    <span class="product-meta__item text-secondary">
         Đã bán {{ number_format((int) $product->sold_count) }}
     </span>
 
@@ -97,7 +97,9 @@
     @endif
 
     <dt class="col-4 col-sm-3 fw-normal text-secondary">Danh mục</dt>
-    <dd class="col-8 col-sm-9">{{ $product->category?->category_name ?? '—' }}</dd>
+    <dd class="col-8 col-sm-9">
+        {{ $product->category?->category_name ?? '—' }}
+    </dd>
 
     <dt class="col-4 col-sm-3 fw-normal text-secondary">Tình trạng</dt>
     <dd class="col-8 col-sm-9" id="productStatus">
@@ -279,3 +281,10 @@
         });
     </script>
 @endif
+
+<style>
+    .product-meta__item + .product-meta__item {
+        padding-left: 1rem;
+        border-left: 1px solid #d7dce2;
+    }
+</style>

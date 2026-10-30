@@ -313,30 +313,35 @@
         border-radius: 20px;
     }
 
+    /* Hai cột cố định giúp MSSV thẳng hàng giữa các thành viên. */
     .site-footer__members {
         display: grid;
-        gap: 7px;
+        gap: 8px;
         margin: 0;
         padding: 0;
     }
 
     .site-footer__members li {
-        display: flex;
-        min-width: 0;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 88px;
         align-items: center;
-        gap: 5px 7px;
+        column-gap: 8px;
+        min-width: 0;
         color: #475569;
         font-size: .72rem;
         line-height: 1.35;
     }
 
     .site-footer__member-name {
+        min-width: 0;
         overflow-wrap: anywhere;
     }
 
     .site-footer__mssv {
-        padding: 2px 6px;
+        display: inline-flex;
+        justify-content: center;
+        width: 88px;
+        padding: 3px 5px;
         color: #64748B;
         font-size: .64rem;
         font-variant-numeric: tabular-nums;

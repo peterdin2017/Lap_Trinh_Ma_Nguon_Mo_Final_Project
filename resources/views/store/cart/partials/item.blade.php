@@ -22,8 +22,8 @@
     data-quantity="{{ $quantity }}"
     data-stock="{{ $stock }}"
     data-subtotal="{{ $lineTotal }}"
-    data-update-url="{{ route('store.cart.items.update', ['key' => $key]) }}"
-    data-delete-url="{{ route('store.cart.items.destroy', ['key' => $key]) }}"
+    data-update-url="{{ route('store.cart.items.update', ['cartItemId' => $item['cart_item_id']]) }}"
+    data-delete-url="{{ route('store.cart.items.destroy', ['cartItemId' => $item['cart_item_id']]) }}"
 >
     <div class="cart-item__select">
         <input
