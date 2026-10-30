@@ -14,7 +14,7 @@
     $reportMenuOpen = $statisticsMenuOpen || $violationMenuOpen;
 
     $voucherMenuOpen = request()->routeIs('admin.vouchers.*');
-
+    $supportMenuOpen = request()->routeIs('admin.support.*');
     $storeMenuId = 'adminStoreMenu' . $suffix;
     $accountMenuId = 'adminAccountMenu' . $suffix;
     $productMenuId = 'adminProductMenu' . $suffix;
@@ -104,6 +104,13 @@
         <span>Voucher sàn</span>
     </a>
 
+    <a href="{{ route('admin.support.index') }}"
+       class="admin-nav-link {{ $supportMenuOpen ? 'active' : '' }}"
+       @if ($supportMenuOpen) aria-current="page" @endif>
+        <i class="bi bi-headset" aria-hidden="true"></i>
+        <span>Hỗ trợ khách hàng</span>
+    </a>
+
     <button class="admin-nav-link admin-nav-toggle {{ $reportMenuOpen ? 'active' : '' }}"
             type="button"
             data-bs-toggle="collapse"
@@ -111,7 +118,7 @@
             aria-expanded="{{ $reportMenuOpen ? 'true' : 'false' }}"
             aria-controls="{{ $reportMenuId }}">
         <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
-        <span>Báo cáo & thống kê</span>
+        <span>Báo cáo &amp; thống kê</span>
         <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
     </button>
 

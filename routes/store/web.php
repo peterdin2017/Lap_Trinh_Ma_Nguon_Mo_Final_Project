@@ -37,3 +37,6 @@ require __DIR__ . '/shop/shop.php';
 
 // Chat
 require __DIR__ . '/chat/chat.php';
+
+// Support
+require __DIR__ . '/support/support.php';
