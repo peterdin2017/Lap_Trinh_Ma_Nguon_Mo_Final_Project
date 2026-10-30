@@ -1,5 +1,5 @@
 @php
-    $productsOpen = request()->routeIs('seller.products.*');
+    $productsOpen = request()->routeIs('seller.products.*', 'seller.reviews.*');
     $ordersOpen = request()->routeIs('seller.orders.*');
     $reportsOpen = request()->routeIs('seller.reports.*', 'seller.analytics.*');
     $vouchersOpen = request()->routeIs('seller.vouchers.*');
@@ -55,6 +55,10 @@
                 <a href="{{ route('seller.products.create') }}"
                     class="seller-subnav-link {{ request()->routeIs('seller.products.create') ? 'active' : '' }}">
                     Thêm sản phẩm mới
+                </a>
+                <a href="{{ route('seller.reviews.index') }}"
+                    class="seller-subnav-link {{ request()->routeIs('seller.reviews.*') ? 'active' : '' }}">
+                    Đánh giá sản phẩm
                 </a>
             </nav>
         </div>
@@ -227,7 +231,10 @@
                         class="seller-subnav-link {{ request()->routeIs('seller.products.create') ? 'active' : '' }}">
                         Thêm sản phẩm mới
                     </a>
-
+                    <a href="{{ route('seller.reviews.index') }}"
+                        class="seller-subnav-link {{ request()->routeIs('seller.reviews.*') ? 'active' : '' }}">
+                        Đánh giá sản phẩm
+                    </a>
                     <a href="{{ \Illuminate\Support\Facades\Route::has('seller.products.hidden') ? route('seller.products.hidden') : '#' }}"
                         class="seller-subnav-link {{ request()->routeIs('seller.products.hidden') ? 'active' : '' }}">
                         Sản phẩm hết hàng / ẩn
@@ -593,22 +600,21 @@
 </style>
 
 <style>
-/* Match Admin icon alignment and state: glyph color follows the menu item. */
-.seller-sidebar .seller-nav-link > i:first-child,
-.seller-sidebar--mobile .seller-nav-link > i:first-child {
-    display: inline-flex;
-    flex: 0 0 1.2rem;
-    width: 1.2rem;
-    height: auto;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0;
-    color: currentColor;
-    background: transparent;
-    box-shadow: none;
-    font-size: 1rem;
-    transform: none;
-    transition: color .15s ease;
-}
+    /* Match Admin icon alignment and state: glyph color follows the menu item. */
+    .seller-sidebar .seller-nav-link>i:first-child,
+    .seller-sidebar--mobile .seller-nav-link>i:first-child {
+        display: inline-flex;
+        flex: 0 0 1.2rem;
+        width: 1.2rem;
+        height: auto;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0;
+        color: currentColor;
+        background: transparent;
+        box-shadow: none;
+        font-size: 1rem;
+        transform: none;
+        transition: color .15s ease;
+    }
 </style>
-

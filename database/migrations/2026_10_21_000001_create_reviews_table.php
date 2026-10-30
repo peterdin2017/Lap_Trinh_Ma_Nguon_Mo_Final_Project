@@ -12,18 +12,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reviews', function (Blueprint $table) {
+        Schema::create('reviews', function (Blueprint $table): void {
             $table->bigIncrements('review_id');
             $table->unsignedBigInteger('account_id');
             $table->unsignedBigInteger('product_id');
-
-            // unique: mỗi dòng hàng chỉ được đánh giá một lần.
-            // Chưa đặt foreign key vì bảng order_items do Người 2 tạo;
-            // sau khi gộp nhánh hãy thêm FK -> order_items.order_item_id.
             $table->unsignedBigInteger('order_item_id')->unique();
 
-            $table->unsignedTinyInteger('rating'); // 1..5
+            $table->unsignedTinyInteger('rating');
             $table->text('comment')->nullable();
+
+            // Phản hồi của Shop; mỗi đánh giá có tối đa một phản hồi.
+            $table->text('seller_reply')->nullable();
+            $table->timestamp('seller_replied_at')->nullable();
+
             $table->timestamps();
 
             $table->index('product_id');

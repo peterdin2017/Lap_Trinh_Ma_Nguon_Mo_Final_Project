@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-use App\Models\ReviewImage;
-
 class Review extends Model
 {
     protected $table = 'reviews';
@@ -20,12 +18,15 @@ class Review extends Model
         'order_item_id',
         'rating',
         'comment',
+        'seller_reply',
+        'seller_replied_at',
     ];
 
     protected function casts(): array
     {
         return [
             'rating' => 'integer',
+            'seller_replied_at' => 'datetime',
         ];
     }
 

@@ -31,6 +31,7 @@ Route::middleware(['auth', 'seller.status'])->group(function () {
     require __DIR__ . '/order/order.php';
     require __DIR__ . '/voucher/voucher.php';
     require __DIR__ . '/report/report.php';
+    require __DIR__ . '/reviews/reviews.php';
 });
 
 

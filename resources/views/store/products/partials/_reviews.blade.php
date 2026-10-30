@@ -129,6 +129,25 @@
                                 <p class="product-review__comment">{{ $review->comment }}</p>
                             @endif
 
+                            @if (filled($review->seller_reply))
+                                <div class="product-review__seller-reply">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+                                        <strong>
+                                            <i class="bi bi-reply-fill me-1" aria-hidden="true"></i>
+                                            Phản hồi từ Shop
+                                        </strong>
+
+                                        @if ($review->seller_replied_at)
+                                            <span class="small text-secondary">
+                                                {{ $review->seller_replied_at->format('d/m/Y H:i') }}
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <p class="mb-0">{{ $review->seller_reply }}</p>
+                                </div>
+                            @endif
+
                             @if ($hasMedia)
                                 <div class="product-review__media">
                                     @foreach ($reviewImages as $reviewImage)
@@ -352,6 +371,25 @@
         overflow-wrap: anywhere;
     }
 
+    .product-review__seller-reply {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-left: 3px solid #1A94FF;
+        border-radius: 8px;
+        background: #F0F7FF;
+    }
+
+    .product-review__seller-reply strong {
+        color: #1673D1;
+    }
+
+    .product-review__seller-reply p {
+        color: #334155;
+        line-height: 1.6;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+    }
+
     .product-review__media {
         margin-top: 12px;
     }
@@ -474,8 +512,6 @@
         paintStars(Number(ratingInput?.value || 0));
     });
 
-    paintStars(Number(ratingInput?.value || 0));
-
     const input = root.querySelector('#reviewImagesInput');
     const preview = root.querySelector('#reviewImagesPreview');
 
@@ -514,4 +550,4 @@
         });
     });
 })();
-</script>   
+</script>
