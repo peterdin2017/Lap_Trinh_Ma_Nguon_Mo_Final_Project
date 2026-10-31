@@ -204,7 +204,7 @@
                             <div class="col">
                                 <article class="home-product-card">
                                     <a
-                                        href="{{ route('store.products.show', $product->product_id) }}"
+                                        href="{{ route('store.products.show', ['slug' => $product->slug ?: $product->product_id]) }}"
                                         class="home-product-card__image-link"
                                         aria-label="Xem {{ $product->product_name }}"
                                     >
@@ -239,7 +239,7 @@
                                         </div>
 
                                         <h3 class="home-product-card__title">
-                                            <a href="{{ route('store.products.show', $product->product_id) }}">
+                                            <a href="{{ route('store.products.show', ['slug' => $product->slug ?: $product->product_id]) }}">
                                                 {{ $product->product_name }}
                                             </a>
                                         </h3>
@@ -290,7 +290,7 @@
 
                                         @if ($hasVariants)
                                             <a
-                                                href="{{ route('store.products.show', $product->product_id) }}"
+                                                href="{{ route('store.products.show', ['slug' => $product->slug ?: $product->product_id]) }}"
                                                 class="btn home-product-card__add"
                                             >
                                                 Chọn phân loại

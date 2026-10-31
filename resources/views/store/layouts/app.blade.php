@@ -397,7 +397,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.store-main .alert').forEach(function(alert) {
+            // Chỉ gắn bộ đếm cho thông báo đã hiện khi tải trang.
+            // Feedback giỏ hàng được bật sau đó bởi AJAX và tự quản lý thời gian riêng.
+            document.querySelectorAll('.store-main .alert:not(.d-none)').forEach(function(alert) {
                 window.setTimeout(function() {
                     if (!alert.isConnected) {
                         return;

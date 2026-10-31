@@ -1,6 +1,6 @@
 {{-- Thẻ sản phẩm. Cần biến $product; cột Bootstrap do view gọi partial quản lý. --}}
 <a
-    href="{{ route('store.products.show', $product->product_id) }}"
+    href="{{ route('store.products.show', ['slug' => $product->slug ?: $product->product_id]) }}"
     class="store-product__link text-decoration-none text-dark d-block h-100"
 >
     <article class="card store-product h-100 border-0 shadow-sm">

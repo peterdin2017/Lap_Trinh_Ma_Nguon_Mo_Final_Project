@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -23,6 +24,26 @@ class Product extends Model
         'image_url',
         'status',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Product $product): void {
+            if (filled($product->slug)) {
+                return;
+            }
+
+            $baseSlug = Str::limit(Str::slug($product->product_name), 180, '');
+            $baseSlug = $baseSlug !== '' ? $baseSlug : 'san-pham';
+            $slug = $baseSlug;
+            $suffix = 2;
+
+            while (static::query()->where('slug', $slug)->exists()) {
+                $slug = $baseSlug . '-' . $suffix++;
+            }
+
+            $product->slug = $slug;
+        });
+    }
 
     protected function casts(): array
     {

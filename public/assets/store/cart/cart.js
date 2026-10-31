@@ -29,14 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let pendingDelete = null;
     let confirmModal = null;
+    let feedbackTimer = null;
 
     const formatCurrency = (amount) =>
         new Intl.NumberFormat('vi-VN').format(Math.round(amount)) + '₫';
 
     function showFeedback(message, type = 'success') {
+        window.clearTimeout(feedbackTimer);
         feedback.textContent = message;
         feedback.className = `alert alert-${type} cart-feedback`;
         feedback.classList.remove('d-none');
+        feedbackTimer = window.setTimeout(() => {
+            feedback.classList.add('d-none');
+        }, 3000);
     }
 
     function getRows() {

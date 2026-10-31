@@ -37,11 +37,16 @@ class ProductController extends Controller
                 ->first();
 
             if ($legacyProduct) {
-                return redirect()->route(
-                    'store.products.show',
-                    ['slug' => $legacyProduct->slug],
-                    301
-                );
+                if (filled($legacyProduct->slug)) {
+                    return redirect()->route(
+                        'store.products.show',
+                        ['slug' => $legacyProduct->slug],
+                        301
+                    );
+                }
+
+                // Sản phẩm cũ chưa có slug vẫn mở được bằng URL số.
+                $product = $legacyProduct;
             }
         }
 
@@ -71,19 +76,41 @@ class ProductController extends Controller
             ->pluck('full_name', 'account_id');
 
         $accountId = session('account_id');
+        $productCount = $product->seller
+            ? $product->seller->products()->where('status', 'active')->count()
+            : 0;
+        $products = Product::query()
+            ->with(['category', 'seller'])
+            ->where('status', 'active')
+            ->where('product_id', '!=', $product->product_id)
+            ->whereHas('seller', fn ($query) => $query->where('status', 'active'))
+            ->where(function ($query) use ($product): void {
+                $query->where('category_id', $product->category_id)
+                    ->orWhere('seller_id', $product->seller_id);
+            })
+            ->orderByRaw('CASE WHEN category_id = ? THEN 0 ELSE 1 END', [$product->category_id])
+            ->latest('product_id')
+            ->paginate(8, ['*'], 'products_page')
+            ->withQueryString();
+        $reviewableOrderItemId = $accountId
+            ? $eligibility->reviewableOrderItemId(
+                (int) $accountId,
+                $product->product_id
+            )
+            : null;
 
         return view('store.products.show', [
             'product' => $product,
+            'seller' => $product->seller,
+            'productCount' => $productCount,
+            'products' => $products,
             'images' => $images,
             'breadcrumb' => $catalog->breadcrumb($product->category),
             'reviews' => $reviews,
             'reviewerNames' => $reviewerNames,
             'isGuest' => ! $accountId,
-            'canReview' => $accountId
-                && $eligibility->reviewableOrderItemId(
-                    (int) $accountId,
-                    $product->product_id
-                ) !== null,
+            'reviewableOrderItemId' => $reviewableOrderItemId,
+            'canReview' => $reviewableOrderItemId !== null,
         ]);
     }
 }

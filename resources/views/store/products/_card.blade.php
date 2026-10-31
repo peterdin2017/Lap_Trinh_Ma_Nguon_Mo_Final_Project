@@ -7,7 +7,7 @@
 
 <div class="col">
     <a
-        href="{{ route('store.products.show', $product->product_id) }}"
+        href="{{ route('store.products.show', ['slug' => $product->slug ?: $product->product_id]) }}"
         class="text-decoration-none text-dark d-block h-100"
     >
         <article class="card h-100 border-0 shadow-sm product-card">

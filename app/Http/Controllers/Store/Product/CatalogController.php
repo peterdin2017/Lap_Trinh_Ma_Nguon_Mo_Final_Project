@@ -48,7 +48,9 @@ class CatalogController extends Controller
                     'image_url' => $product->image_src,
                     'shop_name' => $product->seller?->shop_name,
                     'category_name' => $product->category?->category_name,
-                    'url' => route('store.products.show', $product->product_id),
+                    'url' => route('store.products.show', [
+                        'slug' => $product->slug ?: $product->product_id,
+                    ]),
                 ])->values(),
             ]);
         }

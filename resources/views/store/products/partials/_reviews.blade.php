@@ -204,6 +204,12 @@
             >
                 @csrf
 
+                <input
+                    type="hidden"
+                    name="order_item_id"
+                    value="{{ $reviewableOrderItemId }}"
+                >
+
                 <h3 class="h6 fw-bold mb-3">Viết đánh giá của bạn</h3>
 
                 <input type="hidden" name="rating" id="reviewRating" value="{{ old('rating') }}">
