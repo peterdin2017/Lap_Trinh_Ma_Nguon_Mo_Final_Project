@@ -870,6 +870,3 @@
         })();
     </script>
 @endsection
-
-
-

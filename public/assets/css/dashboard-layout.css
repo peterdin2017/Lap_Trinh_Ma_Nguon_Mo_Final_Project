@@ -23,8 +23,8 @@ body {
 }
 
 /* Desktop sidebars share a width and scroll behavior. */
-.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile),
-.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) {
+.app-wrapper>.admin-sidebar:not(.admin-sidebar--mobile),
+.app-wrapper>.seller-sidebar:not(.seller-sidebar--mobile) {
     position: relative !important;
     inset: auto !important;
     z-index: auto;
@@ -38,17 +38,17 @@ body {
     overflow: hidden;
 }
 
-.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) > .admin-sidebar__brand,
-.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) > .admin-sidebar__section,
-.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) > .admin-sidebar__bottom,
-.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) > .seller-brand,
-.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) > .seller-sidebar__section,
-.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) > .seller-sidebar__footer {
+.app-wrapper>.admin-sidebar:not(.admin-sidebar--mobile)>.admin-sidebar__brand,
+.app-wrapper>.admin-sidebar:not(.admin-sidebar--mobile)>.admin-sidebar__section,
+.app-wrapper>.admin-sidebar:not(.admin-sidebar--mobile)>.admin-sidebar__bottom,
+.app-wrapper>.seller-sidebar:not(.seller-sidebar--mobile)>.seller-brand,
+.app-wrapper>.seller-sidebar:not(.seller-sidebar--mobile)>.seller-sidebar__section,
+.app-wrapper>.seller-sidebar:not(.seller-sidebar--mobile)>.seller-sidebar__footer {
     flex: 0 0 auto;
 }
 
-.app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile) > .admin-sidebar__nav,
-.app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) > .seller-sidebar__nav {
+.app-wrapper>.admin-sidebar:not(.admin-sidebar--mobile)>.admin-sidebar__nav,
+.app-wrapper>.seller-sidebar:not(.seller-sidebar--mobile)>.seller-sidebar__nav {
     flex: 1 1 auto;
     min-height: 0;
     overflow-x: hidden;
@@ -76,8 +76,8 @@ body {
     background: var(--seller-page-bg);
 }
 
-.app-main > .admin-header,
-.app-main > .seller-topbar {
+.app-main>.admin-header,
+.app-main>.seller-topbar {
     position: relative;
     z-index: 5;
     display: flex;
@@ -90,28 +90,28 @@ body {
     padding-bottom: 0 !important;
 }
 
-.app-main > .admin-header {
+.app-main>.admin-header {
     color: var(--app-text);
     background: var(--app-card-bg);
     border-bottom: 1px solid var(--app-border);
 }
 
-.app-main > .seller-topbar {
+.app-main>.seller-topbar {
     color: var(--seller-text);
     background: var(--seller-card-bg);
     border-bottom: 1px solid var(--seller-border);
 }
 
-.app-main > .admin-header h1,
-.app-main > .seller-topbar h1 {
+.app-main>.admin-header h1,
+.app-main>.seller-topbar h1 {
     margin-bottom: 0;
     font-size: 17px;
     font-weight: 700;
     letter-spacing: -.01em;
 }
 
-.app-main > .content-body,
-.app-main > .seller-content {
+.app-main>.content-body,
+.app-main>.seller-content {
     flex: 1 1 auto;
     min-width: 0;
     min-height: 0;
@@ -120,8 +120,8 @@ body {
     overscroll-behavior: contain;
 }
 
-.app-main > .admin-footer,
-.app-main > .seller-footer {
+.app-main>.admin-footer,
+.app-main>.seller-footer {
     flex: 0 0 auto;
 }
 
@@ -139,8 +139,8 @@ body {
     line-height: 1.4;
 }
 
-.admin-sidebar .admin-nav-link > i:first-child,
-.seller-sidebar .seller-nav-link > i:first-child {
+.admin-sidebar .admin-nav-link>i:first-child,
+.seller-sidebar .seller-nav-link>i:first-child {
     flex: 0 0 22px;
     width: 22px;
     text-align: center;
@@ -168,8 +168,9 @@ body {
 }
 
 @media (max-width: 991.98px) {
-    .app-wrapper > .admin-sidebar:not(.admin-sidebar--mobile),
-    .app-wrapper > .seller-sidebar:not(.seller-sidebar--mobile) {
+
+    .app-wrapper>.admin-sidebar:not(.admin-sidebar--mobile),
+    .app-wrapper>.seller-sidebar:not(.seller-sidebar--mobile) {
         display: none !important;
     }
 
@@ -198,14 +199,16 @@ body {
 }
 
 @media (max-width: 575.98px) {
-    .app-main > .content-body,
-    .app-main > .seller-content {
+
+    .app-main>.content-body,
+    .app-main>.seller-content {
         padding-right: 1rem;
         padding-left: 1rem;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .content-body,
     .seller-content {
         scroll-behavior: auto;

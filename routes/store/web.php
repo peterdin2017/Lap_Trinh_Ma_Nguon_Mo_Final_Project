@@ -8,8 +8,8 @@ use App\Http\Controllers\Store\Account\BuyerOrderController;
 Route::get('/', [HomeController::class, 'index'])
     ->name('store.home');
 
-Route::get('/products/{productId}', [ProductController::class, 'show'])
-    ->whereNumber('productId')
+Route::get('/products/{slug}', [ProductController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9-]+')
     ->name('store.products.show');
 
 // Các route Store

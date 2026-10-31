@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Product;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -10,10 +11,49 @@ class ProductModerationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['seller', 'category']);
-        if ($request->filled('q')) $query->where('product_name', 'like', '%' . $request->q . '%');
-        if (in_array($request->input('status'), ['active', 'hidden', 'locked'], true)) $query->where('status', $request->status);
-        return view('admin.products.index', ['products' => $query->orderByDesc('product_id')->paginate(12)->withQueryString()]);
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:200'],
+            'status' => ['nullable', 'in:draft,active,hidden,locked'],
+            'category' => ['nullable', 'integer', 'exists:categories,category_id'],
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $from = $filters['from'] ?? null;
+        $to = $filters['to'] ?? null;
+
+        if ($from && $to && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+
+        $products = Product::query()
+            ->with(['seller', 'category'])
+            ->when($filters['q'] ?? null, function ($query, string $keyword): void {
+                $query->where('product_name', 'like', '%' . $keyword . '%');
+            })
+            ->when($filters['status'] ?? null, function ($query, string $status): void {
+                $query->where('status', $status);
+            })
+            ->when($filters['category'] ?? null, function ($query, int $categoryId): void {
+                $query->where('category_id', $categoryId);
+            })
+            ->when($from, fn ($query) => $query->whereDate('published_at', '>=', $from))
+            ->when($to, fn ($query) => $query->whereDate('published_at', '<=', $to))
+            ->orderByDesc('product_id')
+            ->paginate(12)
+            ->withQueryString();
+
+        $categories = Category::query()->orderBy('category_name')->get([
+            'category_id',
+            'category_name',
+        ]);
+
+        return view('admin.products.index', compact(
+            'products',
+            'categories',
+            'from',
+            'to'
+        ));
     }
     public function lock(Request $request, Product $product)
     {

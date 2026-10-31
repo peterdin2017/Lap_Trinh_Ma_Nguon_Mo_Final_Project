@@ -11,12 +11,14 @@
         $statusTabs = [
             'all' => 'Tất cả',
             'active' => 'Đang hoạt động',
+            'draft' => 'Bản nháp',
             'out_of_stock' => 'Hết hàng',
             'hidden' => 'Đã ẩn',
         ];
 
         $statusMap = [
             'active' => ['Đang bán', 'status-active'],
+            'draft' => ['Bản nháp', 'status-hidden'],
             'hidden' => ['Đã ẩn', 'status-hidden'],
             'locked' => ['Bị khóa', 'status-locked'],
         ];
@@ -323,7 +325,7 @@
                     <input type="hidden" name="status" value="{{ $status }}">
 
                     <div class="row g-2">
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-3">
                             <label for="product-search" class="visually-hidden">
                                 Tìm tên hoặc mã sản phẩm
                             </label>
@@ -339,7 +341,7 @@
                             >
                         </div>
 
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-3">
                             <label for="product-category" class="visually-hidden">
                                 Lọc theo danh mục
                             </label>
@@ -362,13 +364,41 @@
                             </select>
                         </div>
 
-                        <div class="col-12 col-md-2">
+                        <div class="col-6 col-md-2">
+                            <label for="published-from" class="visually-hidden">Đăng từ ngày</label>
+                            <input
+                                id="published-from"
+                                type="date"
+                                name="from"
+                                value="{{ $from }}"
+                                class="form-control"
+                                aria-label="Đăng từ ngày"
+                            >
+                        </div>
+
+                        <div class="col-6 col-md-2">
+                            <label for="published-to" class="visually-hidden">Đăng đến ngày</label>
+                            <input
+                                id="published-to"
+                                type="date"
+                                name="to"
+                                value="{{ $to }}"
+                                class="form-control"
+                                aria-label="Đăng đến ngày"
+                            >
+                        </div>
+
+                        <div class="col-12 col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-search me-1" aria-hidden="true"></i>
+                                Lọc
+                            </button>
                             <a
                                 href="{{ route('seller.products.index') }}"
-                                class="btn btn-outline-secondary w-100 js-products-ajax-link"
+                                class="btn btn-outline-secondary js-products-ajax-link"
+                                aria-label="Xóa bộ lọc"
                             >
-                                <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>
-                                Xóa lọc
+                                <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
                             </a>
                         </div>
                     </div>
@@ -430,6 +460,7 @@
                                 </th>
                                 <th style="width:72px">Ảnh</th>
                                 <th>Sản phẩm</th>
+                                <th style="min-width:165px">Thời gian đăng</th>
                                 <th>Danh mục</th>
                                 <th class="text-end">Giá</th>
                                 <th class="text-center">Tồn kho</th>
@@ -485,6 +516,19 @@
                                         <small class="text-secondary">
                                             Mã SP: {{ $product->product_id }}
                                         </small>
+                                    </td>
+
+                                    <td class="small text-nowrap">
+                                        @if ($product->published_at)
+                                            <span class="text-secondary">
+                                                {{ \Illuminate\Support\Carbon::parse($product->published_at)->format('d/m/Y') }}
+                                            </span>
+                                            <span class="d-block fw-semibold">
+                                                {{ \Illuminate\Support\Carbon::parse($product->published_at)->format('H:i') }}
+                                            </span>
+                                        @else
+                                            <span class="text-secondary">Chưa đăng</span>
+                                        @endif
                                     </td>
 
                                     <td class="text-secondary">
@@ -549,7 +593,7 @@
                                             </a>
 
                                             <a
-                                                href="{{ route('store.products.show', $product->product_id) }}"
+                                                href="{{ route('store.products.show', ['slug' => $product->slug]) }}"
                                                 class="btn btn-sm btn-outline-secondary rounded-2 action-button"
                                                 aria-label="Xem {{ $product->product_name }} ngoài cửa hàng"
                                                 title="Xem ngoài cửa hàng"
@@ -565,7 +609,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-secondary py-5">
+                                    <td colspan="9" class="text-center text-secondary py-5">
                                         <span class="products-empty-icon mb-3">
                                             <i class="bi bi-box-seam fs-3" aria-hidden="true"></i>
                                         </span>

@@ -7,21 +7,45 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\Store\ProductCatalog;
 use App\Services\Store\ReviewEligibility;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function show(int $productId, ProductCatalog $catalog, ReviewEligibility $eligibility): View
-    {
+    public function show(
+        string $slug,
+        ProductCatalog $catalog,
+        ReviewEligibility $eligibility
+    ): View|RedirectResponse {
         // Chỉ cho xem sản phẩm đang bán từ shop đã được Admin duyệt.
-        $product = Product::query()
+        $visibleProducts = Product::query()
             ->with(['category.parent', 'seller', 'variants'])
             ->where('status', 'active')
-            ->whereHas('seller', function ($query) {
+            ->whereHas('seller', function ($query): void {
                 $query->where('status', 'active');
-            })
-            ->findOrFail($productId);
+            });
+
+        $product = (clone $visibleProducts)
+            ->where('slug', $slug)
+            ->first();
+
+        // URL số cũ vẫn hoạt động và được chuyển sang URL slug chuẩn.
+        if (! $product && ctype_digit($slug)) {
+            $legacyProduct = (clone $visibleProducts)
+                ->whereKey((int) $slug)
+                ->first();
+
+            if ($legacyProduct) {
+                return redirect()->route(
+                    'store.products.show',
+                    ['slug' => $legacyProduct->slug],
+                    301
+                );
+            }
+        }
+
+        abort_unless($product, 404);
 
         // Lấy ảnh chính và các ảnh phụ để hiện thành thư viện ảnh.
         $images = collect([$product->image_url])
@@ -34,15 +58,16 @@ class ProductController extends Controller
             )
             ->values();
 
-        // Đánh giá: danh sách (5 mỗi trang) + người đang xem có được đánh giá không.
+        // Đánh giá: danh sách 5 mỗi trang và kiểm tra quyền đánh giá.
         $reviews = $product->reviews()
             ->latest('created_at')
             ->latest('review_id')
             ->paginate(5, ['*'], 'reviews_page')
             ->fragment('reviews');
 
-        // Chỉ lộ tên hiển thị, không bao giờ lộ email.
-        $reviewerNames = User::whereIn('account_id', $reviews->pluck('account_id'))
+        // Chỉ hiển thị tên, không hiển thị email người đánh giá.
+        $reviewerNames = User::query()
+            ->whereIn('account_id', $reviews->pluck('account_id'))
             ->pluck('full_name', 'account_id');
 
         $accountId = session('account_id');
@@ -55,7 +80,10 @@ class ProductController extends Controller
             'reviewerNames' => $reviewerNames,
             'isGuest' => ! $accountId,
             'canReview' => $accountId
-                && $eligibility->reviewableOrderItemId((int) $accountId, $product->product_id) !== null,
+                && $eligibility->reviewableOrderItemId(
+                    (int) $accountId,
+                    $product->product_id
+                ) !== null,
         ]);
     }
 }

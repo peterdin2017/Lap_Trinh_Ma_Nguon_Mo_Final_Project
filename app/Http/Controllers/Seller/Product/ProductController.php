@@ -28,9 +28,23 @@ class ProductController extends Controller
     {
         $seller = $this->currentSeller();
 
-        $status = (string) $request->query('status', 'all');
+        $filters = $request->validate([
+            'status' => ['nullable', 'in:all,active,draft,out_of_stock,hidden'],
+            'q' => ['nullable', 'string', 'max:200'],
+            'category' => ['nullable', 'integer'],
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $status = (string) ($filters['status'] ?? 'all');
         $search = trim((string) $request->query('q', ''));
         $categoryId = $request->query('category');
+        $from = $filters['from'] ?? null;
+        $to = $filters['to'] ?? null;
+
+        if ($from && $to && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
 
         $productsQuery = Product::query()
             ->with('category')
@@ -48,12 +62,17 @@ class ProductController extends Controller
             ->when(
                 $categoryId,
                 fn($query) => $query->where('category_id', $categoryId)
+            )
+            ->when($from, fn($query) => $query->whereDate('published_at', '>=', $from))
+            ->when($to, fn($query) => $query->whereDate('published_at', '<=', $to)
             );
 
         match ($status) {
             'active' => $productsQuery
                 ->where('status', 'active')
                 ->where('stock_quantity', '>', 0),
+
+            'draft' => $productsQuery->where('status', 'draft'),
 
             // DB không có trạng thái out_of_stock; suy ra từ tồn kho.
             'out_of_stock' => $productsQuery->where('stock_quantity', 0),
@@ -77,7 +96,9 @@ class ProductController extends Controller
             'categories',
             'status',
             'search',
-            'categoryId'
+            'categoryId',
+            'from',
+            'to'
         ));
     }
 
@@ -104,7 +125,7 @@ class ProductController extends Controller
         $seller = $this->currentSeller();
         $data = $request->validated();
         $variants = $data['variants'] ?? [];
-        $status = $data['status'] ?? 'active';
+        $status = $data['status'];
 
         unset(
             $data['image'],
@@ -143,6 +164,7 @@ class ProductController extends Controller
                 $product->fill($data);
                 $product->seller_id = $seller->seller_id;
                 $product->status = $status;
+                $product->published_at = $status === 'active' ? now() : null;
                 $product->save();
 
                 // Lưu ảnh chính.
@@ -385,6 +407,9 @@ class ProductController extends Controller
             ): void {
                 $productModel->fill($data);
                 $productModel->status = $status;
+                if ($status === 'active' && ! $productModel->published_at) {
+                    $productModel->published_at = now();
+                }
                 $productModel->save();
 
                 foreach ($imagesToRemove as $image) {
@@ -487,11 +512,13 @@ class ProductController extends Controller
             ? 'hidden'
             : 'active';
 
+        if ($productModel->status === 'active' && ! $productModel->published_at) {
+            $productModel->published_at = now();
+        }
+
         $productModel->save();
 
-        $label = $productModel->status === 'active'
-            ? 'Đang bán'
-            : 'Đã ẩn';
+        $label = $productModel->status === 'active' ? 'Đang bán' : 'Đã ẩn';
 
         if ($request->expectsJson()) {
             return response()->json([
