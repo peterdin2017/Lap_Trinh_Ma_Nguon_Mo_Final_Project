@@ -2,6 +2,7 @@
     method="POST"
     action="{{ route('store.cart.items.store') }}"
     id="purchaseForm"
+    data-cart-ajax-form
     novalidate
 >
     @csrf

@@ -109,6 +109,9 @@
        @if ($supportMenuOpen) aria-current="page" @endif>
         <i class="bi bi-headset" aria-hidden="true"></i>
         <span>Hỗ trợ khách hàng</span>
+        <span class="admin-support-count-badge d-none"
+              data-admin-support-count
+              aria-live="polite"></span>
     </a>
 
     <button class="admin-nav-link admin-nav-toggle {{ $reportMenuOpen ? 'active' : '' }}"

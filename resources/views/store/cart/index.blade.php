@@ -3,11 +3,17 @@
 @section('title', 'Giỏ hàng')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('assets/store/cart/cart.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ asset('assets/store/cart/cart.css') }}?v={{ filemtime(public_path('assets/store/cart/cart.css')) }}"
+    >
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('assets/store/cart/cart.js') }}" defer></script>
+    <script
+        src="{{ asset('assets/store/cart/cart.js') }}?v={{ filemtime(public_path('assets/store/cart/cart.js')) }}"
+        defer
+    ></script>
 @endpush
 
 @section('content')

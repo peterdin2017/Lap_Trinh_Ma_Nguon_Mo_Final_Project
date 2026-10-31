@@ -34,6 +34,8 @@
             class="seller-nav-link {{ request()->routeIs('seller.chat.*') ? 'active' : '' }}">
             <i class="bi bi-chat-dots" aria-hidden="true"></i>
             <span>Tin nhắn</span>
+            <span class="seller-menu-badge d-none" data-seller-chat-unread
+                data-unread-url="{{ route('seller.chat.conversations.updates') }}" aria-live="polite"></span>
         </a>
 
         {{-- Quản lý sản phẩm --}}
@@ -209,6 +211,8 @@
                 class="seller-nav-link {{ request()->routeIs('seller.chat.*') ? 'active' : '' }}">
                 <i class="bi bi-chat-dots" aria-hidden="true"></i>
                 <span>Tin nhắn</span>
+                <span class="seller-menu-badge d-none" data-seller-chat-unread
+                    data-unread-url="{{ route('seller.chat.conversations.updates') }}" aria-live="polite"></span>
             </a>
 
             {{-- Quản lý sản phẩm --}}
@@ -618,5 +622,13 @@
         font-size: 1rem;
         transform: none;
         transition: color .15s ease;
+    }
+
+    .seller-sidebar .seller-menu-badge[data-seller-chat-unread] {
+        padding: 3px 8px;
+        color: #fff;
+        background: #FF424E;
+        border-radius: 999px;
+        box-shadow: 0 2px 6px rgba(255, 66, 78, .22);
     }
 </style>

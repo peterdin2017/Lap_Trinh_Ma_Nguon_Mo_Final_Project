@@ -619,7 +619,7 @@
 
                                     @include('store.products._category-tree', [
                                         'nodes' => $categoryTree,
-                                        'activeId' => $filters['category'] ?? null,
+                                        'activeId' => $currentCategory?->category_id,
                                     ])
                                 </nav>
                             </div>

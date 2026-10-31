@@ -22,7 +22,8 @@ class HomeController extends Controller
 
         $categories = Category::query()
             ->orderBy('category_name')
-            ->get(['category_id', 'parent_id', 'category_name']);
+            // Load the current table columns so this page also works before slug migration runs.
+            ->get();
 
         $childrenByParent = [];
 

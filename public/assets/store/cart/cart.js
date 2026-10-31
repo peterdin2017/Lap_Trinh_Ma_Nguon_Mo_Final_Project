@@ -82,6 +82,8 @@ document.addEventListener('DOMContentLoaded', () => {
             0
         );
 
+        updateHeaderCartCount(totalQuantity);
+
         syncStoreCheckboxes();
 
         selectedCount.textContent = selectedRows.length;
@@ -111,6 +113,20 @@ document.addEventListener('DOMContentLoaded', () => {
             emptyState.classList.remove('d-none');
             mobileContinue?.classList.add('d-none');
         }
+    }
+
+    function updateHeaderCartCount(quantity) {
+        const badge = document.getElementById('store-cart-count');
+        const cartLink = badge?.closest('a');
+
+        if (!badge) {
+            return;
+        }
+
+        const count = Math.max(0, Number(quantity) || 0);
+        badge.textContent = count > 99 ? '99+' : String(count);
+        badge.hidden = count === 0;
+        cartLink?.setAttribute('aria-label', `Giỏ hàng, ${count} món`);
     }
 
     async function requestJson(url, method, payload = null) {
@@ -151,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const input = row.querySelector('.cart-quantity-input');
 
         input.value = quantity;
+        input.disabled = false;
         input.max = stock;
         row.dataset.stock = stock;
         decrementButton.disabled = quantity <= 1;
@@ -175,6 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const data = await requestJson(row.dataset.updateUrl, 'PATCH', { quantity });
             const item = data.item;
+
+            updateHeaderCartCount(data.cart_quantity);
 
             row.dataset.unitPrice = item.unit_price;
             row.dataset.quantity = item.quantity;
@@ -212,11 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ? `Bạn có chắc muốn xóa ${action.keys.length} sản phẩm đã chọn khỏi giỏ hàng?`
             : 'Sản phẩm này sẽ được xóa khỏi giỏ hàng.';
 
-        if (window.bootstrap?.Modal) {
+        if (window.bootstrap?.Modal && confirmModalElement) {
             confirmModal ??= new window.bootstrap.Modal(confirmModalElement);
             confirmModal.show();
         } else if (window.confirm(confirmMessage.textContent)) {
-            confirmDelete();
+            void confirmDelete();
         }
     }
 
@@ -227,7 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const action = pendingDelete;
         pendingDelete = null;
-        confirmDeleteButton.disabled = true;
+        if (confirmDeleteButton) {
+            confirmDeleteButton.disabled = true;
+        }
 
         try {
             let data;
@@ -248,11 +269,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             showFeedback(data.message || 'Đã xóa sản phẩm khỏi giỏ hàng.', 'success');
+            updateHeaderCartCount(data.cart_quantity);
             updateSummary();
         } catch (error) {
             showFeedback(error.message, 'danger');
         } finally {
-            confirmDeleteButton.disabled = false;
+            if (confirmDeleteButton) {
+                confirmDeleteButton.disabled = false;
+            }
             confirmModal?.hide();
         }
     }

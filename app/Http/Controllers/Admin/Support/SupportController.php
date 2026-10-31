@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\Support\UpdateSupportRequest;
 use App\Models\CustomerNotification;
 use App\Models\CustomerSupportRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -60,6 +61,37 @@ class SupportController extends Controller
         return view('admin.support.index', [
             'requests' => $requests,
             'statuses' => $statuses,
+        ]);
+    }
+
+    public function updates(): JsonResponse
+    {
+        $openStatuses = ['pending', 'in_progress'];
+
+        $requests = CustomerSupportRequest::query()
+            ->whereIn('status', $openStatuses)
+            ->with('account')
+            ->orderByDesc('created_at')
+            ->orderByDesc('request_id')
+            ->limit(8)
+            ->get();
+
+        return response()->json([
+            'open_total' => CustomerSupportRequest::query()
+                ->whereIn('status', $openStatuses)
+                ->count(),
+            'latest_request_id' => (int) (CustomerSupportRequest::query()->max('request_id') ?? 0),
+            'requests' => $requests->map(fn (CustomerSupportRequest $supportRequest): array => [
+                'id' => $supportRequest->request_id,
+                'customer' => $supportRequest->account?->email
+                    ?? 'Tài khoản không còn tồn tại',
+                'requester_role' => $supportRequest->requester_role,
+                'topic' => $supportRequest->topic,
+                'message' => $supportRequest->message,
+                'created_at' => $supportRequest->created_at?->toIso8601String(),
+                'url' => route('admin.support.index', ['status' => 'pending'])
+                    . '#support-request-' . $supportRequest->request_id,
+            ])->values(),
         ]);
     }
 

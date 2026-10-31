@@ -173,7 +173,7 @@
 
             <main class="content-body container-fluid px-3 px-lg-4 py-4">
                 @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="status">
+                    <div class="alert alert-success alert-dismissible fade show" role="status" data-auto-dismiss>
                         {{ session('success') }}
                         <button type="button"
                                 class="btn-close"
@@ -183,7 +183,7 @@
                 @endif
 
                 @if (session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert" data-auto-dismiss>
                         {{ session('error') }}
                         <button type="button"
                                 class="btn-close"
@@ -198,6 +198,8 @@
             @include('admin.layouts.footer')
         </div>
     </div>
+
+    @include('admin.partials.support-notifications')
 
     <script src="{{ asset('assets/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
@@ -240,9 +242,16 @@
             });
 
             applyTheme(root.getAttribute('data-bs-theme') || 'light');
+
+            document.querySelectorAll('[data-auto-dismiss]').forEach((alert) => {
+                window.setTimeout(() => {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }, 3000);
+            });
         })();
     </script>
 
     @stack('scripts')
+    <script src="{{ asset('assets/admin/support-notifications.js') }}" defer></script>
 </body>
 </html>

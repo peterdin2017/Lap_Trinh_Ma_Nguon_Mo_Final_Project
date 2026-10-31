@@ -9,6 +9,7 @@
     const sendButton = document.getElementById('sellerChatSend');
     const errorBox = document.getElementById('sellerChatError');
     const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    const unreadBadges = document.querySelectorAll('[data-seller-chat-unread]');
 
     let lastId = box
         ? Math.max(
@@ -142,6 +143,16 @@
         list.replaceChildren(fragment);
     }
 
+    function renderUnreadTotal(total) {
+        const count = Math.max(0, Number(total) || 0);
+
+        unreadBadges.forEach((badge) => {
+            badge.textContent = count > 99 ? '99+' : String(count);
+            badge.classList.toggle('d-none', count === 0);
+            badge.setAttribute('aria-label', `${count} tin nhắn chưa xem`);
+        });
+    }
+
     async function pollConversations() {
         if (!list || listLoading || !page.dataset.conversationsUrl) return;
 
@@ -149,6 +160,7 @@
 
         try {
             const data = await request(page.dataset.conversationsUrl);
+            renderUnreadTotal(data.unread_total);
             renderConversationList(data.conversations || []);
         } catch (error) {
             // Giữ danh sách hiện tại nếu request tạm thời bị lỗi.

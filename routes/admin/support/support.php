@@ -10,6 +10,9 @@ Route::prefix('admin/support')
         Route::get('/', 'index')
             ->name('index');
 
+        Route::get('/updates', 'updates')
+            ->name('updates');
+
         Route::patch('/{requestId}', 'update')
             ->whereNumber('requestId')
             ->name('update');

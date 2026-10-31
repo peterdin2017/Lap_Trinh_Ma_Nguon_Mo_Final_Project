@@ -2,7 +2,6 @@
 @section('title','Kiểm duyệt sản phẩm')
 @section('page-title','Kiểm duyệt sản phẩm')
 @section('content')
-@include('admin.partials.flash')
 <div class="admin-section-head"><div><h2>Danh sách sản phẩm</h2><p>Chặn sản phẩm vi phạm, ghi rõ lý do và kiểm soát việc mở khóa.</p></div></div>
 <form method="GET" class="admin-filter">
     <input class="form-control" name="q" value="{{ request('q') }}" placeholder="Tên sản phẩm...">

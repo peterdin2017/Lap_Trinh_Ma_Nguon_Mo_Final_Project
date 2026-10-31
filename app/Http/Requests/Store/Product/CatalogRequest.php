@@ -16,7 +16,7 @@ class CatalogRequest extends FormRequest
     {
         return [
             'q' => ['nullable', 'string', 'max:100'],
-            'category' => ['nullable', 'integer', 'min:1'],
+            'category' => ['nullable', 'string', 'max:191'],
             'min_price' => ['nullable', 'integer', 'min:0', 'max:1000000000000'],
             'max_price' => ['nullable', 'integer', 'min:0', 'max:1000000000000'],
             'sort' => ['nullable', 'in:' . implode(',', ProductCatalog::SORTS)],
@@ -38,7 +38,7 @@ class CatalogRequest extends FormRequest
     /**
      * Bộ lọc đã chuẩn hóa. Khoảng giá ngược (min > max) được đổi chỗ cho đúng.
      *
-     * @return array{q: string, category: ?int, min_price: ?int, max_price: ?int, sort: string}
+     * @return array{q: string, category: int|string|null, min_price: ?int, max_price: ?int, sort: string}
      */
     public function filters(): array
     {
@@ -49,9 +49,13 @@ class CatalogRequest extends FormRequest
             [$min, $max] = [$max, $min];
         }
 
+        $category = trim((string) $this->input('category', ''));
+
         return [
             'q' => trim((string) $this->input('q', '')),
-            'category' => $this->filled('category') ? (int) $this->input('category') : null,
+            'category' => $category === ''
+                ? null
+                : (ctype_digit($category) ? (int) $category : $category),
             'min_price' => $min,
             'max_price' => $max,
             'sort' => $this->input('sort', 'newest'),

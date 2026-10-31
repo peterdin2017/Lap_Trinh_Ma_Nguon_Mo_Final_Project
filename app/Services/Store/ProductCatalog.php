@@ -27,7 +27,7 @@ class ProductCatalog
     }
 
     /**
-     * @param array{q?: ?string, category?: ?int, min_price?: ?int, max_price?: ?int, sort?: ?string} $filters
+     * @param array{q?: ?string, category?: int|string|null, min_price?: ?int, max_price?: ?int, sort?: ?string} $filters
      */
     public function search(array $filters): Builder
     {
@@ -47,7 +47,12 @@ class ProductCatalog
 
         if (! empty($filters['category'])) {
             // Quy ước nhóm: chọn danh mục cha thì BAO GỒM sản phẩm của danh mục con/cháu.
-            $query->whereIn('products.category_id', $this->descendantIds((int) $filters['category']));
+            $category = $this->findCategory($filters['category']);
+            $categoryIds = $category
+                ? $this->descendantIds((int) $category->category_id)
+                : [];
+
+            $query->whereIn('products.category_id', $categoryIds);
         }
 
         if (isset($filters['min_price'])) {
@@ -64,6 +69,17 @@ class ProductCatalog
             'best_selling' => $query->orderByDesc('products.sold_count')->orderByDesc('products.product_id'),
             default => $query->orderByDesc('products.created_at')->orderByDesc('products.product_id'),
         };
+    }
+
+    public function findCategory(int|string $identifier): ?Category
+    {
+        $value = (string) $identifier;
+
+        if (ctype_digit($value)) {
+            return Category::query()->find((int) $value);
+        }
+
+        return Category::query()->where('slug', $value)->first();
     }
 
     /**

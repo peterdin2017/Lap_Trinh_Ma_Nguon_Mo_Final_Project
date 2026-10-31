@@ -22,8 +22,8 @@
     data-quantity="{{ $quantity }}"
     data-stock="{{ $stock }}"
     data-subtotal="{{ $lineTotal }}"
-    data-update-url="{{ route('store.cart.items.update', ['cartItemId' => $item['cart_item_id']]) }}"
-    data-delete-url="{{ route('store.cart.items.destroy', ['cartItemId' => $item['cart_item_id']]) }}"
+    data-update-url="{{ route('store.cart.items.update', ['key' => $key]) }}"
+    data-delete-url="{{ route('store.cart.items.destroy', ['key' => $key]) }}"
 >
     <div class="cart-item__select">
         <input
@@ -40,7 +40,7 @@
 
     <a
         class="cart-item__image-link"
-        href="{{ route('store.products.show', $item['product_id']) }}"
+        href="{{ route('store.products.show', ['slug' => $item['product_slug']]) }}"
         tabindex="-1"
         aria-hidden="true"
     >
@@ -60,7 +60,7 @@
     <div class="cart-item__details">
         <a
             class="cart-item__name"
-            href="{{ route('store.products.show', $item['product_id']) }}"
+            href="{{ route('store.products.show', ['slug' => $item['product_slug']]) }}"
         >
             {{ $item['product_name'] }}
         </a>

@@ -169,7 +169,16 @@
                     value="{{ request()->routeIs('store.products.index') ? request('q') : '' }}"
                     maxlength="100"
                     placeholder="Tìm kiếm sản phẩm..."
+                    autocomplete="off"
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-expanded="false"
+                    aria-controls="store-search-suggestions"
                 >
+                <div id="store-search-suggestions"
+                     class="shop-search-suggestions d-none"
+                     role="listbox"
+                     aria-label="Gợi ý sản phẩm"></div>
                 <button type="submit" aria-label="Tìm kiếm">
                     <i class="bi bi-search" aria-hidden="true"></i>
                 </button>
@@ -182,12 +191,11 @@
             >
                 <span class="shop-header__cart-icon">
                     <i class="bi bi-cart3" aria-hidden="true"></i>
-
-                    @if ($cartItemCount > 0)
-                        <span class="shop-header__cart-count">
-                            {{ $cartItemCount > 99 ? '99+' : $cartItemCount }}
-                        </span>
-                    @endif
+                    <span
+                        id="store-cart-count"
+                        class="shop-header__cart-count"
+                        @if ($cartItemCount < 1) hidden @endif
+                    >{{ $cartItemCount > 99 ? '99+' : $cartItemCount }}</span>
                 </span>
 
                 <span class="shop-header__cart-label">Giỏ hàng</span>
@@ -386,16 +394,93 @@
     }
 
     .shop-header__search {
+        position: relative;
         display: flex;
         width: 100%;
         min-width: 0;
         height: 40px;
-        overflow: hidden;
+        overflow: visible;
         border: 2px solid #fff;
         border-radius: 9px;
         background: #fff;
         box-shadow: 0 2px 8px rgba(0, 70, 140, .12);
     }
+
+    .shop-search-suggestions {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        left: 0;
+        z-index: 1080;
+        overflow: hidden;
+        padding: 6px;
+        color: #17243B;
+        background: #fff;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, .16);
+    }
+
+    .shop-search-suggestions__item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-width: 0;
+        padding: 9px;
+        color: inherit;
+        text-decoration: none;
+        border-radius: 8px;
+    }
+
+    .shop-search-suggestions__item:hover,
+    .shop-search-suggestions__item:focus-visible {
+        color: inherit;
+        background: #F0F7FF;
+        outline: none;
+    }
+
+    .shop-search-suggestions__image {
+        display: grid;
+        flex: 0 0 46px;
+        width: 46px;
+        height: 46px;
+        overflow: hidden;
+        place-items: center;
+        color: #94A3B8;
+        background: #F4F7FA;
+        border-radius: 8px;
+    }
+
+    .shop-search-suggestions__image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .shop-search-suggestions__copy { min-width: 0; flex: 1; }
+    .shop-search-suggestions__name,
+    .shop-search-suggestions__meta {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .shop-search-suggestions__name { font-size: .84rem; font-weight: 650; }
+    .shop-search-suggestions__meta { margin-top: 2px; color: #64748B; font-size: .74rem; }
+    .shop-search-suggestions__price { flex: 0 0 auto; color: #EE4D2D; font-size: .82rem; font-weight: 700; }
+    .shop-search-suggestions__state { padding: 14px 10px; color: #64748B; font-size: .84rem; }
+    .shop-search-suggestions__all {
+        display: block;
+        margin-top: 4px;
+        padding: 11px 10px 8px;
+        color: #1A94FF;
+        border-top: 1px solid #E2E8F0;
+        font-size: .82rem;
+        font-weight: 650;
+        text-align: center;
+        text-decoration: none;
+    }
+    .shop-search-suggestions__all:hover { color: #0877D1; }
 
     .shop-header__search input {
         width: 100%;

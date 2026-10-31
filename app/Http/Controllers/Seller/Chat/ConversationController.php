@@ -32,8 +32,10 @@ class ConversationController extends Controller
         abort_unless($account instanceof Account && $account->seller, 403);
 
         $conversations = $this->conversationsFor($account);
+        $unreadTotal = (int) $conversations->sum('unread_count');
 
         return response()->json([
+            'unread_total' => $unreadTotal,
             'conversations' => $conversations->map(
                 fn (Conversation $conversation) => [
                     'id' => $conversation->conversation_id,

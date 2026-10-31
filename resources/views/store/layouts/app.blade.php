@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,17 +8,13 @@
 
     <title>@yield('title', 'Website Bán hàng Online')</title>
 
-    <link rel="stylesheet"
-          href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap">
 
-    <link rel="stylesheet"
-          href="{{ asset('assets/store/css/app.css') }}?v=store-fixed-20261029">
+    <link rel="stylesheet" href="{{ asset('assets/store/css/app.css') }}?v=store-fixed-20261029">
 
     @stack('styles')
 
@@ -52,15 +48,13 @@
         .shop-header.store-topbar {
             position: relative;
             z-index: 100;
-            background: linear-gradient(
-                110deg,
-                #112941 0%,
-                #173b59 55%,
-                #1d4966 100%
-            ) !important;
+            background: linear-gradient(110deg,
+                    #112941 0%,
+                    #173b59 55%,
+                    #1d4966 100%) !important;
             color: #ffffff !important;
-            border-bottom: 1px solid rgba(255,255,255,.08);
-            box-shadow: 0 4px 18px rgba(10,30,50,.12);
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            box-shadow: 0 4px 18px rgba(10, 30, 50, .12);
         }
 
         .store-header-row {
@@ -119,7 +113,7 @@
 
         .store-header-search:focus-within {
             border-color: #52aaff;
-            box-shadow: 0 0 0 3px rgba(22,136,248,.15);
+            box-shadow: 0 0 0 3px rgba(22, 136, 248, .15);
         }
 
         .store-header-search input {
@@ -212,7 +206,7 @@
             align-items: center;
             gap: 10px;
             padding: 10px 0 14px;
-            border-top: 1px solid rgba(255,255,255,.13);
+            border-top: 1px solid rgba(255, 255, 255, .13);
             overflow-x: auto;
         }
 
@@ -231,7 +225,7 @@
 
         .store-nav-item:hover,
         .store-nav-item.active {
-            background: rgba(82,170,255,.18);
+            background: rgba(82, 170, 255, .18);
             color: #ffffff !important;
         }
 
@@ -271,12 +265,12 @@
             background: #1688f8 !important;
             border-color: #1688f8 !important;
             color: #ffffff !important;
-            box-shadow: 0 5px 14px rgba(22,136,248,.18) !important;
+            box-shadow: 0 5px 14px rgba(22, 136, 248, .18) !important;
             transform: translateY(-2px);
         }
 
         .store-main .store-cart-fix:focus-visible {
-            outline: 3px solid rgba(22,136,248,.4);
+            outline: 3px solid rgba(22, 136, 248, .4);
             outline-offset: 3px;
         }
 
@@ -301,7 +295,7 @@
         .store-main .product-card:hover {
             transform: translateY(-3px);
             border-color: #b7dbff;
-            box-shadow: 0 8px 22px rgba(18,58,105,.09);
+            box-shadow: 0 8px 22px rgba(18, 58, 105, .09);
         }
 
         /* RESPONSIVE */
@@ -351,6 +345,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
+
             .store-main .store-cart-fix,
             .store-main .product-card,
             .store-action {
@@ -370,23 +365,23 @@
 
     @include('store.layouts.footer')
 
-    @if(session('account_role') === 'user')
+    @if (session('account_role') === 'user')
         @include('store.chat.widget')
     @endif
 
     <script src="{{ asset('assets/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
-    @if(session('account_role') === 'user')
+    @if (session('account_role') === 'user')
         <script src="{{ asset('assets/store/chat/chat.js') }}" defer></script>
     @endif
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const buttons = document.querySelectorAll(
                 '.store-main button, .store-main a.btn, .store-main input[type="submit"]'
             );
 
-            buttons.forEach(function (button) {
+            buttons.forEach(function(button) {
                 const label = (
                     button.value ||
                     button.textContent ||
@@ -401,9 +396,9 @@
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.store-main .alert').forEach(function (alert) {
-                window.setTimeout(function () {
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.store-main .alert').forEach(function(alert) {
+                window.setTimeout(function() {
                     if (!alert.isConnected) {
                         return;
                     }
@@ -417,8 +412,11 @@
             });
         });
     </script>
-
+    <script
+        src="{{ asset('assets/store/cart/add-to-cart.js') }}?v={{ filemtime(public_path('assets/store/cart/add-to-cart.js')) }}"
+        defer></script>
     @stack('scripts')
+    <script src="{{ asset('assets/store/search/live-search.js') }}" defer></script>
 </body>
-</html>
 
+</html>

@@ -299,6 +299,7 @@
                                             <form
                                                 method="POST"
                                                 action="{{ route('store.cart.items.store') }}"
+                                                data-cart-ajax-form
                                             >
                                                 @csrf
                                                 <input

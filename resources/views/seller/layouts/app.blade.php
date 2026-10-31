@@ -645,6 +645,47 @@
     </script>
 
     @stack('scripts')
+
+    <script>
+        (() => {
+            const badges = document.querySelectorAll('[data-seller-chat-unread]');
+            if (!badges.length) return;
+
+            // Trang hộp thư đã polling endpoint để cập nhật cả danh sách và badge.
+            if (document.querySelector('.seller-chat-page')) return;
+
+            const url = badges[0].dataset.unreadUrl;
+            if (!url) return;
+
+            const updateUnreadBadge = async () => {
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin',
+                    });
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    const count = Math.max(0, Number(data.unread_total) || 0);
+
+                    badges.forEach((badge) => {
+                        badge.textContent = count > 99 ? '99+' : String(count);
+                        badge.classList.toggle('d-none', count === 0);
+                        badge.setAttribute('aria-label', `${count} tin nhắn chưa xem`);
+                    });
+                } catch (error) {
+                    // Giữ badge hiện tại nếu mạng tạm thời không khả dụng.
+                    console.error(error);
+                }
+            };
+
+            updateUnreadBadge();
+            window.setInterval(updateUnreadBadge, 3000);
+        })();
+    </script>
 </body>
 </html>
 

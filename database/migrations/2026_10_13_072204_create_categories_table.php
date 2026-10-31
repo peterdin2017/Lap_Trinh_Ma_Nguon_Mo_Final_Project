@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable();
 
             $table->string('category_name', 100);
+            $table->string('slug', 191)->nullable();
             $table->timestamps();
 
             // Trỏ về chính bảng categories. Không cho xoá danh mục cha khi còn con.

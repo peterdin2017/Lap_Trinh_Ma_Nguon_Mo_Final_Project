@@ -61,7 +61,9 @@ class CartController extends Controller
                 'cart_item_id' => (int) $item->getKey(),
                 'seller_id' => $product->seller?->seller_id ?? 0,
                 'shop_name' => $product->seller?->shop_name ?? 'Cửa hàng',
+                'shop_slug' => $product->seller?->slug,
                 'product_id' => $product->product_id,
+                'product_slug' => $product->slug,
                 'variant_id' => $item->variant_id,
                 'product_name' => $product->product_name,
                 'variant_name' => $hasInvalidVariant
@@ -77,16 +79,24 @@ class CartController extends Controller
             ];
         }
 
-        $cartGroups = collect($cartItems)->groupBy('seller_id');
+        // Preserve item_key array keys (e.g. "11:simple") for item update/delete URLs.
+        $cartGroups = collect($cartItems)->groupBy('seller_id', true);
 
         return view('store.cart.index', compact('cartGroups'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         $accountId = $this->accountId($request);
 
         if (! $accountId) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.',
+                    'login_url' => route('login.form'),
+                ], 401);
+            }
+
             return redirect()->guest(route('login.form'));
         }
 
@@ -184,10 +194,25 @@ class CartController extends Controller
                 ->with('success', 'Đã chuẩn bị sản phẩm để mua. Kiểm tra giỏ hàng trước khi tiếp tục.');
         }
 
+        if ($request->expectsJson()) {
+            $cart = Cart::query()
+                ->where('account_id', $accountId)
+                ->withCount('items')
+                ->withSum('items', 'quantity')
+                ->first();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã thêm sản phẩm vào giỏ hàng.',
+                'cart_quantity' => (int) ($cart?->items_sum_quantity ?? 0),
+                'cart_item_count' => (int) ($cart?->items_count ?? 0),
+            ]);
+        }
+
         return back()->with('success', 'Đã thêm sản phẩm vào giỏ hàng.');
     }
 
-    public function destroy(Request $request, int $cartItemId): JsonResponse|RedirectResponse
+    public function destroy(Request $request, string $key): JsonResponse|RedirectResponse
     {
         $accountId = $this->accountId($request);
 
@@ -201,7 +226,7 @@ class CartController extends Controller
             return redirect()->guest(route('login.form'));
         }
 
-        $deletedCount = DB::transaction(function () use ($accountId, $cartItemId): int {
+        $deletedCount = DB::transaction(function () use ($accountId, $key): int {
             $cart = Cart::query()
                 ->where('account_id', $accountId)
                 ->lockForUpdate()
@@ -212,20 +237,26 @@ class CartController extends Controller
             }
 
             return $cart->items()
-                ->whereKey($cartItemId)
+                ->where('item_key', $key)
                 ->delete();
         }, 3);
 
         if ($request->expectsJson()) {
             if ($deletedCount === 0) {
                 return response()->json([
-                    'message' => 'Sản phẩm không còn trong giỏ hàng. Vui lòng tải lại trang.',
+                    'message' => 'Sản phẩm không còn trong giỏ hàng.',
                 ], 404);
             }
+
+            $cart = Cart::query()
+                ->where('account_id', $accountId)
+                ->withSum('items', 'quantity')
+                ->first();
 
             return response()->json([
                 'success' => true,
                 'deleted_count' => $deletedCount,
+                'cart_quantity' => (int) ($cart?->items_sum_quantity ?? 0),
                 'message' => 'Đã xóa sản phẩm khỏi giỏ hàng.',
             ]);
         }
@@ -235,7 +266,7 @@ class CartController extends Controller
             ->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
     }
 
-    public function updateQuantity(Request $request, int $cartItemId): JsonResponse
+    public function updateQuantity(Request $request, string $key): JsonResponse
     {
         $accountId = $this->accountId($request);
 
@@ -249,40 +280,22 @@ class CartController extends Controller
             'quantity' => ['required', 'integer', 'min:1', 'max:1000'],
         ]);
 
-        $item = DB::transaction(function () use ($accountId, $data, $cartItemId): array {
+        $item = DB::transaction(function () use ($accountId, $data, $key): array {
             $cart = Cart::query()
                 ->where('account_id', $accountId)
                 ->lockForUpdate()
-                ->first();
-
-            if (! $cart) {
-                throw ValidationException::withMessages([
-                    'quantity' => 'Giỏ hàng không còn tồn tại. Vui lòng tải lại trang.',
-                ]);
-            }
+                ->firstOrFail();
 
             $cartItem = $cart->items()
-                ->whereKey($cartItemId)
+                ->where('item_key', $key)
                 ->lockForUpdate()
-                ->first();
-
-            if (! $cartItem) {
-                throw ValidationException::withMessages([
-                    'quantity' => 'Sản phẩm không còn trong giỏ hàng. Vui lòng tải lại trang.',
-                ]);
-            }
+                ->firstOrFail();
 
             $product = Product::query()
                 ->where('status', 'active')
                 ->whereHas('seller', fn ($query) => $query->where('status', 'active'))
                 ->lockForUpdate()
-                ->find($cartItem->product_id);
-
-            if (! $product) {
-                throw ValidationException::withMessages([
-                    'quantity' => 'Sản phẩm hiện không còn được bán.',
-                ]);
-            }
+                ->findOrFail($cartItem->product_id);
 
             $variant = null;
 
@@ -290,13 +303,7 @@ class CartController extends Controller
                 $variant = $product->variants()
                     ->whereKey($cartItem->variant_id)
                     ->lockForUpdate()
-                    ->first();
-
-                if (! $variant) {
-                    throw ValidationException::withMessages([
-                        'quantity' => 'Mẫu sản phẩm không còn khả dụng.',
-                    ]);
-                }
+                    ->firstOrFail();
             }
 
             $expectedKey = $product->product_id . ':'
@@ -328,9 +335,16 @@ class CartController extends Controller
             ];
         }, 3);
 
+        $cartQuantity = Cart::query()
+            ->where('account_id', $accountId)
+            ->first()
+            ?->items()
+            ->sum('quantity') ?? 0;
+
         return response()->json([
             'success' => true,
             'item' => $item,
+            'cart_quantity' => (int) $cartQuantity,
         ]);
     }
 
@@ -360,9 +374,15 @@ class CartController extends Controller
                 ->delete();
         }, 3);
 
+        $cart = Cart::query()
+            ->where('account_id', $accountId)
+            ->withSum('items', 'quantity')
+            ->first();
+
         return response()->json([
             'success' => true,
             'deleted_count' => $deletedCount,
+            'cart_quantity' => (int) ($cart?->items_sum_quantity ?? 0),
             'message' => 'Đã xóa các sản phẩm đã chọn khỏi giỏ hàng.',
         ]);
     }
@@ -377,7 +397,7 @@ class CartController extends Controller
 
         $accountId = Account::query()
             ->whereKey((int) $accountId)
-            ->whereIn('role', ['user', 'seller'])
+            ->where('role', 'user')
             ->where('status', 'active')
             ->value('account_id');
 

@@ -98,7 +98,7 @@
                         : 'pending';
                 @endphp
 
-                <article class="admin-panel support-card">
+                <article class="admin-panel support-card" id="support-request-{{ $requestId }}">
                     <header class="support-card__header">
                         <div class="support-card__heading">
                             <div class="support-card__id">Yêu cầu #{{ $requestId }}</div>
