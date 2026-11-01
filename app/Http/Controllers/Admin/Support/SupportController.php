@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Admin\Support;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Support\SupportIndexRequest;
 use App\Http\Requests\Admin\Support\UpdateSupportRequest;
 use App\Models\CustomerNotification;
 use App\Models\CustomerSupportRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -16,8 +16,9 @@ use Illuminate\View\View;
 
 class SupportController extends Controller
 {
-    public function index(Request $request): View
+    public function index(SupportIndexRequest $request): View
     {
+        $filters = $request->validated();
         $statuses = [
             'pending' => 'Chờ tiếp nhận',
             'resolved' => 'Đã xử lý',
@@ -26,7 +27,7 @@ class SupportController extends Controller
         $query = CustomerSupportRequest::query()
             ->with(['account', 'handler']);
 
-        $status = $request->query('status');
+        $status = $filters['status'] ?? null;
 
         if ($status === 'pending') {
             // Bao gồm cả yêu cầu cũ đang có trạng thái in_progress.
@@ -35,7 +36,7 @@ class SupportController extends Controller
             $query->where('status', 'resolved');
         }
 
-        $keyword = trim((string) $request->query('q', ''));
+        $keyword = trim((string) ($filters['q'] ?? ''));
 
         if ($keyword !== '') {
             $query->where(function ($builder) use ($keyword): void {

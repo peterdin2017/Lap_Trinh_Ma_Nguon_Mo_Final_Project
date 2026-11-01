@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ForgotPassword\ForgotPasswordEmailRequest;
+use App\Http\Requests\Auth\ForgotPassword\ForgotPasswordPortalRequest;
 use App\Http\Requests\Auth\ForgotPassword\ResetPasswordRequest;
 use App\Mail\OtpMail;
 use App\Models\Account;
@@ -29,13 +30,9 @@ class ForgotPasswordController extends Controller
     /**
      * Bước 1/4: hiển thị trang nhập email.
      */
-    public function showEmailForm(Request $request): View
+    public function showEmailForm(ForgotPasswordPortalRequest $request): View
     {
-        $portal = $request->query('portal', 'store');
-
-        if (! array_key_exists($portal, self::PORTAL_ROLES)) {
-            $portal = 'store';
-        }
+        $portal = $request->validated('portal');
 
         return view('auth.forgot-password.email', [
             'portal' => $portal,
@@ -51,18 +48,7 @@ class ForgotPasswordController extends Controller
         $email = $request->validated('email');
 
         // Portal được gửi trong form; query là giá trị dự phòng.
-        $portal = $request->input(
-            'portal',
-            $request->query('portal', 'store')
-        );
-
-        if (! array_key_exists($portal, self::PORTAL_ROLES)) {
-            return back()
-                ->withErrors([
-                    'email' => 'Không xác định được loại tài khoản.',
-                ])
-                ->withInput();
-        }
+        $portal = $request->validated('portal');
 
         // Xóa trạng thái cũ để không dùng nhầm một lượt đặt lại trước đó.
         $this->clearResetSession();

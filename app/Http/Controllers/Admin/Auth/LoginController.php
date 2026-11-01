@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Auth\AdminLoginRequest;
 use App\Models\Account;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,16 +22,9 @@ class LoginController extends Controller
         return view('admin.auth.login');
     }
 
-    public function login(Request $request): RedirectResponse
+    public function login(AdminLoginRequest $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ], [
-            'email.required' => 'Vui lòng nhập email Admin.',
-            'email.email' => 'Email không đúng định dạng.',
-            'password.required' => 'Vui lòng nhập mật khẩu.',
-        ]);
+        $credentials = $request->validated();
 
         $account = Account::query()
             ->where('email', $credentials['email'])

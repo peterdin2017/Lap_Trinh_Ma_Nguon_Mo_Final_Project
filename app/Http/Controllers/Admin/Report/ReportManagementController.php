@@ -3,21 +3,22 @@
 namespace App\Http\Controllers\Admin\Report;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Report\ReportManagementRequest;
 use App\Models\Product;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReportManagementController extends Controller
 {
-    public function index(Request $request)
+    public function index(ReportManagementRequest $request)
     {
+        $filters = $request->validated();
         $query = DB::table('product_reports as r')->leftJoin('products as p', 'p.product_id', '=', 'r.product_id')->leftJoin('accounts as a', 'a.account_id', '=', 'r.account_id')->select('r.*', 'p.product_name', 'p.status as product_status', 'a.email');
-        if (in_array($request->input('status'), ['pending', 'resolved', 'dismissed'], true)) $query->where('r.status', $request->status);
+        if (! empty($filters['status'])) $query->where('r.status', $filters['status']);
         return view('admin.reports.index', ['reports' => $query->orderByDesc('r.created_at')->paginate(12)->withQueryString()]);
     }
-    public function handle(Request $request, int $report)
+    public function handle(ReportManagementRequest $request, int $report)
     {
-        $data = $request->validate(['decision' => ['required', 'in:resolved,dismissed'], 'admin_note' => ['required', 'string', 'max:255']]);
+        $data = $request->validated();
         $done = DB::transaction(function () use ($request, $report, $data) {
             $row = DB::table('product_reports')->where('report_id', $report)->lockForUpdate()->first();
             if (!$row || $row->status !== 'pending') return false;

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin\Report;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Report\AdminStatisticsRequest;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -19,7 +19,7 @@ class AdminStatisticsController extends Controller
 {
     private const PLATFORM_FEE_PER_ORDER = 30_000;
 
-    public function index(Request $request): View
+    public function index(AdminStatisticsRequest $request): View
     {
         [$from, $to] = $this->resolveDateRange($request);
         $report = $this->buildReportData($from, $to);
@@ -31,7 +31,7 @@ class AdminStatisticsController extends Controller
         ]);
     }
 
-    public function export(Request $request): StreamedResponse
+    public function export(AdminStatisticsRequest $request): StreamedResponse
     {
         [$from, $to] = $this->resolveDateRange($request);
         $report = $this->buildReportData($from, $to);
@@ -192,12 +192,9 @@ class AdminStatisticsController extends Controller
         );
     }
 
-    private function resolveDateRange(Request $request): array
+    private function resolveDateRange(AdminStatisticsRequest $request): array
     {
-        $filters = $request->validate([
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
-        ]);
+        $filters = $request->validated();
 
         $to = CarbonImmutable::parse($filters['to'] ?? now()->toDateString())
             ->endOfDay();

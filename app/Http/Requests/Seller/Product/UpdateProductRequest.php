@@ -17,6 +17,7 @@ class UpdateProductRequest extends FormRequest
 
         return [
             'pricing_mode' => ['required', 'in:single,variants'],
+            'status' => ['required', 'in:draft,active,hidden'],
 
             'category_id' => ['required', 'exists:categories,category_id'],
             'product_name' => ['required', 'string', 'max:200'],
@@ -94,6 +95,8 @@ class UpdateProductRequest extends FormRequest
         return [
             'pricing_mode.required' => 'Vui lòng chọn kiểu sản phẩm.',
             'pricing_mode.in' => 'Kiểu sản phẩm không hợp lệ.',
+            'status.required' => 'Vui lòng chọn trạng thái sản phẩm.',
+            'status.in' => 'Trạng thái sản phẩm không hợp lệ.',
 
             'category_id.required' => 'Vui lòng chọn danh mục.',
             'category_id.exists' => 'Danh mục không hợp lệ.',

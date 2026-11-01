@@ -3,20 +3,21 @@
 namespace App\Http\Controllers\Admin\Voucher;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Voucher\PlatformVoucherIndexRequest;
 use App\Http\Requests\Admin\Voucher\PlatformVoucherRequest;
 use App\Models\PlatformVoucher;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class PlatformVoucherController extends Controller
 {
-    public function index(Request $request): View
+    public function index(PlatformVoucherIndexRequest $request): View
     {
+        $filters = $request->validated();
         $vouchers = PlatformVoucher::query()
-            ->when($request->filled('keyword'), function ($query) use ($request): void {
-                $keyword = trim((string) $request->input('keyword'));
+            ->when(! empty($filters['keyword']), function ($query) use ($filters): void {
+                $keyword = trim($filters['keyword']);
 
                 $query->where(function ($query) use ($keyword): void {
                     $query->where('voucher_code', 'like', "%{$keyword}%")
@@ -24,9 +25,8 @@ class PlatformVoucherController extends Controller
                 });
             })
             ->when(
-                $request->filled('status')
-                    && in_array($request->input('status'), ['active', 'inactive'], true),
-                fn ($query) => $query->where('status', $request->input('status'))
+                ! empty($filters['status']),
+                fn ($query) => $query->where('status', $filters['status'])
             )
             ->orderByDesc('created_at')
             ->paginate(15)

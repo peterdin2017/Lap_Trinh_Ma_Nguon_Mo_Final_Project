@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin\Category;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Category\CategoryRequest;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
-use Illuminate\Validation\Rule;
 
 class CategoryManagementController extends Controller
 {
@@ -16,15 +16,14 @@ class CategoryManagementController extends Controller
         $parents = Category::orderBy('category_name')->get(['category_id', 'category_name', 'parent_id']);
         return view('admin.categories.index', compact('categories', 'parents'));
     }
-    public function store(Request $request)
+    public function store(CategoryRequest $request)
     {
-        $data = $request->validate(['category_name' => ['required', 'string', 'max:100'], 'parent_id' => ['nullable', 'exists:categories,category_id']]);
-        Category::create($data);
+        Category::create($request->validated());
         return back()->with('success', 'Đã tạo danh mục.');
     }
-    public function update(Request $request, Category $category)
+    public function update(CategoryRequest $request, Category $category)
     {
-        $data = $request->validate(['category_name' => ['required', 'string', 'max:100'], 'parent_id' => ['nullable', 'exists:categories,category_id']]);
+        $data = $request->validated();
         $ancestor = $data['parent_id'] ?? null;
         while ($ancestor !== null) {
             if ((int)$ancestor === (int)$category->category_id) return back()->with('error', 'Không thể tạo vòng lặp danh mục.');

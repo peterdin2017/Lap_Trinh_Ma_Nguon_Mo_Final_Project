@@ -3,22 +3,14 @@
 namespace App\Http\Controllers\Store\Product;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\Product\ProductReportRequest;
 use App\Models\Product;
 use App\Models\ProductReport;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class ProductReportController extends Controller
 {
-    private const REASONS = [
-        'fake',
-        'prohibited',
-        'wrong_info',
-        'copyright',
-        'other',
-    ];
-
-    public function store(Request $request, int $productId): RedirectResponse
+    public function store(ProductReportRequest $request, int $productId): RedirectResponse
     {
         $accountId = session('account_id');
 
@@ -28,15 +20,7 @@ class ProductReportController extends Controller
                 ->with('error', 'Vui lòng đăng nhập tài khoản khách hàng để báo cáo sản phẩm.');
         }
 
-        $validated = $request->validate([
-            'reason' => ['required', 'in:' . implode(',', self::REASONS)],
-            'description' => ['nullable', 'string', 'max:2000', 'required_if:reason,other'],
-        ], [
-            'reason.required' => 'Vui lòng chọn lý do báo cáo.',
-            'reason.in' => 'Lý do báo cáo không hợp lệ.',
-            'description.required_if' => 'Vui lòng mô tả chi tiết khi chọn lý do khác.',
-            'description.max' => 'Mô tả không được vượt quá 2.000 ký tự.',
-        ]);
+        $validated = $request->validated();
 
         $product = Product::query()
             ->where('product_id', $productId)

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin\Seller;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Seller\RejectSellerRequest;
 use App\Models\Seller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SellerApprovalController extends Controller
@@ -48,14 +48,9 @@ class SellerApprovalController extends Controller
     }
 
     // Từ chối shop và lưu lý do.
-    public function reject(Request $request, Seller $seller): RedirectResponse
+    public function reject(RejectSellerRequest $request, Seller $seller): RedirectResponse
     {
-        $data = $request->validate([
-            'reject_reason' => ['required', 'string', 'max:255'],
-        ], [
-            'reject_reason.required' => 'Vui lòng nhập lý do từ chối hồ sơ.',
-            'reject_reason.max' => 'Lý do từ chối không được vượt quá 255 ký tự.',
-        ]);
+        $data = $request->validated();
 
         $updated = Seller::query()
             ->whereKey($seller->getKey())

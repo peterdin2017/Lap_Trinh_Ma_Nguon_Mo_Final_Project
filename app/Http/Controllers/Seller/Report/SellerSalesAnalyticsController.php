@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Seller\Report;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Seller\Report\SellerSalesAnalyticsRequest;
 use App\Models\Seller;
 use Carbon\CarbonImmutable;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class SellerSalesAnalyticsController extends Controller
 {
-    public function index(Request $request): View
+    public function index(SellerSalesAnalyticsRequest $request): View
     {
         $seller = $request->user()?->seller;
 
@@ -22,10 +21,7 @@ class SellerSalesAnalyticsController extends Controller
             'Tài khoản hiện tại chưa liên kết với cửa hàng Seller.'
         );
 
-        $filters = $request->validate([
-            'date_from' => ['nullable', 'date', 'before_or_equal:today'],
-            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
+        $filters = $request->validated();
 
         $timezone = config('app.timezone', 'UTC');
         $today = CarbonImmutable::now($timezone)->startOfDay();
@@ -41,12 +37,6 @@ class SellerSalesAnalyticsController extends Controller
                 : $today->startOfMonth());
 
         $periodDays = $dateFrom->startOfDay()->diffInDays($dateTo->startOfDay()) + 1;
-
-        if ($periodDays > 366) {
-            throw ValidationException::withMessages([
-                'date_to' => 'Khoảng thời gian tối đa là 366 ngày.',
-            ]);
-        }
 
         $previousFrom = $dateFrom->subDays($periodDays)->startOfDay();
         $previousTo = $dateFrom->subDay()->endOfDay();

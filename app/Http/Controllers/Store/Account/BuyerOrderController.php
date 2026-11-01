@@ -3,35 +3,25 @@
 namespace App\Http\Controllers\Store\Account;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\Account\BuyerOrderFilterRequest;
+use App\Http\Requests\Store\Account\BuyerReturnRequest;
 use App\Models\Order;
 use App\Models\OrderReturnRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Review;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BuyerOrderController extends Controller
 {
-    private const STATUSES = [
-        'all',
-        'pending',
-        'shipping',
-        'completed',
-        'cancelled',
-        'return_requested',
-    ];
-
-    public function index(Request $request): View
+    public function index(BuyerOrderFilterRequest $request): View
     {
         $accountId = $this->accountId();
 
-        $filters = $request->validate([
-            'status' => ['nullable', 'in:' . implode(',', self::STATUSES)],
-        ]);
+        $filters = $request->validated();
 
         $status = $filters['status'] ?? 'all';
 
@@ -224,24 +214,11 @@ class BuyerOrderController extends Controller
         return back()->with('success', 'Đơn hàng đã được hủy.');
     }
 
-    public function requestReturn(Request $request, int $id): RedirectResponse
+    public function requestReturn(BuyerReturnRequest $request, int $id): RedirectResponse
     {
         $accountId = $this->accountId();
 
-        $data = $request->validate([
-            'request_type' => ['required', 'in:return,refund'],
-            'reason' => [
-                'required',
-                'in:damaged,wrong_item,missing_parts,not_as_described,changed_mind,other',
-            ],
-            'description' => ['nullable', 'string', 'max:2000'],
-        ], [
-            'request_type.required' => 'Vui lòng chọn hình thức yêu cầu.',
-            'request_type.in' => 'Hình thức yêu cầu không hợp lệ.',
-            'reason.required' => 'Vui lòng chọn lý do.',
-            'reason.in' => 'Lý do yêu cầu không hợp lệ.',
-            'description.max' => 'Mô tả không được vượt quá 2000 ký tự.',
-        ]);
+        $data = $request->validated();
 
         DB::transaction(function () use ($id, $accountId, $data): void {
             $order = Order::query()

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Store\Product;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\Product\CartAddRequest;
+use App\Http\Requests\Store\Product\CartBulkDeleteRequest;
+use App\Http\Requests\Store\Product\CartQuantityRequest;
 use App\Models\Account;
 use App\Models\Cart;
 use App\Models\Product;
@@ -85,7 +88,7 @@ class CartController extends Controller
         return view('store.cart.index', compact('cartGroups'));
     }
 
-    public function store(Request $request): JsonResponse|RedirectResponse
+    public function store(CartAddRequest $request): JsonResponse|RedirectResponse
     {
         $accountId = $this->accountId($request);
 
@@ -100,17 +103,7 @@ class CartController extends Controller
             return redirect()->guest(route('login.form'));
         }
 
-        $data = $request->validate([
-            'product_id' => ['required', 'integer', 'min:1'],
-            'variant_id' => ['nullable', 'integer', 'min:1'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:1000'],
-            'intent' => ['nullable', 'in:cart,buy_now'],
-        ], [
-            'product_id.required' => 'Không tìm thấy sản phẩm.',
-            'quantity.required' => 'Vui lòng chọn số lượng.',
-            'quantity.integer' => 'Số lượng phải là số nguyên.',
-            'quantity.min' => 'Số lượng phải lớn hơn 0.',
-        ]);
+        $data = $request->validated();
 
         $cartItemId = DB::transaction(function () use ($accountId, $data): int {
             $product = Product::query()
@@ -266,7 +259,7 @@ class CartController extends Controller
             ->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
     }
 
-    public function updateQuantity(Request $request, string $key): JsonResponse
+    public function updateQuantity(CartQuantityRequest $request, string $key): JsonResponse
     {
         $accountId = $this->accountId($request);
 
@@ -276,9 +269,7 @@ class CartController extends Controller
             ], 401);
         }
 
-        $data = $request->validate([
-            'quantity' => ['required', 'integer', 'min:1', 'max:1000'],
-        ]);
+        $data = $request->validated();
 
         $item = DB::transaction(function () use ($accountId, $data, $key): array {
             $cart = Cart::query()
@@ -348,7 +339,7 @@ class CartController extends Controller
         ]);
     }
 
-    public function destroySelected(Request $request): JsonResponse
+    public function destroySelected(CartBulkDeleteRequest $request): JsonResponse
     {
         $accountId = $this->accountId($request);
 
@@ -358,10 +349,7 @@ class CartController extends Controller
             ], 401);
         }
 
-        $data = $request->validate([
-            'keys' => ['required', 'array', 'min:1', 'max:100'],
-            'keys.*' => ['required', 'string', 'max:100'],
-        ]);
+        $data = $request->validated();
 
         $deletedCount = DB::transaction(function () use ($accountId, $data): int {
             $cart = Cart::query()
