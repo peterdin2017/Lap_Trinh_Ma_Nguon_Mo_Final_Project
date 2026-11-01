@@ -308,11 +308,9 @@
             @endforelse
         </div>
 
-        @if ($requests->hasPages())
-            <div class="support-pagination">
-                {{ $requests->links() }}
-            </div>
-        @endif
+        <div class="support-pagination">
+            {{ $requests->links() }}
+        </div>
     </main>
 
     <style>

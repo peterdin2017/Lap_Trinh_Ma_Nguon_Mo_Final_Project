@@ -338,106 +338,12 @@
         }
 
         .product-list-page__pagination {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 18px;
             margin-top: 26px;
             padding: 15px 18px;
             border: 1px solid var(--pl-border);
             border-radius: 12px;
             background: #fff;
             box-shadow: 0 4px 16px rgba(25, 55, 95, .045);
-        }
-
-        .product-pagination__summary {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--pl-muted);
-            font-size: .875rem;
-        }
-
-        .product-pagination__summary i {
-            margin-right: 3px;
-            color: var(--pl-primary);
-            font-size: 1rem;
-        }
-
-        .product-pagination__summary strong {
-            color: var(--pl-text);
-            font-weight: 700;
-        }
-
-        .product-pagination__links {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-        }
-
-        .product-pagination__link {
-            display: inline-flex;
-            min-width: 40px;
-            height: 40px;
-            align-items: center;
-            justify-content: center;
-            padding: 0 12px;
-            border: 1px solid var(--pl-border);
-            border-radius: 9px;
-            color: var(--pl-primary);
-            background: #fff;
-            font-size: .9rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color .16s ease, background-color .16s ease,
-                border-color .16s ease, box-shadow .16s ease, transform .16s ease;
-        }
-
-        .product-pagination__link:hover,
-        .product-pagination__link:focus-visible {
-            color: var(--pl-primary);
-            border-color: var(--pl-primary);
-            background: #f3f8ff;
-            box-shadow: 0 3px 9px rgba(8, 120, 217, .10);
-            transform: translateY(-1px);
-        }
-
-        .product-pagination__link.is-current {
-            color: #fff;
-            border-color: var(--pl-primary);
-            background: var(--pl-primary);
-            box-shadow: 0 4px 10px rgba(8, 120, 217, .22);
-        }
-
-        .product-pagination__link.is-current:hover,
-        .product-pagination__link.is-current:focus-visible {
-            color: #fff;
-            background: var(--pl-primary);
-        }
-
-        .product-pagination__link.is-disabled {
-            color: #a3afbf;
-            border-color: #e8edf4;
-            background: #f5f7fa;
-            pointer-events: none;
-        }
-
-        .product-pagination__ellipsis {
-            padding: 0 3px;
-            color: var(--pl-muted);
-        }
-
-        @media (max-width: 575.98px) {
-            .product-list-page__pagination {
-                align-items: stretch;
-                flex-direction: column;
-                gap: 12px;
-                padding: 14px;
-            }
-
-            .product-pagination__summary { justify-content: center; }
-            .product-pagination__links { justify-content: center; gap: 6px; }
-            .product-pagination__link { min-width: 37px; height: 37px; padding: 0 9px; }
         }
 
         @media (max-width: 991.98px) {
@@ -764,71 +670,10 @@
                             @endforeach
                         </div>
 
-                        @php
-                            $products->withQueryString();
-                            $paginationCurrent = $products->currentPage();
-                            $paginationLast = $products->lastPage();
-                            $paginationStart = max(1, min($paginationCurrent - 1, $paginationLast - 2));
-                            $paginationEnd = min($paginationLast, $paginationStart + 2);
-                        @endphp
-
-                        <div class="product-list-page__pagination">
-                            <div class="product-pagination__summary" aria-live="polite">
-                                <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
-                                <span>Hiển thị</span>
-                                <strong>{{ number_format($products->firstItem() ?? 0) }}–{{ number_format($products->lastItem() ?? 0) }}</strong>
-                                <span>trên {{ number_format($products->total()) }} sản phẩm</span>
-                            </div>
-
-                            @if ($paginationLast > 1)
-                                <nav aria-label="Phân trang sản phẩm">
-                                    <div class="product-pagination__links">
-                                        @if ($products->onFirstPage())
-                                            <span class="product-pagination__link is-disabled" aria-disabled="true" aria-label="Trang trước">
-                                                <i class="bi bi-chevron-left" aria-hidden="true"></i>
-                                            </span>
-                                        @else
-                                            <a class="product-pagination__link" href="{{ $products->previousPageUrl() }}" rel="prev" aria-label="Trang trước">
-                                                <i class="bi bi-chevron-left" aria-hidden="true"></i>
-                                            </a>
-                                        @endif
-
-                                        @if ($paginationStart > 1)
-                                            <a class="product-pagination__link" href="{{ $products->url(1) }}">1</a>
-                                            @if ($paginationStart > 2)
-                                                <span class="product-pagination__ellipsis" aria-hidden="true">…</span>
-                                            @endif
-                                        @endif
-
-                                        @for ($page = $paginationStart; $page <= $paginationEnd; $page++)
-                                            @if ($page === $paginationCurrent)
-                                                <span class="product-pagination__link is-current" aria-current="page">{{ $page }}</span>
-                                            @else
-                                                <a class="product-pagination__link" href="{{ $products->url($page) }}" aria-label="Đến trang {{ $page }}">{{ $page }}</a>
-                                            @endif
-                                        @endfor
-
-                                        @if ($paginationEnd < $paginationLast)
-                                            @if ($paginationEnd < $paginationLast - 1)
-                                                <span class="product-pagination__ellipsis" aria-hidden="true">…</span>
-                                            @endif
-                                            <a class="product-pagination__link" href="{{ $products->url($paginationLast) }}">{{ $paginationLast }}</a>
-                                        @endif
-
-                                        @if ($products->hasMorePages())
-                                            <a class="product-pagination__link" href="{{ $products->nextPageUrl() }}" rel="next" aria-label="Trang sau">
-                                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
-                                            </a>
-                                        @else
-                                            <span class="product-pagination__link is-disabled" aria-disabled="true" aria-label="Trang sau">
-                                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
-                                            </span>
-                                        @endif
-                                    </div>
-                                </nav>
-                            @endif
-                        </div>
                     @endif
+                    <div class="product-list-page__pagination">
+                        {{ $products->withQueryString()->links() }}
+                    </div>
                 </section>
             </div>
         </div>

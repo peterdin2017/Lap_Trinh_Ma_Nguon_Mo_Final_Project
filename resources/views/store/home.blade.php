@@ -325,14 +325,9 @@
                         @endforeach
                     </div>
 
-                    @if ($products->hasPages())
-                        <nav
-                            class="d-flex justify-content-center mt-4"
-                            aria-label="Phân trang sản phẩm"
-                        >
-                            {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
-                        </nav>
-                    @endif
+                    <div class="mt-4">
+                        {{ $products->withQueryString()->links() }}
+                    </div>
                 @endif
             </section>
         </div>

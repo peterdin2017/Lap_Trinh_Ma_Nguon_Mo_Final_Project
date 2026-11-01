@@ -239,11 +239,9 @@
                     </table>
             </div>
 
-            @if ($vouchers->hasPages())
-                    <div class="card-footer seller-voucher-card__footer">
-                        {{ $vouchers->links() }}
-                    </div>
-            @endif
+            <div class="card-footer seller-voucher-card__footer">
+                {{ $vouchers->links() }}
+            </div>
         </section>
     </main>
 

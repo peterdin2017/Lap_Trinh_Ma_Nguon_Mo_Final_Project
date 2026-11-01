@@ -187,9 +187,9 @@
             </div>
         </div>
 
-        @if (method_exists($reviews, 'hasPages') && $reviews->hasPages())
+        @if (method_exists($reviews, 'links'))
             <div class="mt-3">
-                {{ $reviews->links('pagination::bootstrap-5') }}
+                {{ $reviews->links() }}
             </div>
         @endif
 

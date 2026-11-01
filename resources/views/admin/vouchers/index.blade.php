@@ -127,7 +127,7 @@
             </a>
         </div>
 
-        
+
 
         @if ($errors->has('voucher'))
             <div class="alert alert-danger" role="alert">{{ $errors->first('voucher') }}</div>
@@ -344,11 +344,9 @@
                 </table>
             </div>
 
-            @if ($vouchers->hasPages())
-                <div class="platform-vouchers__card-footer">
-                    {{ $vouchers->links() }}
-                </div>
-            @endif
+            <div class="platform-vouchers__card-footer">
+                {{ $vouchers->links() }}
+            </div>
         </div>
     </div>
 @endsection

@@ -304,7 +304,7 @@
                 {{ number_format($orders->total()) }} đơn hàng phù hợp
             </p>
         </header>
-        
+
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
@@ -640,11 +640,9 @@
             </div>
         @endforelse
 
-        @if ($orders->hasPages())
-            <div class="d-flex justify-content-center mt-4">
-                {{ $orders->links('pagination::bootstrap-5') }}
-            </div>
-        @endif
+        <div class="mt-4">
+            {{ $orders->links() }}
+        </div>
     </main>
 @endsection
 
