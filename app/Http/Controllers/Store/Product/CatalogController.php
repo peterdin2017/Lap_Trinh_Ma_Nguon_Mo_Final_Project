@@ -28,7 +28,7 @@ class CatalogController extends Controller
             && filled($currentCategory->slug)
             && ctype_digit((string) $filters['category'])
             && (string) $filters['category'] !== (string) $currentCategory->slug) {
-            $query = $request->query();
+            $query = $request->validated();
             $query['category'] = $currentCategory->slug;
 
             return redirect()->route('store.products.index', $query, 301);

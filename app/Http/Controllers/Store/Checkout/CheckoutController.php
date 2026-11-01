@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Store\Checkout;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Store\Checkout\CheckoutRequest;
+use App\Http\Requests\Store\Checkout\CheckoutSelectionRequest;
 use App\Models\Account;
 use App\Models\AccountSavedVoucher;
 use App\Models\Address;
@@ -26,7 +27,7 @@ class CheckoutController extends Controller
 {
     private const SHIPPING_FEE_PER_STORE = 30000;
 
-    public function index(Request $request): View|RedirectResponse
+    public function index(CheckoutSelectionRequest $request): View|RedirectResponse
     {
         $accountId = $this->accountId($request);
 
@@ -34,10 +35,7 @@ class CheckoutController extends Controller
             return redirect()->guest(route('login.form'));
         }
 
-        $validated = $request->validate([
-            'cart_item_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'cart_item_ids.*' => ['required', 'integer', 'min:1', 'distinct'],
-        ]);
+        $validated = $request->validated();
 
         $cart = Cart::query()
             ->where('account_id', $accountId)
@@ -201,7 +199,7 @@ class CheckoutController extends Controller
             );
 
             return back()
-                ->withInput($request->except(['_token', 'intent']))
+                ->withInput($request->safe()->except(['intent']))
                 ->with('success', 'Lựa chọn voucher đã được cập nhật.');
         }
 

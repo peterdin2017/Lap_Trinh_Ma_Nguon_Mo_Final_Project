@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seller\Report;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Seller\Report\SellerRevenueReportRequest;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Seller;
@@ -10,7 +11,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SellerRevenueReportController extends Controller
 {
-    public function index(Request $request): View
+    public function index(SellerRevenueReportRequest $request): View
     {
         $seller = $this->currentSeller($request);
         [$dateFrom, $dateTo] = $this->reportPeriod($request);
@@ -116,7 +116,7 @@ class SellerRevenueReportController extends Controller
         ]);
     }
 
-    public function export(Request $request): StreamedResponse
+    public function export(SellerRevenueReportRequest $request): StreamedResponse
     {
         $seller = $this->currentSeller($request);
         [$dateFrom, $dateTo] = $this->reportPeriod($request);
@@ -369,12 +369,9 @@ class SellerRevenueReportController extends Controller
         );
     }
 
-    private function reportPeriod(Request $request): array
+    private function reportPeriod(SellerRevenueReportRequest $request): array
     {
-        $filters = $request->validate([
-            'date_from' => ['nullable', 'date', 'before_or_equal:today'],
-            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
+        $filters = $request->validated();
 
         $timezone = config('app.timezone', 'UTC');
         $today = CarbonImmutable::now($timezone)->startOfDay();
@@ -388,12 +385,6 @@ class SellerRevenueReportController extends Controller
         $dateTo = isset($filters['date_to'])
             ? CarbonImmutable::parse($filters['date_to'], $timezone)->endOfDay()
             : $today->endOfDay();
-
-        if ($dateFrom->diffInDays($dateTo) > 366) {
-            throw ValidationException::withMessages([
-                'date_to' => 'Khoảng thời gian báo cáo tối đa là 366 ngày.',
-            ]);
-        }
 
         return [$dateFrom, $dateTo];
     }

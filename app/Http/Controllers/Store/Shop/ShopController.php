@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Store\Shop;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\Shop\ShopSearchRequest;
 use App\Models\AccountSavedVoucher;
 use App\Models\Seller;
 use App\Models\SellerVoucher;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ShopController extends Controller
 {
-    public function show(Request $request, int $sellerId): View
+    public function show(ShopSearchRequest $request, int $sellerId): View
     {
+        $keyword = trim((string) ($request->validated('q') ?? ''));
         $seller = Seller::query()
             ->where('status', 'active')
             ->with('account')
@@ -21,10 +22,7 @@ class ShopController extends Controller
         $products = $seller->products()
             ->with(['category', 'images'])
             ->where('status', 'active')
-            ->when($request->filled('q'), function ($query) use ($request): void {
-                $search = trim((string) $request->query('q'));
-                $query->where('product_name', 'like', "%{$search}%");
-            })
+            ->when($keyword !== '', fn ($query) => $query->where('product_name', 'like', "%{$keyword}%"))
             ->latest()
             ->paginate(12)
             ->withQueryString();

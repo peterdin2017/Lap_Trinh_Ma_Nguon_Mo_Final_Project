@@ -11,10 +11,21 @@ class ForgotPasswordEmailRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $portal = $this->input('portal', $this->query('portal', 'store'));
+        $this->merge([
+            'portal' => in_array($portal, ['store', 'seller', 'admin'], true)
+                ? $portal
+                : 'store',
+        ]);
+    }
+
     public function rules(): array
     {
         return [
             'email' => ['required', 'email', 'max:100'],
+            'portal' => ['required', 'in:store,seller,admin'],
         ];
     }
 

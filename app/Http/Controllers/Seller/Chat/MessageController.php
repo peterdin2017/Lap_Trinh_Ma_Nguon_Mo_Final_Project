@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seller\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Chat\ConversationMessagesRequest;
 use App\Http\Requests\Chat\SendMessageRequest;
 use App\Models\Account;
 use App\Models\Conversation;
@@ -12,14 +13,14 @@ use Illuminate\Support\Carbon;
 
 class MessageController extends Controller
 {
-    public function index(Request $request, int $conversationId): JsonResponse
+    public function index(ConversationMessagesRequest $request, int $conversationId): JsonResponse
     {
         [$account, $conversation] = $this->sellerConversation(
             $request,
             $conversationId
         );
 
-        $afterId = max(0, (int) $request->query('after_id', 0));
+        $afterId = (int) ($request->validated('after_id') ?? 0);
 
         $messages = $conversation->messages()
             ->where('message_id', '>', $afterId)

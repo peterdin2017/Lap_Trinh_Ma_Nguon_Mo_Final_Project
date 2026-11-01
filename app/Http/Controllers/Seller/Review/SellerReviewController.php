@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seller\Review;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Seller\Review\SellerReviewIndexRequest;
 use App\Http\Requests\Seller\Review\SellerReviewReplyRequest;
 use App\Models\Review;
 use App\Models\Seller;
@@ -12,20 +13,13 @@ use Illuminate\View\View;
 
 class SellerReviewController extends Controller
 {
-    public function index(Request $request): View
+    public function index(SellerReviewIndexRequest $request): View
     {
         $seller = $this->currentSeller($request);
-        $keyword = trim((string) $request->query('keyword', ''));
-        $status = (string) $request->query('status', 'all');
-        $rating = $request->query('rating');
-
-        if (! in_array($status, ['all', 'unanswered', 'answered'], true)) {
-            $status = 'all';
-        }
-
-        if (! in_array((string) $rating, ['1', '2', '3', '4', '5'], true)) {
-            $rating = '';
-        }
+        $filters = $request->validated();
+        $keyword = trim((string) ($filters['keyword'] ?? ''));
+        $status = (string) ($filters['status'] ?? 'all');
+        $rating = (string) ($filters['rating'] ?? '');
 
         $reviews = Review::query()
             ->with(['product', 'orderItem', 'images'])

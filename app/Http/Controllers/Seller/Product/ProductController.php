@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Seller\Product;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Seller\Product\SellerProductFilterRequest;
 use App\Http\Requests\Seller\Product\StoreProductRequest;
 use App\Http\Requests\Seller\Product\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Seller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -24,21 +25,14 @@ class ProductController extends Controller
     /**
      * Danh sách sản phẩm của Seller hiện đăng nhập.
      */
-    public function index(Request $request): View
+    public function index(SellerProductFilterRequest $request): View
     {
         $seller = $this->currentSeller();
-
-        $filters = $request->validate([
-            'status' => ['nullable', 'in:all,active,draft,out_of_stock,hidden'],
-            'q' => ['nullable', 'string', 'max:200'],
-            'category' => ['nullable', 'integer'],
-            'from' => ['nullable', 'date_format:Y-m-d'],
-            'to' => ['nullable', 'date_format:Y-m-d'],
-        ]);
+        $filters = $request->validated();
 
         $status = (string) ($filters['status'] ?? 'all');
-        $search = trim((string) $request->query('q', ''));
-        $categoryId = $request->query('category');
+        $search = trim((string) ($filters['q'] ?? ''));
+        $categoryId = $filters['category'] ?? null;
         $from = $filters['from'] ?? null;
         $to = $filters['to'] ?? null;
 
@@ -274,10 +268,11 @@ class ProductController extends Controller
         $removeIds = $data['remove_image_ids'] ?? [];
         $newImages = $request->file('images', []);
         $status = $data['status'] ?? $productModel->status;
+        $variantsPresent = (bool) ($data['variants_present'] ?? false);
 
         // Đồng bộ mẫu mã khi đang dùng mẫu mã hoặc form có gửi cờ variants_present.
         $variantsWereSubmitted = $pricingMode === 'variants'
-            || $request->boolean('variants_present')
+            || $variantsPresent
             || array_key_exists('variants', $data);
 
         unset(

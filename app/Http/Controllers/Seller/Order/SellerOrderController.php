@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Seller\Order;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Seller\Order\HandleSellerReturnRequest;
+use App\Http\Requests\Seller\Order\SellerOrderFilterRequest;
+use App\Http\Requests\Seller\Order\UpdateSellerOrderStatusRequest;
 use App\Models\Order;
 use App\Models\OrderReturnRequest;
 use App\Models\Seller;
@@ -14,21 +17,9 @@ use Illuminate\View\View;
 
 class SellerOrderController extends Controller
 {
-    public function index(Request $request): View
+    public function index(SellerOrderFilterRequest $request): View
     {
-        $filters = $request->validate([
-            'status' => [
-                'nullable',
-                'in:all,pending,processing,shipping,completed,cancelled',
-            ],
-            'q' => ['nullable', 'string', 'max:100'],
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
-        ], [
-            'status.in' => 'Trạng thái đơn hàng không hợp lệ.',
-            'q.max' => 'Từ khóa tìm kiếm không được vượt quá 100 ký tự.',
-            'date_to.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
-        ]);
+        $filters = $request->validated();
 
         $seller = $this->currentSeller($request);
         $selectedStatus = $filters['status'] ?? 'all';
@@ -135,27 +126,9 @@ class SellerOrderController extends Controller
         return view('seller.orders.show', compact('order', 'returnRequest'));
     }
 
-    public function updateStatus(Request $request, int $order): RedirectResponse
+    public function updateStatus(UpdateSellerOrderStatusRequest $request, int $order): RedirectResponse
     {
-        $validated = $request->validate([
-            'status' => [
-                'required',
-                'in:processing,shipping,completed,cancelled',
-            ],
-            'cancellation_reason' => [
-                'required_if:status,cancelled',
-                'nullable',
-                'string',
-                'min:5',
-                'max:1000',
-            ],
-        ], [
-            'status.required' => 'Vui lòng chọn trạng thái đơn hàng.',
-            'status.in' => 'Trạng thái đơn hàng không hợp lệ.',
-            'cancellation_reason.required_if' => 'Vui lòng nhập lý do hủy đơn.',
-            'cancellation_reason.min' => 'Lý do hủy đơn cần có ít nhất 5 ký tự.',
-            'cancellation_reason.max' => 'Lý do hủy đơn không được vượt quá 1000 ký tự.',
-        ]);
+        $validated = $request->validated();
 
         $seller = $this->currentSeller($request);
 
@@ -227,14 +200,9 @@ class SellerOrderController extends Controller
 
         return $seller;
     }
-    public function updateReturnRequest(Request $request, int $returnRequest): RedirectResponse
+    public function updateReturnRequest(HandleSellerReturnRequest $request, int $returnRequest): RedirectResponse
     {
-        $validated = $request->validate([
-            'decision' => ['required', 'in:approved,rejected'],
-        ], [
-            'decision.required' => 'Vui lòng chọn cách xử lý yêu cầu.',
-            'decision.in' => 'Quyết định xử lý không hợp lệ.',
-        ]);
+        $validated = $request->validated();
 
         $seller = $this->currentSeller($request);
 

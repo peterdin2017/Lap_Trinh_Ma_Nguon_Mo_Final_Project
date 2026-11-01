@@ -42,23 +42,24 @@ class CatalogRequest extends FormRequest
      */
     public function filters(): array
     {
-        $min = $this->filled('min_price') ? (int) $this->input('min_price') : null;
-        $max = $this->filled('max_price') ? (int) $this->input('max_price') : null;
+        $validated = $this->validated();
+        $min = isset($validated['min_price']) ? (int) $validated['min_price'] : null;
+        $max = isset($validated['max_price']) ? (int) $validated['max_price'] : null;
 
         if ($min !== null && $max !== null && $min > $max) {
             [$min, $max] = [$max, $min];
         }
 
-        $category = trim((string) $this->input('category', ''));
+        $category = trim((string) ($validated['category'] ?? ''));
 
         return [
-            'q' => trim((string) $this->input('q', '')),
+            'q' => trim((string) ($validated['q'] ?? '')),
             'category' => $category === ''
                 ? null
                 : (ctype_digit($category) ? (int) $category : $category),
             'min_price' => $min,
             'max_price' => $max,
-            'sort' => $this->input('sort', 'newest'),
+            'sort' => $validated['sort'] ?? 'newest',
         ];
     }
 }

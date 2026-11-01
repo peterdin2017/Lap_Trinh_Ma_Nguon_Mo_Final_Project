@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Store\Support;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\Support\SupportSearchRequest;
 use App\Http\Requests\Store\Support\StoreSupportRequest;
 use App\Models\Account;
 use App\Models\CustomerSupportRequest;
@@ -44,7 +45,7 @@ class SupportController extends Controller
     /**
      * Trang trung tâm hỗ trợ và câu hỏi thường gặp.
      */
-    public function index(Request $request): View
+    public function index(SupportSearchRequest $request): View
     {
         $faqs = [
             [
@@ -79,7 +80,7 @@ class SupportController extends Controller
             ],
         ];
 
-        $keyword = trim((string) $request->query('q', ''));
+        $keyword = trim((string) ($request->validated('q') ?? ''));
 
         if ($keyword !== '') {
             $normalizedKeyword = mb_strtolower($keyword);

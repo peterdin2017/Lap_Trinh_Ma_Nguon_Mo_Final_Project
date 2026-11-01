@@ -3,21 +3,15 @@
 namespace App\Http\Controllers\Admin\Product;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Product\ProductModerationRequest;
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Http\Request;
 
 class ProductModerationController extends Controller
 {
-    public function index(Request $request)
+    public function index(ProductModerationRequest $request)
     {
-        $filters = $request->validate([
-            'q' => ['nullable', 'string', 'max:200'],
-            'status' => ['nullable', 'in:draft,active,hidden,locked'],
-            'category' => ['nullable', 'integer', 'exists:categories,category_id'],
-            'from' => ['nullable', 'date_format:Y-m-d'],
-            'to' => ['nullable', 'date_format:Y-m-d'],
-        ]);
+        $filters = $request->validated();
 
         $from = $filters['from'] ?? null;
         $to = $filters['to'] ?? null;
@@ -55,9 +49,9 @@ class ProductModerationController extends Controller
             'to'
         ));
     }
-    public function lock(Request $request, Product $product)
+    public function lock(ProductModerationRequest $request, Product $product)
     {
-        $data = $request->validate(['locked_reason' => ['required', 'string', 'max:255']]);
+        $data = $request->validated();
         if ($product->status === 'locked') return back()->with('error', 'Sản phẩm đã bị khóa.');
         $product->forceFill(['status' => 'locked', 'locked_reason' => $data['locked_reason'], 'locked_at' => now()])->save();
         return back()->with('success', 'Đã khóa sản phẩm.');

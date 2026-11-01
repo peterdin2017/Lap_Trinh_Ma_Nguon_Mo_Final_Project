@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seller\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Seller\Auth\SellerLoginRequest;
 use App\Models\Account;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,16 +22,9 @@ class LoginController extends Controller
         return view('seller.auth.login');
     }
 
-    public function login(Request $request): RedirectResponse
+    public function login(SellerLoginRequest $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ], [
-            'email.required' => 'Vui lòng nhập email.',
-            'email.email' => 'Email không đúng định dạng.',
-            'password.required' => 'Vui lòng nhập mật khẩu.',
-        ]);
+        $credentials = $request->validated();
 
         // Lọc theo role để email dùng chung với Store hoặc Admin
         // không thể đăng nhập nhầm vào tài khoản Seller.

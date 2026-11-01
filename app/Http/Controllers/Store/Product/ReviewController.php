@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Store\Product;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\Product\ReviewRequest;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -10,7 +11,6 @@ use App\Models\ProductVariant;
 use App\Models\Review;
 use App\Models\ReviewImage;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +18,7 @@ use Throwable;
 
 class ReviewController extends Controller
 {
-    public function store(Request $request, int $productId): RedirectResponse
+    public function store(ReviewRequest $request, int $productId): RedirectResponse
     {
         $accountId = $request->session()->get('account_id');
 
@@ -26,18 +26,7 @@ class ReviewController extends Controller
             return redirect()->guest(route('login.form'));
         }
 
-        $data = $request->validate([
-            'order_item_id' => ['required', 'integer', 'min:1'],
-            'rating' => ['required', 'integer', 'between:1,5'],
-            'comment' => ['nullable', 'string', 'max:1000'],
-            'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
-        ], [
-            'images.max' => 'Mỗi đánh giá chỉ được tải lên tối đa 5 ảnh.',
-            'images.*.image' => 'Tệp tải lên phải là hình ảnh.',
-            'images.*.mimes' => 'Ảnh phải có định dạng JPEG, PNG hoặc WEBP.',
-            'images.*.max' => 'Mỗi ảnh không được vượt quá 5MB.',
-        ]);
+        $data = $request->validated();
 
         $storedPaths = [];
 

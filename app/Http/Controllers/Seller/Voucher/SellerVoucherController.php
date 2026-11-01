@@ -3,32 +3,30 @@
 namespace App\Http\Controllers\Seller\Voucher;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Seller\Voucher\SellerVoucherIndexRequest;
+use App\Http\Requests\Seller\Voucher\SellerVoucherRequest;
 use App\Models\Seller;
 use App\Models\SellerVoucher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class SellerVoucherController extends Controller
 {
-    public function index(Request $request): View
+    public function index(SellerVoucherIndexRequest $request): View
     {
         $seller = $this->currentSeller($request);
+        $filters = $request->validated();
 
         $vouchers = SellerVoucher::query()
             ->where('seller_id', $seller->seller_id)
-            ->when($request->filled('keyword'), function ($query) use ($request): void {
-                $keyword = trim((string) $request->input('keyword'));
+            ->when(! empty($filters['keyword']), function ($query) use ($filters): void {
+                $keyword = trim($filters['keyword']);
                 $query->where('code', 'like', "%{$keyword}%");
             })
-            ->when(
-                $request->filled('status')
-                    && in_array($request->input('status'), ['active', 'paused'], true),
-                fn ($query) => $query->where('status', $request->input('status'))
-            )
+            ->when(! empty($filters['status']), fn ($query) => $query->where('status', $filters['status']))
             ->latest('created_at')
             ->paginate(15)
             ->withQueryString();
@@ -50,10 +48,10 @@ class SellerVoucherController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(SellerVoucherRequest $request): RedirectResponse
     {
         $seller = $this->currentSeller($request);
-        $data = $this->validatedData($request, $seller);
+        $data = $request->validated();
 
         SellerVoucher::query()->create([
             ...$data,
@@ -75,11 +73,11 @@ class SellerVoucherController extends Controller
         ]);
     }
 
-    public function update(Request $request, int $voucher): RedirectResponse
+    public function update(SellerVoucherRequest $request, int $voucher): RedirectResponse
     {
         $seller = $this->currentSeller($request);
         $voucherModel = $this->sellerVouchers($seller)->findOrFail($voucher);
-        $data = $this->validatedData($request, $seller, $voucherModel);
+        $data = $request->validated();
 
         $voucherModel->update($data);
 
@@ -120,67 +118,6 @@ class SellerVoucherController extends Controller
         $voucherModel->delete();
 
         return back()->with('success', 'Đã xóa voucher.');
-    }
-
-    private function validatedData(
-        Request $request,
-        Seller $seller,
-        ?SellerVoucher $voucher = null
-    ): array {
-        $isPercent = $request->input('discount_type') === 'percent';
-
-        return $request->validate([
-            'code' => [
-                'required',
-                'string',
-                'alpha_dash:ascii',
-                'max:30',
-                Rule::unique('seller_vouchers', 'code')
-                    ->where('seller_id', $seller->seller_id)
-                    ->ignore($voucher?->voucher_id, 'voucher_id'),
-            ],
-            'discount_type' => ['required', Rule::in(['percent', 'fixed'])],
-            'discount_value' => [
-                'required',
-                'numeric',
-                'gt:0',
-                'max:' . ($isPercent ? '100' : '999999999999'),
-            ],
-            'min_order_amount' => [
-                'required',
-                'numeric',
-                'min:0',
-                'max:999999999999',
-            ],
-            'max_discount' => [
-                Rule::requiredIf($isPercent),
-                'nullable',
-                'numeric',
-                'gt:0',
-                'max:999999999999',
-            ],
-            'usage_limit' => ['nullable', 'integer', 'min:1', 'max:10000000'],
-            'starts_at' => ['required', 'date'],
-            'expires_at' => ['required', 'date', 'after:starts_at'],
-            'status' => ['required', Rule::in(['active', 'paused'])],
-        ], [
-            'code.required' => 'Vui lòng nhập mã voucher.',
-            'code.alpha_dash' => 'Mã chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới.',
-            'code.unique' => 'Shop đã có mã voucher này.',
-            'discount_type.required' => 'Vui lòng chọn kiểu giảm giá.',
-            'discount_value.required' => 'Vui lòng nhập mức giảm.',
-            'discount_value.gt' => 'Mức giảm phải lớn hơn 0.',
-            'discount_value.max' => $isPercent
-                ? 'Mức giảm phần trăm không được vượt quá 100%.'
-                : 'Số tiền giảm vượt quá giới hạn cho phép.',
-            'min_order_amount.required' => 'Vui lòng nhập giá trị đơn hàng tối thiểu.',
-            'max_discount.required' => 'Voucher giảm theo phần trăm cần có mức giảm tối đa.',
-            'usage_limit.integer' => 'Số lượt sử dụng phải là số nguyên.',
-            'usage_limit.min' => 'Số lượt sử dụng phải lớn hơn 0.',
-            'starts_at.required' => 'Vui lòng chọn thời gian bắt đầu.',
-            'expires_at.required' => 'Vui lòng chọn thời gian kết thúc.',
-            'expires_at.after' => 'Thời gian kết thúc phải sau thời gian bắt đầu.',
-        ]);
     }
 
     private function sellerVouchers(Seller $seller)

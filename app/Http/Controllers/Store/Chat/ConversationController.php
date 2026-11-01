@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Store\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\Chat\StartConversationRequest;
 use App\Models\Account;
 use App\Models\Conversation;
 use App\Models\Product;
@@ -52,14 +53,10 @@ class ConversationController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StartConversationRequest $request): JsonResponse
     {
         $account = $this->customer($request);
-
-        $data = $request->validate([
-            'seller_id' => ['required', 'integer', 'exists:sellers,seller_id'],
-            'product_id' => ['nullable', 'integer', 'exists:products,product_id'],
-        ]);
+        $data = $request->validated();
 
         $seller = Seller::query()
             ->where('seller_id', $data['seller_id'])
