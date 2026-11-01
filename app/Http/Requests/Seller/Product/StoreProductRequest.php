@@ -16,6 +16,7 @@ class StoreProductRequest extends FormRequest
         $variantMode = $this->boolean('variants_present');
 
         return [
+            'status' => ['required', 'in:draft,active'],
             'category_id' => ['required', 'exists:categories,category_id'],
             'product_name' => ['required', 'string', 'max:200'],
             'brand' => ['nullable', 'string', 'max:100'],
@@ -63,6 +64,8 @@ class StoreProductRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'status.required' => 'Vui lòng chọn trạng thái sản phẩm.',
+            'status.in' => 'Trạng thái sản phẩm không hợp lệ.',
             'category_id.required' => 'Vui lòng chọn danh mục.',
             'category_id.exists' => 'Danh mục không hợp lệ.',
 

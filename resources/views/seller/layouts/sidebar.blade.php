@@ -149,10 +149,7 @@
                     Hồ sơ cửa hàng
                 </a>
 
-                <a href="{{ \Illuminate\Support\Facades\Route::has('seller.shipping.edit') ? route('seller.shipping.edit') : '#' }}"
-                    class="seller-subnav-link {{ request()->routeIs('seller.shipping.*') ? 'active' : '' }}">
-                    Cài đặt vận chuyển
-                </a>
+
             </nav>
         </div>
     </nav>
@@ -333,10 +330,6 @@
                         Hồ sơ cửa hàng
                     </a>
 
-                    <a href="{{ \Illuminate\Support\Facades\Route::has('seller.shipping.edit') ? route('seller.shipping.edit') : '#' }}"
-                        class="seller-subnav-link {{ request()->routeIs('seller.shipping.*') ? 'active' : '' }}">
-                        Cài đặt vận chuyển
-                    </a>
                 </nav>
             </div>
         </nav>
