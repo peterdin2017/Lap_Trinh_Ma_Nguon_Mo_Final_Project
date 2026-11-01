@@ -72,14 +72,10 @@
                                         </button>
                                     </form>
 
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-link text-danger text-decoration-none p-0"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#rejectSellerModal"
+                                    <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none p-0"
+                                        data-bs-toggle="modal" data-bs-target="#rejectSellerModal"
                                         data-reject-url="{{ route('admin.sellers.reject', $seller) }}"
-                                        data-shop-name="{{ $seller->shop_name }}"
-                                    >
+                                        data-shop-name="{{ $seller->shop_name }}">
                                         <i class="bi bi-x-circle me-1" aria-hidden="true"></i>
                                         Từ chối hồ sơ
                                     </button>
@@ -107,23 +103,20 @@
             </table>
         </div>
 
-        @if ($sellers->hasPages())
-            <div class="admin-table-card__footer">
-                {{ $sellers->links() }}
-            </div>
-        @endif
+        <div class="admin-table-card__footer">
+            {{ $sellers->links() }}
+        </div>
     </section>
 
-    <div class="modal fade" id="rejectSellerModal" tabindex="-1"
-        aria-labelledby="rejectSellerModalTitle" aria-hidden="true">
+    <div class="modal fade" id="rejectSellerModal" tabindex="-1" aria-labelledby="rejectSellerModalTitle"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content admin-reject-modal">
                 <div class="modal-header">
                     <h2 class="modal-title fs-5 fw-bold" id="rejectSellerModalTitle">
                         Từ chối hồ sơ cửa hàng
                     </h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Đóng"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
 
                 <form id="rejectSellerForm" method="POST">
@@ -135,13 +128,12 @@
                         <label for="rejectReasonInput" class="form-label small fw-semibold">
                             Lý do từ chối
                         </label>
-                        <input id="rejectReasonInput" name="reject_reason" type="text"
-                            maxlength="255" class="form-control" placeholder="Nhập lý do" required>
+                        <input id="rejectReasonInput" name="reject_reason" type="text" maxlength="255"
+                            class="form-control" placeholder="Nhập lý do" required>
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary"
-                            data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
                         <button type="submit" class="btn btn-danger">
                             Xác nhận từ chối
                         </button>

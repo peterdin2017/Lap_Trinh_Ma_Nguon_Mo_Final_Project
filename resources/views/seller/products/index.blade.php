@@ -593,7 +593,7 @@
                                             </a>
 
                                             <a
-                                                href="{{ route('store.products.show', ['slug' => $product->slug]) }}"
+                                                href="{{ route('store.products.show', ['slug' => $product->slug ?: $product->product_id]) }}"
                                                 class="btn btn-sm btn-outline-secondary rounded-2 action-button"
                                                 aria-label="Xem {{ $product->product_name }} ngoài cửa hàng"
                                                 title="Xem ngoài cửa hàng"
@@ -633,14 +633,12 @@
                     </table>
                 </div>
 
-                @if ($products->hasPages())
-                    <div
-                        class="px-3 px-lg-4 py-3 border-top"
-                        style="background: var(--seller-card-bg, #fff); border-color: var(--seller-border, #e2e8f0) !important;"
-                    >
-                        {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
-                    </div>
-                @endif
+                <div
+                    class="px-3 px-lg-4 py-3 border-top"
+                    style="background: var(--seller-card-bg, #fff); border-color: var(--seller-border, #e2e8f0) !important;"
+                >
+                    {{ $products->withQueryString()->links() }}
+                </div>
             </section>
         </div>
     </div>

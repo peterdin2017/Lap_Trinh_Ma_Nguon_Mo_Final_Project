@@ -195,7 +195,7 @@
                         @endphp
 
                         <div class="col">
-                            <a href="{{ route('store.products.show', $product->product_id) }}"
+                            <a href="{{ route('store.products.show', ['slug' => $product->slug ?: $product->product_id]) }}"
                                class="shop-product-link text-decoration-none">
                                 <article class="shop-product-card h-100">
                                     <div class="shop-product-image">
