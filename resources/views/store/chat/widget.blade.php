@@ -32,6 +32,8 @@
             </div>
         </header>
 
+        <div class="store-chat-error d-none" id="storeChatError" role="alert"></div>
+
         <div class="store-chat-layout">
             <aside class="store-chat-inbox" id="storeChatInbox">
                 <label class="store-chat-search">
@@ -65,8 +67,6 @@
                         <small id="storeChatProductContext"></small>
                     </span>
                 </div>
-
-                <div class="store-chat-error d-none" id="storeChatError" role="alert"></div>
 
                 <div class="store-chat-messages" id="storeChatMessages" aria-live="polite">
                     <div class="store-chat-state">Chọn cuộc trò chuyện để xem tin nhắn.</div>

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Store\Chat;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Store\Chat\StartConversationRequest;
+use App\Http\Requests\Chat\StartConversationRequest;
 use App\Models\Account;
 use App\Models\Conversation;
 use App\Models\Product;
@@ -60,7 +60,7 @@ class ConversationController extends Controller
 
         $seller = Seller::query()
             ->where('seller_id', $data['seller_id'])
-            ->where('status', 'active')
+            ->availableForStore()
             ->firstOrFail();
 
         if (! empty($data['product_id'])) {
