@@ -10,14 +10,16 @@ use App\Models\OrderReturnRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Review;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BuyerOrderController extends Controller
 {
-    public function index(BuyerOrderFilterRequest $request): View
+    public function index(BuyerOrderFilterRequest $request): View|JsonResponse
     {
         $accountId = $this->accountId();
 
@@ -25,13 +27,8 @@ class BuyerOrderController extends Controller
 
         $status = $filters['status'] ?? 'all';
 
-        $orders = Order::query()
+        $ordersQuery = Order::query()
             ->where('account_id', $accountId)
-            ->with([
-                'seller',
-                'items.product',
-                'items.variant',
-            ])
             ->when(
                 $status === 'return_requested',
                 fn ($query) => $query->whereIn(
@@ -45,9 +42,32 @@ class BuyerOrderController extends Controller
                 $status !== 'all' && $status !== 'return_requested',
                 fn ($query) => $query->where('order_status', $status)
             )
-            ->latest('created_at')
+            ->latest('created_at');
+
+        if ($request->boolean('refresh')) {
+            $snapshotOrders = (clone $ordersQuery)
+                ->select([
+                    'order_id',
+                    'order_status',
+                    'cancellation_reason',
+                    'updated_at',
+                ])
+                ->paginate(10);
+
+            return response()->json([
+                'fingerprint' => $this->ordersFingerprint($snapshotOrders),
+            ]);
+        }
+
+        $orders = $ordersQuery
+            ->with([
+                'seller',
+                'items.product',
+                'items.variant',
+            ])
             ->paginate(10)
             ->withQueryString();
+        $ordersFingerprint = $this->ordersFingerprint($orders);
 
         /*
          * Đơn cũ có thể thiếu product_id/product_variant_id.
@@ -103,6 +123,7 @@ class BuyerOrderController extends Controller
 
         return view('store.account.orders.index', compact(
             'orders',
+            'ordersFingerprint',
             'status',
             'reviewedItemIds',
             'returnRequests'
@@ -208,6 +229,7 @@ class BuyerOrderController extends Controller
             }
 
             $order->order_status = 'cancelled';
+            $order->cancellation_reason = 'Đơn hàng được hủy theo yêu cầu của khách hàng.';
             $order->save();
         }, 3);
 
@@ -267,6 +289,25 @@ class BuyerOrderController extends Controller
         );
 
         return (int) session('account_id');
+    }
+
+    private function ordersFingerprint(LengthAwarePaginator $orders): string
+    {
+        $snapshot = $orders->getCollection()
+            ->map(fn (Order $order): array => [
+                (int) $order->order_id,
+                (string) $order->order_status,
+                (string) ($order->cancellation_reason ?? ''),
+                $order->updated_at?->toISOString(),
+            ])
+            ->values()
+            ->all();
+
+        return hash('sha256', json_encode([
+            $orders->currentPage(),
+            $orders->total(),
+            $snapshot,
+        ], JSON_THROW_ON_ERROR));
     }
 }
 

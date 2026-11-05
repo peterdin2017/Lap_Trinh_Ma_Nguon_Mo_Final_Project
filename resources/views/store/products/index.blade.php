@@ -551,7 +551,7 @@
                             <h1 id="product-list-title" class="product-list-page__title">
                                 {{ $currentQuery !== '' ? 'Kết quả tìm kiếm' : ($currentCategory?->category_name ?? 'Tất cả sản phẩm') }}
                             </h1>
-                            <span class="product-list-page__count">
+                            <span class="product-list-page__count" data-store-product-count>
                                 {{ number_format($products->total()) }} sản phẩm
                             </span>
                         </div>
@@ -574,6 +574,11 @@
                         </nav>
                     </div>
 
+                    <div
+                        id="storeProductResults"
+                        data-store-product-live
+                        data-store-product-total="{{ $products->total() }}"
+                    >
                     @if ($products->isEmpty())
                         <div class="product-list-page__empty">
                             <i class="bi bi-search" aria-hidden="true"></i>
@@ -583,7 +588,7 @@
                     @else
                         <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 product-list-page__grid">
                             @foreach ($products as $product)
-                                <div class="col">
+                                <div class="col" data-product-id="{{ $product->product_id }}">
                                     @php
                                         $oldPrice = $product->original_price ?? $product->compare_at_price ?? null;
                                         $discountPercent = $oldPrice && $oldPrice > $product->price
@@ -673,6 +678,7 @@
                     @endif
                     <div class="product-list-page__pagination">
                         {{ $products->withQueryString()->links() }}
+                    </div>
                     </div>
                 </section>
             </div>

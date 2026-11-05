@@ -184,6 +184,11 @@
                     </nav>
                 </div>
 
+                <div
+                    id="homeProductListing"
+                    data-store-product-live
+                    data-store-product-total="{{ $products->total() }}"
+                >
                 @if ($products->isEmpty())
                     <div class="home-empty-state">
                         <i class="bi bi-basket" aria-hidden="true"></i>
@@ -201,7 +206,7 @@
                                 $ratingCount = (int) ($product->rating_count ?? 0);
                             @endphp
 
-                            <div class="col">
+                            <div class="col" data-product-id="{{ $product->product_id }}">
                                 <article class="home-product-card">
                                     <a
                                         href="{{ route('store.products.show', ['slug' => $product->slug ?: $product->product_id]) }}"
@@ -329,6 +334,7 @@
                         {{ $products->withQueryString()->links() }}
                     </div>
                 @endif
+                </div>
             </section>
         </div>
     </div>

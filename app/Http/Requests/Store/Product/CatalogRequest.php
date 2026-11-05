@@ -20,6 +20,7 @@ class CatalogRequest extends FormRequest
             'min_price' => ['nullable', 'integer', 'min:0', 'max:1000000000000'],
             'max_price' => ['nullable', 'integer', 'min:0', 'max:1000000000000'],
             'sort' => ['nullable', 'in:' . implode(',', ProductCatalog::SORTS)],
+            'refresh' => ['sometimes', 'boolean'],
         ];
     }
 

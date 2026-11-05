@@ -297,7 +297,11 @@
         }
     </style>
 
-    <main class="seller-orders">
+    <main
+        class="seller-orders"
+        id="sellerOrdersPage"
+        data-orders-version="{{ $ordersVersion }}"
+    >
         <header class="mb-3">
             <h1 class="h4 fw-bold mb-1">Quản lý đơn hàng</h1>
             <p class="small text-secondary mb-0">
@@ -415,7 +419,11 @@
                     ?? $returnRequest?->reason;
             @endphp
 
-            <article class="seller-orders__card">
+            <article
+                class="seller-orders__card"
+                data-order-id="{{ $order->order_id }}"
+                data-order-status="{{ $order->order_status }}"
+            >
                 <header class="seller-orders__card-head d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <div class="d-flex flex-wrap align-items-center gap-3">
                         <a class="seller-orders__code" href="{{ route('seller.orders.show', $order->order_id) }}">
@@ -645,4 +653,11 @@
         </div>
     </main>
 @endsection
+
+@push('scripts')
+    <script
+        src="{{ asset('assets/seller/orders/auto-refresh.js') }}?v={{ filemtime(public_path('assets/seller/orders/auto-refresh.js')) }}"
+        defer
+    ></script>
+@endpush
 

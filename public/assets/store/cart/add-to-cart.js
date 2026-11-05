@@ -97,7 +97,8 @@
 
             if (!response.ok) {
                 if (response.status === 401 && data.login_url) {
-                    throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để thêm sản phẩm.');
+                    window.location.assign(data.login_url);
+                    return;
                 }
 
                 const validationMessage = Object.values(data.errors || {}).flat()[0];

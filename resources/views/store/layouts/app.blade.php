@@ -399,7 +399,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Chỉ gắn bộ đếm cho thông báo đã hiện khi tải trang.
             // Feedback giỏ hàng được bật sau đó bởi AJAX và tự quản lý thời gian riêng.
-            document.querySelectorAll('.store-main .alert:not(.d-none)').forEach(function(alert) {
+            document.querySelectorAll(
+                '.store-main .alert:not(.d-none):not(.buyer-order-cancellation-alert)'
+            ).forEach(function(alert) {
                 window.setTimeout(function() {
                     if (!alert.isConnected) {
                         return;
@@ -416,6 +418,9 @@
     </script>
     <script
         src="{{ asset('assets/store/cart/add-to-cart.js') }}?v={{ filemtime(public_path('assets/store/cart/add-to-cart.js')) }}"
+        defer></script>
+    <script
+        src="{{ asset('assets/store/products/auto-refresh.js') }}?v={{ filemtime(public_path('assets/store/products/auto-refresh.js')) }}"
         defer></script>
     @stack('scripts')
     <script src="{{ asset('assets/store/search/live-search.js') }}" defer></script>

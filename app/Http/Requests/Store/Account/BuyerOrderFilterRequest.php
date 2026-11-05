@@ -15,6 +15,9 @@ class BuyerOrderFilterRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['status' => ['nullable', 'in:' . implode(',', self::STATUSES)]];
+        return [
+            'status' => ['nullable', 'in:' . implode(',', self::STATUSES)],
+            'refresh' => ['sometimes', 'boolean'],
+        ];
     }
 }

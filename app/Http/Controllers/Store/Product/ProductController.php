@@ -22,9 +22,7 @@ class ProductController extends Controller
         $visibleProducts = Product::query()
             ->with(['category.parent', 'seller', 'variants'])
             ->where('status', 'active')
-            ->whereHas('seller', function ($query): void {
-                $query->where('status', 'active');
-            });
+            ->whereHas('seller', fn ($query) => $query->availableForStore());
 
         $product = (clone $visibleProducts)
             ->where('slug', $slug)
@@ -83,7 +81,7 @@ class ProductController extends Controller
             ->with(['category', 'seller'])
             ->where('status', 'active')
             ->where('product_id', '!=', $product->product_id)
-            ->whereHas('seller', fn ($query) => $query->where('status', 'active'))
+            ->whereHas('seller', fn ($query) => $query->availableForStore())
             ->where(function ($query) use ($product): void {
                 $query->where('category_id', $product->category_id)
                     ->orWhere('seller_id', $product->seller_id);

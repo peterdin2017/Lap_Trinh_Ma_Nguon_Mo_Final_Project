@@ -211,10 +211,50 @@
             border: 1px solid var(--line);
             border-radius: 10px;
             background: var(--surface);
+            align-items: flex-start !important;
+        }
+
+        .product-create-page .variant-row > [class*="col-"] {
+            min-width: 0;
+        }
+
+        .product-create-page .variant-row > .d-grid {
+            align-self: flex-end;
+        }
+
+        .product-create-page .variant-image-input {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            overflow: hidden;
+            padding: 0.375rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .product-create-page .variant-image-input::file-selector-button {
+            margin: -0.375rem 0.5rem -0.375rem -0.5rem;
+            padding: 0.65rem 0.7rem;
+            color: var(--ink);
+            background: var(--soft-surface);
+            border: 0;
+            border-right: 1px solid var(--line);
+            cursor: pointer;
+        }
+
+        .product-create-page .variant-image-input::-webkit-file-upload-button {
+            margin: -0.375rem 0.5rem -0.375rem -0.5rem;
+            padding: 0.65rem 0.7rem;
+            color: var(--ink);
+            background: var(--soft-surface);
+            border: 0;
+            border-right: 1px solid var(--line);
+            cursor: pointer;
         }
 
         .product-create-page .variant-image-preview {
             display: flex;
+            min-width: 0;
+            max-width: 100%;
             align-items: center;
             gap: 8px;
             margin-top: 6px;
@@ -226,6 +266,16 @@
             object-fit: cover;
             border: 1px solid var(--line);
             border-radius: 6px;
+            background: var(--surface);
+            flex: 0 0 40px;
+        }
+
+        .product-create-page .variant-image-preview > span {
+            min-width: 0;
+            overflow: hidden;
+            color: var(--muted) !important;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .product-create-page .variant-image-preview.d-none {
@@ -551,7 +601,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-3 mb-4">
                         <span class="section-icon">
-                            <i class="bi bi-card-paragraph" aria-hidden="true"></i>
+                            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
                         </span>
                         <div>
                             <h2 class="h5 fw-bold mb-1">Mô tả sản phẩm</h2>
@@ -627,7 +677,7 @@
                                     type="number"
                                     min="0"
                                     step="1"
-                                    value="{{ old('price', 0) }}"
+                                    value="{{ old('price') }}"
                                     required
                                     @disabled($variantsEnabled)
                                     class="form-control @error('price') is-invalid @enderror"
@@ -647,7 +697,7 @@
                                     name="stock_quantity"
                                     type="number"
                                     min="0"
-                                    value="{{ old('stock_quantity', 0) }}"
+                                    value="{{ old('stock_quantity') }}"
                                     required
                                     @disabled($variantsEnabled)
                                     class="form-control @error('stock_quantity') is-invalid @enderror"
@@ -668,7 +718,7 @@
                         <div id="variantRows" class="d-flex flex-column gap-2">
                             @foreach ($variantRows as $index => $variant)
                                 @if (is_array($variant))
-                                    <div class="variant-row row g-2 align-items-end">
+                                    <div class="variant-row row g-2 align-items-start">
                                         <div class="col-12 col-lg-4">
                                             <label
                                                 for="variant-name-{{ $index }}"
@@ -1030,7 +1080,7 @@
                 const index = nextVariantIndex++;
                 const row = document.createElement('div');
 
-                row.className = 'variant-row row g-2 align-items-end';
+                row.className = 'variant-row row g-2 align-items-start';
                 row.innerHTML = `
                     <div class="col-12 col-lg-4">
                         <label for="variant-name-${index}" class="form-label small fw-semibold">

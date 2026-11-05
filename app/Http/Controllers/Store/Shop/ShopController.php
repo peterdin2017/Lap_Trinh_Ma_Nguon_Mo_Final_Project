@@ -15,7 +15,7 @@ class ShopController extends Controller
     {
         $keyword = trim((string) ($request->validated('q') ?? ''));
         $seller = Seller::query()
-            ->where('status', 'active')
+            ->availableForStore()
             ->with('account')
             ->findOrFail($sellerId);
 

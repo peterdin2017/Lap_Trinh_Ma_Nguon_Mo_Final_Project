@@ -109,7 +109,7 @@
        @if ($supportMenuOpen) aria-current="page" @endif>
         <i class="bi bi-headset" aria-hidden="true"></i>
         <span>Hỗ trợ khách hàng</span>
-        <span class="admin-support-count-badge d-none"
+        <span class="admin-count-badge d-none"
               data-admin-support-count
               aria-live="polite"></span>
     </a>
@@ -122,6 +122,9 @@
             aria-controls="{{ $reportMenuId }}">
         <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
         <span>Báo cáo &amp; thống kê</span>
+        <span class="admin-count-badge admin-report-parent-badge d-none"
+              data-admin-report-count
+              aria-live="polite"></span>
         <i class="bi bi-chevron-down admin-nav-chevron" aria-hidden="true"></i>
     </button>
 
@@ -137,6 +140,9 @@
                class="admin-subnav-link {{ $violationMenuOpen ? 'active' : '' }}"
                @if ($violationMenuOpen) aria-current="page" @endif>
                 Báo cáo vi phạm
+                <span class="admin-count-badge d-none"
+                      data-admin-report-count
+                      aria-live="polite"></span>
             </a>
         </nav>
     </div>

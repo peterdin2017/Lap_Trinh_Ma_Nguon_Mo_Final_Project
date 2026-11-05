@@ -36,12 +36,17 @@ class ConversationController extends Controller
 
         return response()->json([
             'unread_total' => $unreadTotal,
+            'shop_name' => $account->seller?->shop_name ?? 'Seller Center',
             'conversations' => $conversations->map(
                 fn (Conversation $conversation) => [
                     'id' => $conversation->conversation_id,
                     'customer' => $conversation->customer?->email ?? 'Khách hàng',
                     'last_message' => $conversation->latestMessage?->body
                         ?? 'Chưa có tin nhắn',
+                    'latest_message_id' => $conversation->latestMessage?->message_id,
+                    'latest_message_from_customer' => $conversation->latestMessage
+                        ? (int) $conversation->latestMessage->sender_account_id === (int) $conversation->customer_account_id
+                        : false,
                     'last_message_at' => $conversation->last_message_at?->format('H:i'),
                     'unread_count' => (int) $conversation->unread_count,
                     'url' => route('seller.chat.show', $conversation),

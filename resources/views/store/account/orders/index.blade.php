@@ -37,6 +37,12 @@
             color: #1e293b;
         }
 
+        .buyer-orders--loading {
+            opacity: .68;
+            pointer-events: none;
+            transition: opacity .15s ease;
+        }
+
         .buyer-orders__heading {
             margin-bottom: 1.25rem;
         }
@@ -191,11 +197,33 @@
             object-fit: cover;
         }
 
+        .buyer-orders__product-image-link {
+            display: block;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        .buyer-orders__product-image-link:focus-visible,
+        .buyer-orders__product-name a:focus-visible {
+            outline: 2px solid #1a94ff;
+            outline-offset: 3px;
+        }
+
         .buyer-orders__product-name {
             margin-bottom: 4px;
             color: #1e293b;
             font-weight: 600;
             line-height: 1.4;
+        }
+
+        .buyer-orders__product-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .buyer-orders__product-name a:hover {
+            color: #1a94ff;
+            text-decoration: underline;
         }
 
         .buyer-orders__item-price {
@@ -334,7 +362,7 @@
         }
     </style>
 
-    <main class="buyer-orders">
+    <main class="buyer-orders" data-orders-fingerprint="{{ $ordersFingerprint }}">
         <header class="buyer-orders__heading">
             <h1 class="h3 fw-bold mb-1">Đơn hàng của tôi</h1>
             <p class="text-secondary mb-0">Theo dõi trạng thái và lịch sử mua hàng.</p>
@@ -419,13 +447,13 @@
                 </header>
 
                 @if ($order->order_status === 'cancelled')
-                    <div class="alert alert-danger mx-3 mt-3 mb-0" role="status">
+                    <div class="alert alert-danger buyer-order-cancellation-alert mx-3 mt-3 mb-0" role="status">
                         <strong>Đơn hàng đã bị hủy.</strong>
-                        @if (filled($order->cancellation_reason))
-                            <div class="mt-1">
-                                Lý do: {{ $order->cancellation_reason }}
-                            </div>
-                        @endif
+                        <div class="mt-1">
+                            Lý do: {{ filled($order->cancellation_reason)
+                                ? $order->cancellation_reason
+                                : 'Chưa ghi nhận lý do hủy cho đơn hàng này.' }}
+                        </div>
                     </div>
                 @endif
                 @forelse ($order->items as $item)
@@ -438,6 +466,11 @@
 
                         $productName = $item->product_name
                             ?? ($item->product?->product_name ?? 'Sản phẩm');
+                        $productUrl = $item->product
+                            ? route('store.products.show', [
+                                'slug' => $item->product->slug ?: $item->product->product_id,
+                            ])
+                            : null;
 
                         $alreadyReviewed = $reviewedItemIds->contains(
                             (int) $item->order_item_id
@@ -445,25 +478,41 @@
                     @endphp
 
                     <div class="buyer-orders__item">
-                        <div class="buyer-orders__image">
-                            @if ($imageUrl)
-                                <img
-                                    src="{{ $imageUrl }}"
-                                    alt="{{ $productName }}"
-                                    loading="lazy"
-                                    onerror="this.hidden = true; this.nextElementSibling.hidden = false;"
-                                >
-                            @endif
+                        @if ($productUrl)
+                            <a
+                                href="{{ $productUrl }}"
+                                class="buyer-orders__product-image-link"
+                                aria-label="Xem sản phẩm {{ $productName }}"
+                            >
+                        @endif
+                            <div class="buyer-orders__image">
+                                @if ($imageUrl)
+                                    <img
+                                        src="{{ $imageUrl }}"
+                                        alt="{{ $productName }}"
+                                        loading="lazy"
+                                        onerror="this.hidden = true; this.nextElementSibling.hidden = false;"
+                                    >
+                                @endif
 
-                            <i
-                                class="bi bi-image"
-                                aria-hidden="true"
-                                @if ($imageUrl) hidden @endif
-                            ></i>
-                        </div>
+                                <i
+                                    class="bi bi-image"
+                                    aria-hidden="true"
+                                    @if ($imageUrl) hidden @endif
+                                ></i>
+                            </div>
+                        @if ($productUrl)
+                            </a>
+                        @endif
 
                         <div>
-                            <div class="buyer-orders__product-name">{{ $productName }}</div>
+                            <div class="buyer-orders__product-name">
+                                @if ($productUrl)
+                                    <a href="{{ $productUrl }}">{{ $productName }}</a>
+                                @else
+                                    {{ $productName }}
+                                @endif
+                            </div>
 
                             @if ($item->variant_name)
                                 <div class="buyer-orders__muted">
@@ -507,7 +556,8 @@
                             <form
                                 method="POST"
                                 action="{{ route('store.account.orders.cancel', $order->order_id) }}"
-                                onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')"
+                                data-ajax-order-form
+                                data-confirm="Bạn có chắc muốn hủy đơn hàng này?"
                             >
                                 @csrf
                                 @method('PATCH')
@@ -520,7 +570,8 @@
                             <form
                                 method="POST"
                                 action="{{ route('store.account.orders.confirm-receipt', $order->order_id) }}"
-                                onsubmit="return confirm('Xác nhận bạn đã nhận được hàng?')"
+                                data-ajax-order-form
+                                data-confirm="Xác nhận bạn đã nhận được hàng?"
                             >
                                 @csrf
                                 @method('PATCH')
@@ -612,7 +663,7 @@
     >
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 rounded-4">
-                <form id="returnRequestForm" method="POST">
+                <form id="returnRequestForm" method="POST" data-ajax-order-form>
                     @csrf
 
                     <div class="modal-header">
@@ -697,7 +748,7 @@
     >
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 rounded-4">
-                <form id="reviewForm" method="POST" enctype="multipart/form-data">
+                <form id="reviewForm" method="POST" enctype="multipart/form-data" data-ajax-order-form>
                     @csrf
 
                     <input type="hidden" name="order_item_id" id="reviewOrderItemId">
@@ -783,11 +834,12 @@
             const returnOrderCode = document.getElementById('returnRequestOrderCode');
 
             if (returnModal && returnForm) {
-                document.querySelectorAll('[data-bs-target="#returnRequestModal"]').forEach((button) => {
-                    button.addEventListener('click', () => {
-                        returnForm.action = button.dataset.returnUrl;
-                        returnOrderCode.textContent = button.dataset.orderCode || '';
-                    });
+                document.addEventListener('click', (event) => {
+                    const button = event.target.closest('[data-bs-target="#returnRequestModal"]');
+                    if (!button) return;
+
+                    returnForm.action = button.dataset.returnUrl;
+                    returnOrderCode.textContent = button.dataset.orderCode || '';
                 });
 
                 returnModal.addEventListener('hidden.bs.modal', () => {
@@ -807,12 +859,13 @@
                 return;
             }
 
-            document.querySelectorAll('[data-bs-target="#reviewModal"]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    reviewForm.action = button.dataset.reviewUrl;
-                    orderItemInput.value = button.dataset.orderItemId;
-                    productName.textContent = button.dataset.productName || '';
-                });
+            document.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-bs-target="#reviewModal"]');
+                if (!button) return;
+
+                reviewForm.action = button.dataset.reviewUrl;
+                orderItemInput.value = button.dataset.orderItemId;
+                productName.textContent = button.dataset.productName || '';
             });
 
             chooseButton.addEventListener('click', () => fileInput.click());
@@ -868,3 +921,10 @@
         })();
     </script>
 @endsection
+
+@push('scripts')
+    <script
+        src="{{ asset('assets/store/account/orders.js') }}?v={{ filemtime(public_path('assets/store/account/orders.js')) }}"
+        defer
+    ></script>
+@endpush

@@ -162,6 +162,9 @@
             const data = await request(page.dataset.conversationsUrl);
             renderUnreadTotal(data.unread_total);
             renderConversationList(data.conversations || []);
+            window.dispatchEvent(new CustomEvent('seller:chat-updates', {
+                detail: data,
+            }));
         } catch (error) {
             // Giữ danh sách hiện tại nếu request tạm thời bị lỗi.
             console.error(error);

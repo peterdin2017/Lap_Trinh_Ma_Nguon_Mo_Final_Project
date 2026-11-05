@@ -540,6 +540,7 @@
                 transition: none !important;
             }
         }
+
     </style>
 
     @stack('styles')
@@ -651,13 +652,13 @@
             const badges = document.querySelectorAll('[data-seller-chat-unread]');
             if (!badges.length) return;
 
-            // Trang hộp thư đã polling endpoint để cập nhật cả danh sách và badge.
-            if (document.querySelector('.seller-chat-page')) return;
-
             const url = badges[0].dataset.unreadUrl;
             if (!url) return;
+            const isChatPage = Boolean(document.querySelector('.seller-chat-page'));
 
             const updateUnreadBadge = async () => {
+                if (isChatPage) return;
+
                 try {
                     const response = await fetch(url, {
                         headers: {
@@ -677,13 +678,62 @@
                         badge.setAttribute('aria-label', `${count} tin nhắn chưa xem`);
                     });
                 } catch (error) {
-                    // Giữ badge hiện tại nếu mạng tạm thời không khả dụng.
+                    // Giữ badge hiện tại nếu mạng tạm thời bị lỗi.
                     console.error(error);
                 }
             };
 
             updateUnreadBadge();
-            window.setInterval(updateUnreadBadge, 3000);
+            if (!isChatPage) window.setInterval(updateUnreadBadge, 15000);
+        })();
+    </script>
+
+    <script>
+        (() => {
+            const badges = document.querySelectorAll('[data-seller-pending-orders]');
+            if (!badges.length) return;
+
+            const url = badges[0].dataset.countUrl;
+            const subCounts = document.querySelectorAll('[data-seller-pending-subcount]');
+            if (!url) return;
+
+            const updatePendingOrders = async () => {
+                if (document.hidden) return;
+
+                try {
+                    const response = await fetch(url, {
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    const count = Math.max(0, Number(data.count) || 0);
+                    const label = count > 99 ? '99+' : String(count);
+
+                    badges.forEach((badge) => {
+                        badge.textContent = label;
+                        badge.classList.toggle('d-none', count === 0);
+                        badge.setAttribute('aria-label', `${count} đơn hàng chờ xác nhận`);
+                    });
+
+                    subCounts.forEach((badge) => {
+                        badge.textContent = label;
+                        badge.classList.toggle('d-none', count === 0);
+                    });
+                } catch (error) {
+                    // Giữ số hiện tại nếu mạng tạm thời bị lỗi.
+                }
+            };
+
+            updatePendingOrders();
+            window.setInterval(updatePendingOrders, 30000);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) updatePendingOrders();
+            });
         })();
     </script>
 </body>

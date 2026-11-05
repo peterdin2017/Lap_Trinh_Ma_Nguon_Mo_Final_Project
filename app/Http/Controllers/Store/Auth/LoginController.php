@@ -26,13 +26,22 @@ class LoginController extends Controller
         if (
             ! $account ||
             ! in_array($account->role, ['user', 'seller'], true) ||
-            $account->status !== 'active' ||
             ! $account->is_verified ||
             ! Hash::check($data['password'], $account->password_hash)
         ) {
             return back()
                 ->withErrors([
                     'email' => 'Thông tin đăng nhập không hợp lệ.',
+                ])
+                ->onlyInput('email');
+        }
+
+        if ($account->status === 'locked') {
+            return back()
+                ->withErrors([
+                    'email' => $account->role === 'seller'
+                        ? 'Tài khoản người bán đã bị khóa. Vui lòng liên hệ bộ phận hỗ trợ.'
+                        : 'Tài khoản đã bị khóa. Vui lòng liên hệ bộ phận hỗ trợ.',
                 ])
                 ->onlyInput('email');
         }

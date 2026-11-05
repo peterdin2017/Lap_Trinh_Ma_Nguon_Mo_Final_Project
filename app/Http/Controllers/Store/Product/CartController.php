@@ -31,7 +31,7 @@ class CartController extends Controller
         ]);
 
         $items = $cart->items()
-            ->with(['product.seller', 'product.variants', 'variant'])
+            ->with(['product.seller.account', 'product.variants', 'variant'])
             ->get();
 
         $cartItems = [];
@@ -58,6 +58,7 @@ class CartController extends Controller
             $isAvailable = ! $hasInvalidVariant
                 && $product->status === 'active'
                 && $product->seller?->status === 'active'
+                && $product->seller?->account?->status === 'active'
                 && $stock > 0;
 
             $cartItems[$item->item_key] = [
@@ -108,7 +109,7 @@ class CartController extends Controller
         $cartItemId = DB::transaction(function () use ($accountId, $data): int {
             $product = Product::query()
                 ->where('status', 'active')
-                ->whereHas('seller', fn ($query) => $query->where('status', 'active'))
+                ->whereHas('seller', fn ($query) => $query->availableForStore())
                 ->lockForUpdate()
                 ->findOrFail($data['product_id']);
 
@@ -284,7 +285,7 @@ class CartController extends Controller
 
             $product = Product::query()
                 ->where('status', 'active')
-                ->whereHas('seller', fn ($query) => $query->where('status', 'active'))
+                ->whereHas('seller', fn ($query) => $query->availableForStore())
                 ->lockForUpdate()
                 ->findOrFail($cartItem->product_id);
 

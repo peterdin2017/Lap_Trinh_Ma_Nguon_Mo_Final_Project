@@ -25,7 +25,7 @@ class ProductController extends Controller
     /**
      * Danh sách sản phẩm của Seller hiện đăng nhập.
      */
-    public function index(SellerProductFilterRequest $request): View
+    public function index(SellerProductFilterRequest $request): View|JsonResponse
     {
         $seller = $this->currentSeller();
         $filters = $request->validated();
@@ -81,12 +81,33 @@ class ProductController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $productsVersion = hash(
+            'sha256',
+            json_encode([
+                'products' => $products->getCollection()
+                    ->map(fn (Product $product): array => [
+                        (int) $product->product_id,
+                        (string) $product->status,
+                        (int) $product->stock_quantity,
+                        $product->updated_at?->getTimestamp(),
+                    ])
+                    ->values()
+                    ->all(),
+                'total' => (int) $products->total(),
+            ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
+        );
+
+        if ($request->boolean('refresh')) {
+            return response()->json(['version' => $productsVersion]);
+        }
+
         $categories = Category::query()
             ->orderBy('category_name')
             ->get(['category_id', 'category_name']);
 
         return view('seller.products.index', compact(
             'products',
+            'productsVersion',
             'categories',
             'status',
             'search',

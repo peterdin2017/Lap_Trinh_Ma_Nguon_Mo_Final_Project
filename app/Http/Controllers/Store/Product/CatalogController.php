@@ -34,6 +34,19 @@ class CatalogController extends Controller
             return redirect()->route('store.products.index', $query, 301);
         }
 
+        if ($request->boolean('refresh')) {
+            $snapshot = $catalog->search($filters)
+                ->paginate(self::PER_PAGE);
+
+            return response()->json([
+                'product_ids' => $snapshot->getCollection()
+                    ->pluck('product_id')
+                    ->map(fn ($id): int => (int) $id)
+                    ->values(),
+                'total' => $snapshot->total(),
+            ]);
+        }
+
         if ($request->expectsJson()) {
             $suggestions = $catalog->search($filters)
                 ->limit(6)

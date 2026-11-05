@@ -286,7 +286,11 @@
     </style>
 
     <div class="seller-products-page" id="sellerProductsPage">
-        <div class="seller-products-content" id="sellerProductsContent">
+        <div
+            class="seller-products-content"
+            id="sellerProductsContent"
+            data-products-version="{{ $productsVersion }}"
+        >
             <header class="products-heading mb-3 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
                 <div>
                     <h1 class="h4 fw-bold mb-1">Sản phẩm</h1>
@@ -713,7 +717,7 @@
                 return url;
             }
 
-            async function loadPage(url, replace = false) {
+            async function loadPage(url, replace = false, fallbackToNavigation = true) {
                 controller?.abort();
                 controller = new AbortController();
                 root.classList.add('products-loading');
@@ -752,7 +756,7 @@
                     history[replace ? 'replaceState' : 'pushState']({}, '', url);
                     updateSelection();
                 } catch (error) {
-                    if (error.name !== 'AbortError') {
+                    if (error.name !== 'AbortError' && fallbackToNavigation) {
                         location.assign(url);
                     }
                 } finally {
@@ -895,7 +899,53 @@
                 loadPage(location.href, true);
             });
 
+            let refreshInProgress = false;
+
+            async function refreshProductsIfChanged() {
+                if (refreshInProgress || document.hidden) return;
+
+                const focused = document.activeElement;
+                if (focused instanceof Element && focused.closest('#productFilterForm')) return;
+
+                refreshInProgress = true;
+
+                try {
+                    const snapshotUrl = new URL(location.href);
+                    snapshotUrl.searchParams.set('refresh', '1');
+
+                    const response = await fetch(snapshotUrl, {
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    if (!response.ok) return;
+
+                    const snapshot = await response.json();
+                    const content = root.querySelector('#sellerProductsContent');
+
+                    if (
+                        !snapshot.version
+                        || !content
+                        || snapshot.version === content.dataset.productsVersion
+                    ) {
+                        return;
+                    }
+
+                    await loadPage(location.href, true, false);
+                } catch (error) {
+                    // Keep the current product list if the network is temporarily unavailable.
+                } finally {
+                    refreshInProgress = false;
+                }
+            }
+
             updateSelection();
+            window.setInterval(refreshProductsIfChanged, 12000);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) refreshProductsIfChanged();
+            });
         })();
     </script>
 @endsection

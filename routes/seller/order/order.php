@@ -9,6 +9,8 @@ Route::prefix('seller/orders')
     ->group(function (): void {
         Route::get('/', 'index')->name('index');
 
+        Route::get('/pending-count', 'pendingCount')->name('pending-count');
+
         Route::get('/{order}', 'show')
             ->whereNumber('order')
             ->name('show');
@@ -20,7 +22,7 @@ Route::prefix('seller/orders')
         Route::get('/{order}/shipping-label', 'printShippingLabel')
             ->whereNumber('order')
             ->name('shipping-label');
-            
+
         Route::patch('/return-requests/{returnRequest}/decision', 'updateReturnRequest')
             ->whereNumber('returnRequest')
             ->name('return-requests.update');

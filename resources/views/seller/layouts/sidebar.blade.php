@@ -67,11 +67,14 @@
         </div>
 
         {{-- Quản lý đơn hàng --}}
-        <button class="seller-nav-link seller-nav-toggle {{ $ordersOpen ? 'active' : '' }}" type="button"
+        <button class="seller-nav-link seller-nav-toggle seller-nav-toggle--orders {{ $ordersOpen ? 'active' : '' }}" type="button"
             data-bs-toggle="collapse" data-bs-target="#sellerOrderMenu"
             aria-expanded="{{ $ordersOpen ? 'true' : 'false' }}" aria-controls="sellerOrderMenu">
             <i class="bi bi-receipt" aria-hidden="true"></i>
             <span>Quản lý đơn hàng</span>
+            <span class="seller-menu-badge seller-menu-badge--orders {{ $pendingOrderCount > 0 ? '' : 'd-none' }}"
+                data-seller-pending-orders data-count-url="{{ route('seller.orders.pending-count') }}"
+                aria-label="{{ $pendingOrderCount }} đơn hàng chờ xác nhận">{{ $pendingOrderCount > 99 ? '99+' : $pendingOrderCount }}</span>
             <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
         </button>
 
@@ -85,7 +88,8 @@
                 <a href="{{ route('seller.orders.index', ['status' => 'pending']) }}"
                     class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'pending' ? 'active' : '' }}">
                     <span>Chờ xác nhận</span>
-                    <span class="seller-menu-badge">{{ $pendingOrderCount }}</span>
+                    <span class="seller-menu-badge {{ $pendingOrderCount > 0 ? '' : 'd-none' }}"
+                        data-seller-pending-subcount>{{ $pendingOrderCount > 99 ? '99+' : $pendingOrderCount }}</span>
                 </a>
 
                 <a href="{{ route('seller.orders.index', ['status' => 'shipping']) }}"
@@ -246,11 +250,14 @@
             </div>
 
             {{-- Quản lý đơn hàng --}}
-            <button class="seller-nav-link seller-nav-toggle {{ $ordersOpen ? 'active' : '' }}" type="button"
+            <button class="seller-nav-link seller-nav-toggle seller-nav-toggle--orders {{ $ordersOpen ? 'active' : '' }}" type="button"
                 data-bs-toggle="collapse" data-bs-target="#sellerOrderMenuMobile"
                 aria-expanded="{{ $ordersOpen ? 'true' : 'false' }}" aria-controls="sellerOrderMenuMobile">
                 <i class="bi bi-receipt" aria-hidden="true"></i>
                 <span>Quản lý đơn hàng</span>
+                <span class="seller-menu-badge seller-menu-badge--orders {{ $pendingOrderCount > 0 ? '' : 'd-none' }}"
+                    data-seller-pending-orders data-count-url="{{ route('seller.orders.pending-count') }}"
+                    aria-label="{{ $pendingOrderCount }} đơn hàng chờ xác nhận">{{ $pendingOrderCount > 99 ? '99+' : $pendingOrderCount }}</span>
                 <i class="bi bi-chevron-down seller-nav-chevron" aria-hidden="true"></i>
             </button>
 
@@ -264,7 +271,8 @@
                     <a href="{{ route('seller.orders.index', ['status' => 'pending']) }}"
                         class="seller-subnav-link {{ $onOrdersIndex && $currentOrderStatus === 'pending' ? 'active' : '' }}">
                         <span>Chờ xác nhận</span>
-                        <span class="seller-menu-badge">{{ $pendingOrderCount }}</span>
+                        <span class="seller-menu-badge {{ $pendingOrderCount > 0 ? '' : 'd-none' }}"
+                            data-seller-pending-subcount>{{ $pendingOrderCount > 99 ? '99+' : $pendingOrderCount }}</span>
                     </a>
 
                     <a href="{{ route('seller.orders.index', ['status' => 'shipping']) }}"
@@ -623,5 +631,19 @@
         background: #FF424E;
         border-radius: 999px;
         box-shadow: 0 2px 6px rgba(255, 66, 78, .22);
+    }
+
+    .seller-sidebar .seller-menu-badge--orders {
+        flex: 0 0 auto;
+        margin-left: auto;
+        padding: 3px 8px;
+        color: #fff;
+        background: #FF424E;
+        border-radius: 999px;
+        box-shadow: 0 2px 6px rgba(255, 66, 78, .22);
+    }
+
+    .seller-sidebar .seller-nav-toggle--orders .seller-nav-chevron {
+        margin-left: .5rem;
     }
 </style>

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Cart;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
@@ -26,6 +27,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        View::composer('seller.layouts.sidebar', function ($view): void {
+            $seller = request()->user()?->seller;
+            $pendingOrdersCount = $seller
+                ? Order::query()
+                ->where('seller_id', $seller->seller_id)
+                ->where('order_status', 'pending')
+                ->count()
+                : 0;
+
+            $view->with('pendingOrdersCount', (int) $pendingOrdersCount);
+        });
 
         View::composer('store.layouts.header', function ($view): void {
             $accountId = session('account_id');
@@ -50,9 +63,12 @@ class AppServiceProvider extends ServiceProvider
             $avatarUrl = null;
 
             if ($avatarPath) {
+                /** @var \Illuminate\Filesystem\FilesystemAdapter $publicDisk */
+                $publicDisk = Storage::disk('public');
+
                 $avatarUrl = filter_var($avatarPath, FILTER_VALIDATE_URL)
                     ? $avatarPath
-                    : Storage::disk('public')->url(ltrim($avatarPath, '/'));
+                    : $publicDisk->url(ltrim($avatarPath, '/'));
             }
 
             $profileName = $storeProfile?->full_name

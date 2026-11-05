@@ -23,7 +23,7 @@ class ProductCatalog
     {
         return Product::query()
             ->where('products.status', 'active')
-            ->whereHas('seller', fn (Builder $seller) => $seller->where('sellers.status', 'active'));
+            ->whereHas('seller', fn (Builder $seller) => $seller->availableForStore());
     }
 
     /**

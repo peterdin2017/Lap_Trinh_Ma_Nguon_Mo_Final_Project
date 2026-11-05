@@ -9,7 +9,9 @@ use App\Http\Requests\Seller\Order\UpdateSellerOrderStatusRequest;
 use App\Models\Order;
 use App\Models\OrderReturnRequest;
 use App\Models\Seller;
+use App\Models\CustomerNotification;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -17,7 +19,7 @@ use Illuminate\View\View;
 
 class SellerOrderController extends Controller
 {
-    public function index(SellerOrderFilterRequest $request): View
+    public function index(SellerOrderFilterRequest $request): View|JsonResponse
     {
         $filters = $request->validated();
 
@@ -94,16 +96,45 @@ class SellerOrderController extends Controller
         );
 
         $allOrdersCount = (int) $this->sellerOrders($seller)->count();
-        $pendingOrdersCount = (int) ($statusCounts['pending'] ?? 0);
+        $snapshot = [
+            'orders' => $orders->getCollection()
+                ->map(fn (Order $order): array => [
+                    (int) $order->order_id,
+                    (string) $order->order_status,
+                ])
+                ->values()
+                ->all(),
+            'total' => (int) $orders->total(),
+            'status_counts' => $statusCounts->sortKeys()->toArray(),
+            'all_orders_count' => $allOrdersCount,
+        ];
+        $ordersVersion = hash(
+            'sha256',
+            json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
+        );
+
+        if ($request->boolean('refresh')) {
+            return response()->json(['version' => $ordersVersion]);
+        }
 
         return view('seller.orders.index', compact(
             'orders',
             'filters',
             'statusCounts',
             'allOrdersCount',
-            'pendingOrdersCount',
-            'returnRequests'
+            'returnRequests',
+            'ordersVersion'
         ));
+    }
+
+    public function pendingCount(Request $request): JsonResponse
+    {
+        $seller = $this->currentSeller($request);
+        $count = $this->sellerOrders($seller)
+            ->where('order_status', 'pending')
+            ->count();
+
+        return response()->json(['count' => (int) $count]);
     }
 
     public function show(Request $request, int $order): View
@@ -162,6 +193,16 @@ class SellerOrderController extends Controller
             }
 
             $orderModel->save();
+
+            if ($newStatus === 'shipping') {
+                CustomerNotification::query()->create([
+                    'account_id' => $orderModel->account_id,
+                    'order_id' => $orderModel->order_id,
+                    'title' => 'Đơn hàng đã được bàn giao cho đơn vị vận chuyển',
+                    'message' => 'Đơn hàng ' . $orderModel->order_code
+                        . ' đã được bàn giao cho đơn vị vận chuyển và đang trên đường giao đến bạn.',
+                ]);
+            }
         });
 
         return back()->with('success', 'Đã cập nhật trạng thái đơn hàng.');

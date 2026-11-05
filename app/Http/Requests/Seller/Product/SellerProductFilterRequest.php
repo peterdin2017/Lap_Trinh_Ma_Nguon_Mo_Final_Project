@@ -19,6 +19,7 @@ class SellerProductFilterRequest extends FormRequest
             'category' => ['nullable', 'integer', 'exists:categories,category_id'],
             'from' => ['nullable', 'date_format:Y-m-d'],
             'to' => ['nullable', 'date_format:Y-m-d'],
+            'refresh' => ['sometimes', 'boolean'],
         ];
     }
 }

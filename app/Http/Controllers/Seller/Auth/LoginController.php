@@ -31,12 +31,17 @@ class LoginController extends Controller
         $account = Account::query()
             ->where('email', $credentials['email'])
             ->where('role', 'seller')
-            ->where('status', 'active')
             ->first();
 
         if (! $account || ! Hash::check($credentials['password'], $account->password_hash)) {
             return back()
                 ->withErrors(['email' => 'Email hoặc mật khẩu không chính xác.'])
+                ->onlyInput('email');
+        }
+
+        if ($account->status === 'locked') {
+            return back()
+                ->withErrors(['email' => 'Tài khoản người bán đã bị khóa. Vui lòng liên hệ bộ phận hỗ trợ.'])
                 ->onlyInput('email');
         }
 

@@ -51,7 +51,7 @@ class CheckoutController extends Controller
 
         $items = $cart->items()
             ->whereIn('cart_item_id', $cartItemIds)
-            ->with(['product.seller', 'product.variants', 'variant'])
+            ->with(['product.seller.account', 'product.variants', 'variant'])
             ->get();
 
         if ($items->count() !== $cartItemIds->count()) {
@@ -242,7 +242,7 @@ class CheckoutController extends Controller
 
                 $seller = Seller::query()
                     ->where('seller_id', $product->seller_id)
-                    ->where('status', 'active')
+                    ->availableForStore()
                     ->lockForUpdate()
                     ->first();
 
@@ -582,7 +582,7 @@ class CheckoutController extends Controller
 
         $items = $cart->items()
             ->whereIn('cart_item_id', $cartItemIds)
-            ->with(['product.seller', 'product.variants', 'variant'])
+            ->with(['product.seller.account', 'product.variants', 'variant'])
             ->get();
 
         if ($items->count() !== $cartItemIds->count()) {
@@ -938,6 +938,7 @@ class CheckoutController extends Controller
             ! $product
             || $product->status !== 'active'
             || $product->seller?->status !== 'active'
+            || $product->seller?->account?->status !== 'active'
         ) {
             return false;
         }
